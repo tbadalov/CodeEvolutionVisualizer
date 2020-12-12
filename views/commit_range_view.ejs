@@ -1,0 +1,96 @@
+<html>
+  <head>
+    <style>
+      * {
+        padding: 0;
+        margin: 0;
+      }
+
+      html, body {
+        width: 100%;
+        height: 100%;
+      }
+      
+      #container {
+        display: flex;
+        justify-content: stretch;
+        flex: 2 1 auto;
+        height: 100%;
+        position: relative;
+      }
+
+      #leftMenu {
+        background-color: #ccc;
+        display: block;
+        max-width: 25%;
+      }
+
+      #rightMenu {
+        height: 100%;
+        width: 100%;
+        background-color: #ddd;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="container">
+      <div id="leftMenu">
+        <div style="width: 900px;"></div>
+      </div>
+      <div id="rightMenu">
+        <canvas id="draw"/>
+      </div>
+    </div>
+  </body>
+  <script>
+
+    const classNameColorMapping = {};
+
+    function drawRectangle(context, leftBottomCornerX, leftBottomCornerY, width, height, color) {
+      let prevColor = context.fillStyle;
+      context.fillStyle = color;
+      context.fillRect(leftBottomCornerX, leftBottomCornerY, width, height);
+      context.fillStyle = prevColor;
+    }
+
+    function getRandomColor() {
+      var letters = '0123456789ABCDEF';
+      var color = '#';
+      for (var i = 0; i < 6; i++) {
+        color += letters[Math.floor(Math.random() * 16)];
+      }
+      return color;
+    }
+
+    function drawBar(context, commit, order) {
+      const leftBottomCornerX = 50 + order * (30 /* width */ + 2 /* margin */);
+      let visualizedChangedLinesCount = 0;
+      commit.changedClasses.forEach(changedClass => {
+        if (!classNameColorMapping[changedClass.className]) {
+          classNameColorMapping[changedClass.className] = { color: getRandomColor() };
+        }
+        const leftBottomCornerY = context.canvas.height - 30 /* vertical margin */ - commit.totalChangedLinesCount * 6 /* height */ + visualizedChangedLinesCount * 6;
+        drawRectangle(context, leftBottomCornerX, leftBottomCornerY, 30 /* width */, changedClass.changedLinesCount * 6, classNameColorMapping[changedClass.className].color);
+        visualizedChangedLinesCount += changedClass.changedLinesCount;
+      });
+    }
+
+    const canvas = document.getElementById('draw');
+    canvas.width = 500;
+    canvas.height = 500;
+    const ctx = canvas.getContext('2d');
+    //ctx.beginPath();
+    var xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState == XMLHttpRequest.DONE) {
+            const commitsData = JSON.parse(xhr.responseText);
+            commitsData.commits.forEach((commit, index) => {
+              console.log(commit, index);
+              drawBar(ctx, commit, index);
+            });
+        }
+    }
+    xhr.open('GET', 'http://localhost:3000/commit_range_data', true);
+    xhr.send(null);
+  </script>
+</html>
