@@ -1,2 +1,4 @@
 node_modules/
+uploads/
+session_data/
 *.swp
