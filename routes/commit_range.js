@@ -28,7 +28,7 @@ router.get('/', function(req, res, next) {
       const result = [];
       mainQuerySession.run(`
         MATCH (app:App)
-        WHERE app.branch='master'
+        WHERE app.branch='` + mainBranch + `'
         CALL {
           MATCH (c:Class)
             WITH distinct c.name as className, toInteger(RAND() * 10) as changedLinesCount, RAND() * 100 as randomOrder
