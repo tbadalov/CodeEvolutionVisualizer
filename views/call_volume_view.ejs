@@ -146,7 +146,6 @@
     }
 
     function convertToVisualizationData(classesArray) {
-      console.log("girdi");
       if (classesArray.length == 0) {
         return [];
       }
@@ -206,7 +205,7 @@
       new_floors = new_floors.concat(floors.right.reverse());
       floors = new_floors;
       const totalCalls = classesArray.reduce((widthSum, element) => widthSum + element.totalCallAmount, 0);
-      const startingPositionX = Math.floor(centerX - totalCalls / 2);
+      let startingPositionX = Math.floor(centerX - totalCalls / 2);
       const branches = [];
       let currentPositionX = startingPositionX;
       for (let i = 0; i < floors.length; i++) {
@@ -221,7 +220,7 @@
             type: 'rect',
             startX: currentPositionX,
             startY: marginTop,
-            height: floor.ceil + (floor.vertical == 'up' ? floor.maxHeight - classData.totalCallAmount : classData.totalCallAmount),
+            height: floor.vertical == 'up' ? floor.ceil + floor.maxHeight - classData.totalCallAmount : (floor.side == 'left' ? floors[i-1].ceil + floors[i-1].maxHeight - classesArray[i-1].totalCallAmount : floors[i+1].ceil + floors[i+1].maxHeight -classesArray[i+1].totalCallAmount),
             width: classData.totalCallAmount,
             color: branchData.color,
           },
@@ -244,14 +243,16 @@
         } else {
           directionX = 1;
         }
-        const branchStartingPositionX = currentPositionX + (floor.side == 'right' ? classData.totalCallAmount : 0);
+        const branchStartingPositionX = currentPositionX + (floor.side == 'right' ? (floor.vertical == 'up' ? classData.totalCallAmount : classData.totalCallAmount + classesArray[i+1].totalCallAmount) : 0);
         const branchStartingPositionY = floor.ceil + (floor.vertical == 'up' ? floor.maxHeight - classData.totalCallAmount : 0);
         pipes.push({
           type: 'arc',
           thickness: classData.totalCallAmount,
-          radius: classData.totalCallAmount,
-          centerX: branchStartingPositionX,
-          centerY: branchStartingPositionY,
+          radius: floor.vertical == 'up' ? classData.totalCallAmount : floor.side == 'left' ? classData.totalCallAmount + branches[branches.length-1].pipes[1].radius : classData.totalCallAmount + classesArray[i+1].totalCallAmount,
+          centerX: floor.vertical == 'up' ? branchStartingPositionX : (floor.side == 'left' ? branches[branches.length-1].pipes[1].centerX : pipes[0].startX + pipes[0].width + classesArray[i+1].totalCallAmount),
+          centerY: floor.vertical == 'up' ? floor.ceil + floor.maxHeight - classData.totalCallAmount : (floor.side == 'left' ? floors[i-1].ceil + floors[i-1].maxHeight - classesArray[i-1].totalCallAmount : floors[i+1].ceil + floors[i+1].maxHeight -classesArray[i+1].totalCallAmount),
+          //centerX: floor.vertical == 'up' ? branchStartingPositionX : branches[branches.length-1].pipes[1].centerX,
+          //centerY: floor.vertical == 'up' ? branchStartingPositionY : branches[branches.length-1].pipes[1].centerY,
           angle: 90,
           color: branchData.color,
           scaleX: -1 * directionX, // 1 to draw arc to left, -1 to draw to right
@@ -265,9 +266,9 @@
             },
             stem: {
               type: 'rect',
-              startX: currentPositionX + (circleMarginX + method.callAmount + method.callAmount / 2) * directionX,
+              startX: currentPositionX + (circleMarginX + method.callAmount + Math.ceil(method.callAmount * 0.25) / 2) * directionX,
               startY: branchStartingPositionY - (floor.vertical == 'up' ? stemLength : 0) + (floor.vertical == 'down' ? method.callAmount : 0),
-              width: method.callAmount,
+              width: Math.ceil(method.callAmount * 0.25),
               height: stemLength,
               color: branchData.color,
               scaleX: -1 * directionX,
@@ -292,7 +293,7 @@
           color: branchData.color,
           scaleX: directionX,
         });
-        pipes.push({
+        /*pipes.push({
           type: 'arc',
           thickness: classData.totalCallAmount,
           radius: classData.totalCallAmount,
@@ -302,7 +303,7 @@
           color: branchData.color,
           scaleX: directionX, // 1 to draw arc to left, -1 to draw to right,
           scaleY: floor.vertical == 'up' ? 1 : -1, // 1 to draw down, -1 to draw up
-        });
+        });*/
         currentPositionX = pipes[0].startX + pipes[0].width;
         branches.push({
           data: branchData,
