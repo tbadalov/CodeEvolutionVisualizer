@@ -1,0 +1,566 @@
+<html>
+  <head>
+    <style>
+      * {
+        padding: 0;
+        margin: 0;
+      }
+
+      html, body, header {
+        min-height: 100%;
+        width: 100%;
+        height: 100%;
+      }
+      
+      #container {
+        height: calc(100% - 40px);
+        padding: 20px;
+        position: relative;
+      }
+
+      #flexbox {
+        display: flex;
+        justify-content: stretch;
+        flex: 0 0 0;
+        height: 100%;
+      }
+
+      #leftMenu {
+        background-color: #ccc;
+        display: block;
+        max-width: 25%;
+      }
+
+      #rightMenu {
+        height: 100%;
+        width: 100%;
+        background-color: #ddd;
+        overflow: scroll;
+      }
+
+      #selector {
+        width: 0;
+        height: 0;
+        background-color: rgba(50, 200, 211, 0.5);
+        position: absolute;
+      }
+    </style>
+    <script src="https://unpkg.com/konva@7.0.3/konva.min.js"></script>
+  </head>
+  <body>
+    <div id="container">
+      <div id="flexbox">
+        <div id="leftMenu">
+        </div>
+        <div id="rightMenu">
+        </div>
+      </div>
+    </div>
+    <div id="selector"></div>
+  </body>
+  <script>
+    const scale = 5;
+    const circleMarginX = 6;
+    const circleMarginY = 4;
+    const strokeWidth = 0;
+    const pipeAngleRadius = 4;
+    const floorMargin = 10;
+    const stemLength = 10;
+    const stemWidth = 6;
+    var width = 1600;
+    var height = 1000;
+    const centerX = width / 5;
+    const centerY = 0;
+    const marginTop = 0;
+    const trunkHeight = 45;
+    
+
+    function getRandomColor() {
+      var letters = '0123456789ABCDEF';
+      var color = '#';
+      for (var i = 0; i < 6; i++) {
+        color += letters[Math.floor(Math.random() * 16)];
+      }
+      return color;
+    }
+
+    function drawBranches(layer, branches) {
+      for (let i = 0; i < branches.length; i++) {
+        const branch = branches[i];
+        for (let pipe of branch.pipes) {
+          console.log(pipe);
+          if (pipe.type == 'rect') {
+            layer.add(new Konva.Rect({
+              x: pipe.startX,
+              y: pipe.startY,
+              width: pipe.width,
+              height: pipe.height,
+              fill: pipe.color,
+              scaleX: pipe.scaleX,
+            }));
+          } else if (pipe.type == 'arc') {
+            layer.add(new Konva.Arc({
+              x: pipe.centerX,
+              y: pipe.centerY,
+              innerRadius: pipe.radius - pipe.thickness,
+              outerRadius: pipe.radius,
+              angle: pipe.angle,
+              scaleX: pipe.scaleX,
+              scaleY: pipe.scaleY,
+              fill: pipe.color,
+            }));
+          }
+        }
+        for (let leave of branch.leaves) {
+          layer.add(new Konva.Rect({
+            x: leave.stem.startX,
+            y: leave.stem.startY,
+            width: leave.stem.width,
+            height: leave.stem.height,
+            fill: leave.stem.color,
+            scaleX: leave.stem.scaleX,
+          }));
+          layer.add(new Konva.Circle({
+            x: leave.node.centerX,
+            y: leave.node.centerY,
+            radius: leave.node.radius,
+            fill: leave.node.color,
+          }));
+        }
+      }
+    }
+
+    function drawTrunks(layer, trunks) {
+      trunks.map(trunk => {
+        trunk.color = getRandomColor();
+        return new Konva.Rect({
+          width: trunk.width,
+          height: trunk.height,
+          x: trunk.leftTopX,
+          y: trunk.leftTopY,
+          fill: trunk.color,
+          stroke: 'black',
+          strokeWidth: strokeWidth,
+        });
+      }).forEach(rect => layer.add(rect));
+    }
+
+    function convertToVisualizationData(classesArray) {
+      console.log("girdi");
+      if (classesArray.length == 0) {
+        return [];
+      }
+      let floors = {
+        left: [],
+        middle: null,
+        right: [],
+      }
+
+      //build floor heights
+      let maxNodeDiameter = 2 * classesArray[0].methods.reduce((maxSize, method) => Math.max(maxSize, method.callAmount), 0);
+      let maxBranchHeight = stemLength + classesArray[0].totalCallAmount + maxNodeDiameter;
+      let ceil = trunkHeight + classesArray[0].totalCallAmount - maxBranchHeight;
+      floors.left.push({
+        ceil: ceil,
+        maxHeight: maxBranchHeight,
+        side: 'left',
+        vertical: 'up',
+      });
+      if (classesArray.length > 2) {
+        let firstRightElement = classesArray[classesArray.length - 1];
+        maxNodeDiameter = 2 * firstRightElement.methods.reduce((maxSize, method) => Math.max(maxSize, method.callAmount), 0);
+        maxBranchHeight = stemLength + firstRightElement.totalCallAmount + maxNodeDiameter;
+        ceil = trunkHeight + firstRightElement.totalCallAmount - maxBranchHeight;
+        floors.right.push({
+          ceil: ceil,
+          maxHeight: maxBranchHeight,
+          side: 'right',
+          vertical: 'up',
+        });
+      }
+      for (let i = 1; i < classesArray.length-1; i++ ) {
+        let midIndex = Math.floor(classesArray.length / 2);
+        if (i == midIndex && classesArray.length % 2 != 0) {
+          floors.middle = {
+            ceil: floors.left[i-1].ceil + floors.left[i-1].maxHeight,
+            maxHeight: Infinity,
+            side: 'mid',
+          }
+          continue;
+        }
+        let floorsArray = i < midIndex ? floors.left : floors.right;
+        let classData = i < midIndex ? classesArray[i] : classesArray[classesArray.length - 1 - (i - midIndex)];
+        maxNodeDiameter = 2  * classData.methods.reduce((maxSize, method) => Math.max(maxSize, method.callAmount), 0);
+        maxBranchHeight = stemLength + classData.totalCallAmount + maxNodeDiameter;
+        ceil = floorsArray[i-1 - (i > midIndex ? midIndex : 0)].ceil + floorsArray[i-1 - (i > midIndex ? midIndex : 0)].maxHeight;
+        floorsArray.push({
+          ceil: ceil,
+          maxHeight: maxBranchHeight,
+          side: i < midIndex ? 'left' : 'right',
+          vertical: i < midIndex ? (i % 2 == 0 ? 'up' : 'down') : ((1 + (i - midIndex)) % 2 == 0 ? 'down' : 'up'),
+        });
+      }
+
+      let new_floors = [].concat(floors.left);
+      new_floors.push(floors.middle);
+      new_floors = new_floors.concat(floors.right.reverse());
+      floors = new_floors;
+      const totalCalls = classesArray.reduce((widthSum, element) => widthSum + element.totalCallAmount, 0);
+      const startingPositionX = Math.floor(centerX - totalCalls / 2);
+      const branches = [];
+      let currentPositionX = startingPositionX;
+      for (let i = 0; i < floors.length; i++) {
+        const floor = floors[i];
+        const classData = classesArray[i];
+        const branchData = {
+          color: getRandomColor(),
+        };
+        const methods = classData.methods.sort((method1, method2) => method1.callAmount - method2.callAmount);
+        const pipes = [
+          {
+            type: 'rect',
+            startX: currentPositionX,
+            startY: marginTop,
+            height: floor.ceil + (floor.vertical == 'up' ? floor.maxHeight - classData.totalCallAmount : classData.totalCallAmount),
+            width: classData.totalCallAmount,
+            color: branchData.color,
+          },
+        ];
+        const leaves = [];
+        if (floor.side == 'mid') {
+          continue;
+        }
+
+        let directionX = -1;
+        if (floor.side == 'left') {
+
+          if (i % 2 == 0) {
+            for (let method of methods) {
+
+            }
+          } else {
+
+          }
+        } else {
+          directionX = 1;
+        }
+        const branchStartingPositionX = currentPositionX + (floor.side == 'right' ? classData.totalCallAmount : 0);
+        const branchStartingPositionY = floor.ceil + (floor.vertical == 'up' ? floor.maxHeight - classData.totalCallAmount : 0);
+        pipes.push({
+          type: 'arc',
+          thickness: classData.totalCallAmount,
+          radius: classData.totalCallAmount,
+          centerX: branchStartingPositionX,
+          centerY: branchStartingPositionY,
+          angle: 90,
+          color: branchData.color,
+          scaleX: -1 * directionX, // 1 to draw arc to left, -1 to draw to right
+        });
+        currentPositionX = branchStartingPositionX;
+        for ( let m = 0; m < methods.length; m++ ) {
+          const method = methods[m];
+          leaves.push({
+            data: {
+              name: method.name,
+            },
+            stem: {
+              type: 'rect',
+              startX: currentPositionX + (circleMarginX + method.callAmount + method.callAmount / 2) * directionX,
+              startY: branchStartingPositionY - (floor.vertical == 'up' ? stemLength : 0) + (floor.vertical == 'down' ? method.callAmount : 0),
+              width: method.callAmount,
+              height: stemLength,
+              color: branchData.color,
+              scaleX: -1 * directionX,
+            },
+            node: {
+              type: 'circle',
+              centerX: currentPositionX + (circleMarginX + method.callAmount) * directionX,
+              centerY: branchStartingPositionY - (floor.vertical == 'up' ? method.callAmount : -method.callAmount) - (floor.vertical == 'up' ? stemLength : -stemLength) + (floor.vertical == 'down' ? method.callAmount : 0),
+              radius: method.callAmount,
+              color: branchData.color,
+            },
+          });
+          currentPositionX = currentPositionX + (circleMarginX + method.callAmount) * 2 * directionX;
+        }
+        currentPositionX = currentPositionX - circleMarginX * directionX;
+        pipes.push({
+          type: 'rect',
+          startX: branchStartingPositionX,
+          startY: branchStartingPositionY,
+          width: (currentPositionX - branchStartingPositionX) * directionX,
+          height: classData.totalCallAmount,
+          color: branchData.color,
+          scaleX: directionX,
+        });
+        pipes.push({
+          type: 'arc',
+          thickness: classData.totalCallAmount,
+          radius: classData.totalCallAmount,
+          centerX: currentPositionX,
+          centerY: branchStartingPositionY + (floor.vertical == 'down' ? classData.totalCallAmount : 0),
+          angle: 90,
+          color: branchData.color,
+          scaleX: directionX, // 1 to draw arc to left, -1 to draw to right,
+          scaleY: floor.vertical == 'up' ? 1 : -1, // 1 to draw down, -1 to draw up
+        });
+        currentPositionX = pipes[0].startX + pipes[0].width;
+        branches.push({
+          data: branchData,
+          pipes: pipes,
+          leaves: leaves,
+        });
+    }
+    return branches;
+  }
+
+    const data = [
+    {
+        "class": "BrewState",
+        "methods": [
+            {
+                "callAmount": 1,
+                "method": "decode(json:)"
+            },
+            {
+                "callAmount": 0,
+                "method": "create(name:)"
+            }
+        ],
+        "totalCallAmount": 1
+    },
+    {
+        "class": "JSONDecodable",
+        "methods": [
+            {
+                "callAmount": 2,
+                "method": "decode(json:)"
+            }
+        ],
+        "totalCallAmount": 2
+    },
+    {
+        "class": "BrewCell",
+        "methods": [
+            {
+                "callAmount": 4,
+                "method": "setTextColorForAllLabels(color:)"
+            }
+        ],
+        "totalCallAmount": 4
+    },
+    {
+        "class": "Brew",
+        "methods": [
+            {
+                "callAmount": 9,
+                "method": "decode(json:)"
+            }
+        ],
+        "totalCallAmount": 9
+    },
+    {
+        "class": "BrewPhase",
+        "methods": [
+            {
+                "callAmount": 4,
+                "method": "decode(json:)"
+            },
+            {
+                "callAmount": 6,
+                "method": "create(jobEnd:)"
+            }
+        ],
+        "totalCallAmount": 10
+    },
+    {
+        "class": "AppDelegate",
+        "methods": [
+            {
+                "callAmount": 3,
+                "method": "application(application:didFinishLaunchingWithOptions:)"
+            },
+            {
+                "callAmount": 5,
+                "method": "applicationWillResignActive(application:)"
+            },
+            {
+                "callAmount": 6,
+                "method": "applicationDidEnterBackground(application:)"
+            },
+            {
+                "callAmount": 3,
+                "method": "applicationWillEnterForeground(application:)"
+            },
+            {
+                "callAmount": 6,
+                "method": "applicationDidBecomeActive(application:)"
+            },
+            {
+                "callAmount": 7,
+                "method": "applicationWillTerminate(application:)"
+            }
+        ],
+        "totalCallAmount": 30
+    },
+    {
+        "class": "BrewViewController",
+        "methods": [
+            {
+                "callAmount": 0,
+                "method": "tableView(tableView:cellForRowAtIndexPath:)"
+            },
+            {
+                "callAmount": 1,
+                "method": "tableView(tableView:numberOfRowsInSection:)"
+            },
+            {
+                "callAmount": 9,
+                "method": "stateText(brewPhase:)"
+            },
+            {
+                "callAmount": 9,
+                "method": "updateStartTimeLabel()"
+            },
+            {
+                "callAmount": 2,
+                "method": "updateTempLabel(temperature:)"
+            },
+            {
+                "callAmount": 0,
+                "method": "updateNameLabel()"
+            },
+            {
+                "callAmount": 2,
+                "method": "didReceiveMemoryWarning()"
+            },
+            {
+                "callAmount": 2,
+                "method": "viewDidLoad()"
+            },
+            {
+                "callAmount": 6,
+                "method": "connectToHost()"
+            }
+        ],
+        "totalCallAmount": 31
+    }
+];
+
+    const left = [];
+    const right = [];
+    let mid;
+    data.forEach((c, index) => {
+      if (index % 2 == 0) {
+        left.push(c);
+      } else if (index < data.length-1) {
+        right.push(c);
+      } else {
+        mid = c;
+      }
+    });
+    let array = [].concat(left);
+    if (mid) {
+      array.push(mid);
+    }
+    array = array.concat(right);
+    console.log(array);
+    const branchesVisualData = convertToVisualizationData(array);
+    console.log(branchesVisualData);
+    var stage = new Konva.Stage({
+      container: 'rightMenu',
+      width: width,
+      height: height,
+    });
+
+    var layer = new Konva.Layer();
+    stage.add(layer);
+    var arc = new Konva.Arc({
+        x: 10,
+        y: 0,
+        innerRadius: 5,
+        outerRadius: 10,
+        angle: 90,
+        scaleX: -1, // 1 to draw arc to left (default), -1 to draw to right
+        fill: 'blue'
+      });
+      var rect = new Konva.Rect({
+        x: 100,
+        y: 100,
+        width: 100,
+        height: 50,
+        scaleX: -1, //1 to draw rect to right (default), -1 to draw rect to left
+        fill: 'blue'
+      });
+    drawBranches(layer, branchesVisualData);
+    layer.add(arc);
+    layer.add(rect);
+    layer.draw();
+    setTimeout(() => { stage.scale({x: 3, y: 3}); stage.batchDraw(); }, 5000);
+
+/*
+branches: [
+  {
+    data: {
+
+    },
+    pipes: [
+      //the first one is always trunk
+      {
+        type: 'rect',
+        startX: 100,
+        startY: 100,
+        width: 80,
+        height: 100,
+        color: 'blue',
+      },
+      {
+        type: 'arc',
+        thickness: 5,
+        radius:10,
+        centerX: 200,
+        centerY: 180,
+        angle: 90,
+        color: 'blue',
+        scaleX: -1, // 1 to draw arc to left, -1 to draw to right
+      },
+      {
+        type: 'rect',
+        startX: 100,
+        startY: 100,
+        width: 120,
+        height: 120,
+        color: 'red',
+      },
+      // ...
+    ],
+    leaves: [
+      {
+        data: {
+
+        },
+        stem: {
+          type: 'rect,
+          startX: 100, //last corner in branch direction
+          startY: 100,
+          width: 100,
+          height: 100,
+          scaleX: -1,
+          color: 'red',
+        },
+        node: {
+          type: 'circle',
+          centerX: 10,
+          centerY: 10,
+          radius: 10,
+          color: 'orange',
+        }
+      },
+      // ...
+    ]
+  }
+]
+*/
+  </script>
+</html>
+
+
