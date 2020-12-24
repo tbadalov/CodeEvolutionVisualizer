@@ -72,8 +72,197 @@
     const centerX = width / 5;
     const centerY = 0;
     const marginTop = 0;
-    const trunkHeight = 45;
-    
+    const trunkHeight = 45; //todo remove and use INITIAL_TRUNK_HEIGHT
+    const INITIAL_TRUNK_HEIGHT = 45;
+    const FLOOR_MARGIN_VERTICAL = 20;
+    const INIT_STEM_LENGTH = 10;
+    const floors = [];
+
+    class CallVolumeDiagramPositioner {
+      constructor(classesArray) {
+        this.classesArray = classesArray;
+        this.trunkHeightCache = new Array(classesArray.length);
+        this.branchXCache = new Array(classesArray.length);
+        this.trunkXCache = new Array(classesArray.length);
+        this.midIndex = Math.floor(classesArray.length / 2);
+      }
+
+      positionBasedProperty(position, valueForEven, valueForOdd) {
+        return position % 2 == 0 ? valueForEven : valueForOdd;
+      }
+
+      directionY(index) {
+        if (this.classesArray.length % 2 == 1 && index == this.midIndex) {
+          return 0;
+        }
+        let result = index < this.midIndex ? this.positionBasedProperty(index, -1, 1) : this.positionBasedProperty(this.classesArray.length-index-1, -1, 1);
+        console.log("index=" + index + " directionY=" + result);
+        return result;
+      }
+
+      directionX(index) {
+        if (this.classesArray.length % 2 == 1 && index == this.midIndex) {
+          return 0;
+        }
+        let result = index < this.midIndex ? -1 : 1;
+        console.log("index=" + index + " directionX=" + result);
+        return result;
+      }
+
+      pipeWidth(index) {
+        return this.classesArray[index].totalCallAmount;
+      }
+
+      nodeRadius(classIndex, methodIndex) {
+        return this.classesArray[classIndex].methods[methodIndex].callAmount;
+      }
+
+      maxRadius(index) {
+        const classData = this.classesArray[index];
+        return classData.methods.reduce((maxRadius, method, methodIndex) => Math.max(maxRadius, this.nodeRadius(index, methodIndex)), 0);
+      }
+
+      stemWidth(nodeRadius) {
+        return Math.ceil(nodeRadius * 0.25);
+      }
+
+      stemLength(nodeRadius) {
+        return nodeRadius * 1.5;
+      }
+
+      branchHeight(index) {
+        return this.maxRadius(index) + Math.max(INIT_STEM_LENGTH, this.stemLength(this.maxRadius(index)));
+      }
+
+      maxBranchHeight(index) {
+        return this.branchHeight(index) + this.pipeWidth(index);
+      }
+
+      trunkAngleCenterX(index) {
+        if (this.directionY(index) < 0) {
+          if (this.directionX(index) < 0) {
+            return this.trunkX(index);
+          } else if (this.directionX(index) > 0) {
+            return this.trunkX(index) + this.pipeWidth(index);
+          }
+        }
+        if (this.directionY(index) > 0) {
+          if (this.directionX(index) < 0) {
+            return this.trunkAngleCenterX(index-1);
+          }
+          if (this.directionX(index) > 0) {
+            return this.trunkAngleCenterX(index+1);
+          }
+        }
+      }
+
+      trunkAngleCenterY(index) {
+        if (this.directionY(index) < 0) {
+          return this.trunkHeight(index);
+        }
+        if (this.directionY(index) > 0) {
+          if (this.directionX(index) < 0) {
+            return this.trunkAngleCenterY(index-1);
+          }
+          if (this.directionX(index) > 0) {
+            return this.trunkAngleCenterY(index+1);
+          }
+        }
+      }
+
+      trunkAngleRadius(index) {
+        if (this.directionY(index) < 0) {
+          return this.pipeWidth(index);
+        } else if (this.directionY(index) > 0) {
+          if (this.directionX(index) < 0) {
+            return this.pipeWidth(index) + this.pipeWidth(index-1);
+          } else if (this.directionX(index) > 0) {
+            return this.pipeWidth(index) + this.pipeWidth(index+1);
+          }
+        }
+      }
+
+      trunkX(index) {
+        if (this.trunkXCache[index] !== undefined) {
+          return this.trunkXCache[index];
+        }
+
+        if (index == 0) {
+          this.trunkXCache[index] = Math.floor(centerX - this.classesArray.reduce((sum, classData, classIndex) => sum + this.pipeWidth(classIndex), 0) / 2);
+          return this.trunkXCache[index];
+        }
+
+        this.trunkXCache[index] = this.trunkX(index-1) + this.pipeWidth(index-1);
+        return this.trunkXCache[index];
+      }
+
+      trunkHeight(index) {
+        if (this.trunkHeightCache[index] !== undefined) {
+          return this.trunkHeightCache[index];
+        }
+
+        if (index == 0 || index == this.classesArray.length-1) {
+          if (this.classesArray.length > 1) {
+            this.trunkHeightCache[index] = Math.max(INITIAL_TRUNK_HEIGHT, this.maxBranchHeight(index) + FLOOR_MARGIN_VERTICAL);
+          } else if (this.classesArray.length == 1) {
+            this.trunkHeightCache[index] = INITIAL_TRUNK_HEIGHT;
+          }
+          return this.trunkHeightCache[index];
+        }
+
+        if (this.directionY(index) < 0) {
+          if (this.directionX(index) < 0) {
+            this.trunkHeightCache[index] = this.trunkHeight(index-2) + this.pipeWidth(index-2) + this.maxBranchHeight(index-1) + FLOOR_MARGIN_VERTICAL;
+          } else if (this.directionX(index) > 0) {
+            this.trunkHeightCache[index] = this.trunkHeight(index+2) + this.pipeWidth(index+2) + this.maxBranchHeight(index+1) + FLOOR_MARGIN_VERTICAL;
+          }
+        } else if (this.directionY(index) > 0) {
+          if (this.directionX(index) < 0) {
+            this.trunkHeightCache[index] = this.trunkHeight(index-1);
+          } else if (this.directionX(index) > 0) {
+            this.trunkHeightCache[index] = this.trunkHeight(index+1);
+          }
+        } else {
+          this.trunkHeightCache[index] = Math.max(this.trunkHeight(index-1), this.trunkHeight(index+1));
+        }
+
+        return this.trunkHeightCache[index];
+      }
+
+      branchStartY(index) {
+        if (this.directionY(index) > 0) {
+          if (this.directionX(index) < 0) {
+            return this.trunkHeight(index) + this.pipeWidth(index-1) + this.pipeWidth(index);
+          }
+          if (this.directionX(index) > 0) {
+            return this.trunkHeight(index) + this.pipeWidth(index+1) + this.pipeWidth(index);
+          }
+        }
+        return this.trunkHeight(index);
+      }
+
+      branchStartX(index) {
+        if (this.branchXCache[index] !== undefined) {
+          return this.branchXCache[index];
+        }
+
+        if (this.directionY(index) < 0) {
+          if (this.directionX(index) < 0) {
+            this.branchXCache[index] = this.trunkX(index);
+          } else if (this.directionX(index) > 0) {
+            this.branchXCache[index] = this.trunkX(index) + this.pipeWidth(index);
+          }
+        } else if (this.directionY(index) > 0) {
+          if (this.directionX(index) < 0) {
+            this.branchXCache[index] = this.branchStartX(index-1);
+          } else if (this.directionX(index) > 0) {
+            this.branchXCache[index] = this.branchStartX(index+1);
+          }
+        }
+
+        return this.branchXCache[index];
+      }
+    }
 
     function getRandomColor() {
       var letters = '0123456789ABCDEF';
@@ -97,6 +286,7 @@
               height: pipe.height,
               fill: pipe.color,
               scaleX: pipe.scaleX,
+              scaleY: pipe.scaleY,
             }));
           } else if (pipe.type == 'arc') {
             layer.add(new Konva.Arc({
@@ -105,9 +295,9 @@
               innerRadius: pipe.radius - pipe.thickness,
               outerRadius: pipe.radius,
               angle: pipe.angle,
+              fill: pipe.color,
               scaleX: pipe.scaleX,
               scaleY: pipe.scaleY,
-              fill: pipe.color,
             }));
           }
         }
@@ -119,6 +309,7 @@
             height: leave.stem.height,
             fill: leave.stem.color,
             scaleX: leave.stem.scaleX,
+            scaleY: leave.stem.scaleY,
           }));
           layer.add(new Konva.Circle({
             x: leave.node.centerX,
@@ -149,67 +340,9 @@
       if (classesArray.length == 0) {
         return [];
       }
-      let floors = {
-        left: [],
-        middle: null,
-        right: [],
-      }
-
-      //build floor heights
-      let maxNodeDiameter = 2 * classesArray[0].methods.reduce((maxSize, method) => Math.max(maxSize, method.callAmount), 0);
-      let maxBranchHeight = stemLength + classesArray[0].totalCallAmount + maxNodeDiameter;
-      let ceil = trunkHeight + classesArray[0].totalCallAmount - maxBranchHeight;
-      floors.left.push({
-        ceil: ceil,
-        maxHeight: maxBranchHeight,
-        side: 'left',
-        vertical: 'up',
-      });
-      if (classesArray.length > 2) {
-        let firstRightElement = classesArray[classesArray.length - 1];
-        maxNodeDiameter = 2 * firstRightElement.methods.reduce((maxSize, method) => Math.max(maxSize, method.callAmount), 0);
-        maxBranchHeight = stemLength + firstRightElement.totalCallAmount + maxNodeDiameter;
-        ceil = trunkHeight + firstRightElement.totalCallAmount - maxBranchHeight;
-        floors.right.push({
-          ceil: ceil,
-          maxHeight: maxBranchHeight,
-          side: 'right',
-          vertical: 'up',
-        });
-      }
-      for (let i = 1; i < classesArray.length-1; i++ ) {
-        let midIndex = Math.floor(classesArray.length / 2);
-        if (i == midIndex && classesArray.length % 2 != 0) {
-          floors.middle = {
-            ceil: floors.left[i-1].ceil + floors.left[i-1].maxHeight,
-            maxHeight: Infinity,
-            side: 'mid',
-          }
-          continue;
-        }
-        let floorsArray = i < midIndex ? floors.left : floors.right;
-        let classData = i < midIndex ? classesArray[i] : classesArray[classesArray.length - 1 - (i - midIndex)];
-        maxNodeDiameter = 2  * classData.methods.reduce((maxSize, method) => Math.max(maxSize, method.callAmount), 0);
-        maxBranchHeight = stemLength + classData.totalCallAmount + maxNodeDiameter;
-        ceil = floorsArray[i-1 - (i > midIndex ? midIndex : 0)].ceil + floorsArray[i-1 - (i > midIndex ? midIndex : 0)].maxHeight;
-        floorsArray.push({
-          ceil: ceil,
-          maxHeight: maxBranchHeight,
-          side: i < midIndex ? 'left' : 'right',
-          vertical: i < midIndex ? (i % 2 == 0 ? 'up' : 'down') : ((1 + (i - midIndex)) % 2 == 0 ? 'down' : 'up'),
-        });
-      }
-
-      let new_floors = [].concat(floors.left);
-      new_floors.push(floors.middle);
-      new_floors = new_floors.concat(floors.right.reverse());
-      floors = new_floors;
-      const totalCalls = classesArray.reduce((widthSum, element) => widthSum + element.totalCallAmount, 0);
-      let startingPositionX = Math.floor(centerX - totalCalls / 2);
       const branches = [];
-      let currentPositionX = startingPositionX;
-      for (let i = 0; i < floors.length; i++) {
-        const floor = floors[i];
+      const diagramPositioner = new CallVolumeDiagramPositioner(classesArray);
+      for (let i = 0; i < classesArray.length; i++) {
         const classData = classesArray[i];
         const branchData = {
           color: getRandomColor(),
@@ -218,46 +351,29 @@
         const pipes = [
           {
             type: 'rect',
-            startX: currentPositionX,
+            startX: diagramPositioner.trunkX(i),
             startY: marginTop,
-            height: floor.vertical == 'up' ? floor.ceil + floor.maxHeight - classData.totalCallAmount : (floor.side == 'left' ? floors[i-1].ceil + floors[i-1].maxHeight - classesArray[i-1].totalCallAmount : floors[i+1].ceil + floors[i+1].maxHeight -classesArray[i+1].totalCallAmount),
-            width: classData.totalCallAmount,
+            height: diagramPositioner.trunkHeight(i),
+            width: diagramPositioner.pipeWidth(i),
             color: branchData.color,
           },
         ];
         const leaves = [];
-        if (floor.side == 'mid') {
-          continue;
-        }
-
-        let directionX = -1;
-        if (floor.side == 'left') {
-
-          if (i % 2 == 0) {
-            for (let method of methods) {
-
-            }
-          } else {
-
-          }
-        } else {
-          directionX = 1;
-        }
-        const branchStartingPositionX = currentPositionX + (floor.side == 'right' ? (floor.vertical == 'up' ? classData.totalCallAmount : classData.totalCallAmount + classesArray[i+1].totalCallAmount) : 0);
-        const branchStartingPositionY = floor.ceil + (floor.vertical == 'up' ? floor.maxHeight - classData.totalCallAmount : 0);
-        pipes.push({
+       pipes.push({
           type: 'arc',
-          thickness: classData.totalCallAmount,
-          radius: floor.vertical == 'up' ? classData.totalCallAmount : floor.side == 'left' ? classData.totalCallAmount + branches[branches.length-1].pipes[1].radius : classData.totalCallAmount + classesArray[i+1].totalCallAmount,
-          centerX: floor.vertical == 'up' ? branchStartingPositionX : (floor.side == 'left' ? branches[branches.length-1].pipes[1].centerX : pipes[0].startX + pipes[0].width + classesArray[i+1].totalCallAmount),
-          centerY: floor.vertical == 'up' ? floor.ceil + floor.maxHeight - classData.totalCallAmount : (floor.side == 'left' ? floors[i-1].ceil + floors[i-1].maxHeight - classesArray[i-1].totalCallAmount : floors[i+1].ceil + floors[i+1].maxHeight -classesArray[i+1].totalCallAmount),
-          //centerX: floor.vertical == 'up' ? branchStartingPositionX : branches[branches.length-1].pipes[1].centerX,
-          //centerY: floor.vertical == 'up' ? branchStartingPositionY : branches[branches.length-1].pipes[1].centerY,
+          thickness: diagramPositioner.pipeWidth(i),
+          radius: diagramPositioner.trunkAngleRadius(i),
+          centerX: diagramPositioner.trunkAngleCenterX(i),
+          centerY: diagramPositioner.trunkAngleCenterY(i),
           angle: 90,
           color: branchData.color,
-          scaleX: -1 * directionX, // 1 to draw arc to left, -1 to draw to right
+          scaleX: -1 * diagramPositioner.directionX(i), // 1 to draw arc to left, -1 to draw to right
         });
-        currentPositionX = branchStartingPositionX;
+        currentPositionX = diagramPositioner.branchStartX(i);
+        branchStartingPositionY = diagramPositioner.branchStartY(i);
+        let branchStartingPositionX = diagramPositioner.branchStartX(i);
+        let directionX = diagramPositioner.directionX(i);
+        let directionY = diagramPositioner.directionY(i);
         for ( let m = 0; m < methods.length; m++ ) {
           const method = methods[m];
           leaves.push({
@@ -266,32 +382,34 @@
             },
             stem: {
               type: 'rect',
-              startX: currentPositionX + (circleMarginX + method.callAmount + Math.ceil(method.callAmount * 0.25) / 2) * directionX,
-              startY: branchStartingPositionY - (floor.vertical == 'up' ? stemLength : 0) + (floor.vertical == 'down' ? method.callAmount : 0),
-              width: Math.ceil(method.callAmount * 0.25),
-              height: stemLength,
+              startX: currentPositionX + (circleMarginX + diagramPositioner.nodeRadius(i, m) + diagramPositioner.stemWidth(diagramPositioner.nodeRadius(i, m))/2) * diagramPositioner.directionX(i),
+              startY: diagramPositioner.branchStartY(i),
+              width: diagramPositioner.stemWidth(diagramPositioner.nodeRadius(i, m)),
+              height: diagramPositioner.stemLength(diagramPositioner.nodeRadius(i, m)),
               color: branchData.color,
-              scaleX: -1 * directionX,
+              scaleX: -1 * diagramPositioner.directionX(i),
+              scaleY: diagramPositioner.directionY(i),
             },
             node: {
               type: 'circle',
-              centerX: currentPositionX + (circleMarginX + method.callAmount) * directionX,
-              centerY: branchStartingPositionY - (floor.vertical == 'up' ? method.callAmount : -method.callAmount) - (floor.vertical == 'up' ? stemLength : -stemLength) + (floor.vertical == 'down' ? method.callAmount : 0),
+              centerX: currentPositionX + (circleMarginX + diagramPositioner.nodeRadius(i, m)) * diagramPositioner.directionX(i),
+              centerY: diagramPositioner.branchStartY(i) - 0.1 * diagramPositioner.stemLength(i) * diagramPositioner.directionY(i) + (diagramPositioner.nodeRadius(i, m) + diagramPositioner.stemLength(diagramPositioner.nodeRadius(i, m))) * diagramPositioner.directionY(i),
               radius: method.callAmount,
               color: branchData.color,
             },
           });
-          currentPositionX = currentPositionX + (circleMarginX + method.callAmount) * 2 * directionX;
+          currentPositionX = currentPositionX + (circleMarginX + diagramPositioner.nodeRadius(i, m)) * 2 * diagramPositioner.directionX(i);
         }
         currentPositionX = currentPositionX - circleMarginX * directionX;
         pipes.push({
           type: 'rect',
-          startX: branchStartingPositionX,
-          startY: branchStartingPositionY,
+          startX: diagramPositioner.branchStartX(i),
+          startY: diagramPositioner.branchStartY(i),
           width: (currentPositionX - branchStartingPositionX) * directionX,
           height: classData.totalCallAmount,
           color: branchData.color,
-          scaleX: directionX,
+          scaleX: diagramPositioner.directionX(i),
+          scaleY: -1 * diagramPositioner.directionY(i),
         });
         /*pipes.push({
           type: 'arc',
@@ -304,7 +422,7 @@
           scaleX: directionX, // 1 to draw arc to left, -1 to draw to right,
           scaleY: floor.vertical == 'up' ? 1 : -1, // 1 to draw down, -1 to draw up
         });*/
-        currentPositionX = pipes[0].startX + pipes[0].width;
+        //currentPositionX = pipes[0].startX + pipes[0].width;
         branches.push({
           data: branchData,
           pipes: pipes,
@@ -496,7 +614,7 @@
     layer.add(arc);
     layer.add(rect);
     layer.draw();
-    setTimeout(() => { stage.scale({x: 3, y: 3}); stage.batchDraw(); }, 5000);
+    setTimeout(() => { stage.scale({x: 3, y: 3}); stage.batchDraw(); }, 200);
 
 /*
 branches: [
