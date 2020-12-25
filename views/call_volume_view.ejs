@@ -382,7 +382,7 @@
             },
             stem: {
               type: 'rect',
-              startX: currentPositionX + (circleMarginX + diagramPositioner.nodeRadius(i, m) + diagramPositioner.stemWidth(diagramPositioner.nodeRadius(i, m))/2) * diagramPositioner.directionX(i),
+              startX: Math.ceil(currentPositionX + (circleMarginX + diagramPositioner.nodeRadius(i, m) + diagramPositioner.stemWidth(diagramPositioner.nodeRadius(i, m))/2) * diagramPositioner.directionX(i)),
               startY: diagramPositioner.branchStartY(i),
               width: diagramPositioner.stemWidth(diagramPositioner.nodeRadius(i, m)),
               height: diagramPositioner.stemLength(diagramPositioner.nodeRadius(i, m)),
@@ -400,16 +400,27 @@
           });
           currentPositionX = currentPositionX + (circleMarginX + diagramPositioner.nodeRadius(i, m)) * 2 * diagramPositioner.directionX(i);
         }
-        currentPositionX = currentPositionX - circleMarginX * directionX;
+        currentPositionX = Math.ceil(currentPositionX - (circleMarginX + diagramPositioner.nodeRadius(i, methods.length-1) + diagramPositioner.stemWidth(diagramPositioner.nodeRadius(i, methods.length-1))/2) * directionX);
         pipes.push({
           type: 'rect',
           startX: diagramPositioner.branchStartX(i),
           startY: diagramPositioner.branchStartY(i),
           width: (currentPositionX - branchStartingPositionX) * directionX,
-          height: classData.totalCallAmount,
+          height: diagramPositioner.pipeWidth(i),
           color: branchData.color,
           scaleX: diagramPositioner.directionX(i),
           scaleY: -1 * diagramPositioner.directionY(i),
+        });
+        pipes.push({
+          type: 'arc',
+          thickness: diagramPositioner.stemWidth(diagramPositioner.nodeRadius(i, methods.length-1)),
+          radius: diagramPositioner.stemWidth(diagramPositioner.nodeRadius(i, methods.length-1)),
+          centerX: currentPositionX,
+          centerY: diagramPositioner.branchStartY(i),
+          angle: 90,
+          color: branchData.color,
+          scaleX: diagramPositioner.directionX(i), // 1 to draw arc to left, -1 to draw to right
+          scaleY: -(diagramPositioner.pipeWidth(i) / diagramPositioner.stemWidth(diagramPositioner.nodeRadius(i, methods.length-1))) * diagramPositioner.directionY(i),
         });
         /*pipes.push({
           type: 'arc',
