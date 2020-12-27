@@ -85,6 +85,10 @@
         this.branchXCache = new Array(classesArray.length);
         this.trunkXCache = new Array(classesArray.length);
         this.midIndex = Math.floor(classesArray.length / 2);
+        this.stemData = new Array(classesArray.length);
+        for (let i = 0; i < this.stemData.length; i++){
+          this.stemData[i] = new Array(this.stemData.length);
+        }
       }
 
       positionBasedProperty(position, valueForEven, valueForOdd) {
