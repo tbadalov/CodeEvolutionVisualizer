@@ -74,7 +74,7 @@
     const marginTop = 0;
     const trunkHeight = 45; //todo remove and use INITIAL_TRUNK_HEIGHT
     const INITIAL_TRUNK_HEIGHT = 45;
-    const FLOOR_MARGIN_VERTICAL = 20;
+    const FLOOR_MARGIN_VERTICAL = 2;
     const INIT_STEM_LENGTH = 10;
     const floors = [];
 
@@ -212,9 +212,9 @@
 
         if (this.directionY(index) < 0) {
           if (this.directionX(index) < 0) {
-            this.trunkHeightCache[index] = this.trunkHeight(index-2) + this.pipeWidth(index-2) + this.maxBranchHeight(index-1) + FLOOR_MARGIN_VERTICAL;
+            this.trunkHeightCache[index] = this.trunkHeight(index-2) + this.pipeWidth(index-2) + this.maxBranchHeight(index-1) + this.maxBranchHeight(index) + FLOOR_MARGIN_VERTICAL;
           } else if (this.directionX(index) > 0) {
-            this.trunkHeightCache[index] = this.trunkHeight(index+2) + this.pipeWidth(index+2) + this.maxBranchHeight(index+1) + FLOOR_MARGIN_VERTICAL;
+            this.trunkHeightCache[index] = this.trunkHeight(index+2) + this.pipeWidth(index+2) + this.maxBranchHeight(index+1) + this.maxBranchHeight(index) + FLOOR_MARGIN_VERTICAL;
           }
         } else if (this.directionY(index) > 0) {
           if (this.directionX(index) < 0) {
