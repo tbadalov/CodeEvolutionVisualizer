@@ -127,11 +127,20 @@
       nodePosition(classIndex, methodIndex) {
         const stemPosition = this.stemPosition(classIndex, methodIndex);
         if (this.directionY(classIndex) == 0) {
-          return {
-            centerX: stemPosition.startX + stemPosition.width/2,
-            centerY: stemPosition.startY + 0.9 * stemPosition.height + this.nodeRadius(classIndex, methodIndex),
-            radius: this.nodeRadius(classIndex, methodIndex),
-          };
+          if (this.classesArray[classIndex].methods.length == 1) {
+            return {
+              centerX: stemPosition.startX + stemPosition.width/2,
+              centerY: stemPosition.startY + 0.9 * stemPosition.height + this.nodeRadius(classIndex, methodIndex),
+              radius: this.nodeRadius(classIndex, methodIndex),
+            };
+          }
+          if (this.classesArray[classIndex].methods.length > 0) {
+            return {
+              centerX: stemPosition.startX + 0.9 * stemPosition.width * (methodIndex % 2 == 0 ? -1 : 1),
+              centerY: stemPosition.startY + stemPosition.height / 2,
+              radius: this.nodeRadius(classIndex, methodIndex),
+            }
+          }
         }
         return {
           centerX: stemPosition.startX + stemPosition.width / 2 * this.directionX(classIndex),
@@ -144,14 +153,25 @@
         if (this.stemData[classIndex][methodIndex] !== undefined) {
           return this.stemData[classIndex][methodIndex];
         }
+        
         if (methodIndex == 0) {
           if (this.directionX(classIndex) == 0) {
-            this.stemData[classIndex][methodIndex] = {
-              startX: this.branchStartX(classIndex),
-              startY: this.branchStartY(classIndex),
-              width: this.stemWidthFor(classIndex, methodIndex),
-              height: this.stemLengthFor(classIndex, methodIndex),
-            };
+            if (this.classesArray[classIndex].methods.length == 1) {
+              this.stemData[classIndex][methodIndex] = {
+                startX: this.branchStartX(classIndex),
+                startY: this.branchStartY(classIndex),
+                width: this.stemWidthFor(classIndex, methodIndex),
+                height: this.stemLengthFor(classIndex, methodIndex),
+              };
+            } else if (this.classesArray[classIndex].methods.length > 0) {
+              this.stemData[classIndex][methodIndex] = {
+                startX: this.branchStartX(classIndex),
+                startY: this.branchStartY(classIndex),
+                width: this.stemLengthFor(classIndex, methodIndex),
+                height: this.stemWidthFor(classIndex, methodIndex),
+                scaleX: -1,
+              };
+            }
           } else {
             this.stemData[classIndex][methodIndex] = {
               startX: this.branchStartX(classIndex) + (circleMarginX + this.nodeRadius(classIndex, methodIndex)) * this.directionX(classIndex),
@@ -162,15 +182,14 @@
               scaleY: this.directionY(classIndex),
             };
           }
-        } else {
+        } else if (methodIndex > 0) {
           if (this.directionX(classIndex) == 0) {
             this.stemData[classIndex][methodIndex] = {
-              startX: this.branchStartX(classIndex),
-              startY: this.branchStartY(classIndex),
-              width: this.stemWidthFor(classIndex, methodIndex),
-              height: this.stemLengthFor(classIndex, methodIndex),
-              scaleX: this.directionX(classIndex),
-              scaleY: this.directionY(classIndex),
+              startX: this.branchStartX(classIndex) + (methodIndex % 2 == 1 ? + this.pipeWidth(classIndex) : 0),
+              startY: (methodIndex == 1 ? this.stemPosition(classIndex, methodIndex-1).startY + FLOOR_MARGIN_VERTICAL : this.stemPosition(classIndex, methodIndex-2).startY + this.stemPosition(classIndex, methodIndex-2).height/2 + this.nodeRadius(classIndex, methodIndex-2) + FLOOR_MARGIN_VERTICAL + this.nodeRadius(classIndex, methodIndex) - this.stemWidthFor(classIndex, methodIndex)/2.0),
+              width: this.stemLengthFor(classIndex, methodIndex),
+              height: this.stemWidthFor(classIndex, methodIndex),
+              scaleX: methodIndex % 2 == 0 ? -1 : 1,
             };
           } else {
             this.stemData[classIndex][methodIndex] = {
@@ -477,7 +496,28 @@
             },
           });
         }
-        if (diagramPositioner.directionY(i) != 0) {
+        if (diagramPositioner.directionY(i) == 0) {
+          pipes.push({
+            type: 'rect',
+            startX: diagramPositioner.branchStartX(i),
+            startY: diagramPositioner.branchStartY(i),
+            width: diagramPositioner.pipeWidth(i),
+            height: diagramPositioner.stemPosition(i, methods.length-1).startY - diagramPositioner.branchStartY(i),
+            color: branchData.color,
+            scaleY: 1,
+          });
+          pipes.push({
+            type: 'arc',
+            thickness: diagramPositioner.stemWidthFor(i, methods.length-1),
+            radius: diagramPositioner.stemWidthFor(i, methods.length-1),
+            centerX: diagramPositioner.stemPosition(i, methods.length-1).startX,
+            centerY: diagramPositioner.stemPosition(i, methods.length-1).startY,
+            angle: 90,
+            color: branchData.color,
+            scaleX: -1 * ((methods.length-1) % 2 == 0 ? -1 : 1) * (diagramPositioner.pipeWidth(i) / diagramPositioner.stemWidth(diagramPositioner.nodeRadius(i, methods.length-1))), // 1 to draw arc to left, -1 to draw to right
+            scaleY: 1,
+          });
+        } else {
           pipes.push({
             type: 'arc',
             thickness: diagramPositioner.pipeWidth(i),
