@@ -166,7 +166,7 @@
             } else if (this.classesArray[classIndex].methods.length > 0) {
               this.stemData[classIndex][methodIndex] = {
                 startX: this.branchStartX(classIndex),
-                startY: this.branchStartY(classIndex),
+                startY: this.branchStartY(classIndex) + this.nodeRadius(classIndex, methodIndex),
                 width: this.stemLengthFor(classIndex, methodIndex),
                 height: this.stemWidthFor(classIndex, methodIndex),
                 scaleX: -1,
