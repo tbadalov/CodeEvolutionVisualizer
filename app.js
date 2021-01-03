@@ -15,6 +15,10 @@ var callVolumeViewRouter = require('./routes/call_volume_view');
 var classOverviewViewRouter = require('./routes/class_overview_view');
 
 var app = express();
+if (app.get('env') == 'development') {
+  const cors = require('cors');
+  app.use(cors());
+}
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));

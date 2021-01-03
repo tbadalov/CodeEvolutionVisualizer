@@ -4,7 +4,8 @@
   "description": "",
   "private": true,
   "scripts": {
-    "start": "node ./bin/www",
+    "start-server": "node ./bin/www",
+    "dev:start-ui": "./node_modules/.bin/webpack serve --mode development",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
