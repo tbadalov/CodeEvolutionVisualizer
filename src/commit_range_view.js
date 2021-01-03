@@ -65,7 +65,21 @@ class CommitRangeView extends React.Component {
   render() {
     return(
       <div className="diagram">
-        <canvas className="diagram-canvas" ref={this.canvasRef} />
+        <canvas
+          className="diagram-canvas"
+          ref={this.canvasRef}
+          onClick={() => {
+            this.props.changeDiagram(
+              'classOverviewView',
+              {
+                className: 'BrewViewController',
+                branch: 'master',
+                startVersion: 5,
+                endVersion: 20,
+              }
+            )
+          }}
+        />
       </div>
     );
   }

@@ -1,5 +1,6 @@
 const uiConfig = require('./ui_config');
 const CommitRangeView = require('./commit_range_view');
+const ClassOverviewView = require('./class_overview_view');
 const React = require('react');
 const ReactDOM = require('react-dom');
 const diagramStyle = require('./css/diagram.css');
@@ -9,13 +10,14 @@ class App extends React.Component {
     super()
     this.diagrams = {
       commitRangeView: CommitRangeView,
+      classOverviewView: ClassOverviewView,
     }
     this.state = {
       currentDiagram: 'commitRangeView',
       data: {
         diagramData: {
           props: {},
-          changeDiagram: this.changeDiagram,
+          changeDiagram: this.changeDiagram.bind(this),
         },
       },
     }
