@@ -50,10 +50,6 @@ function configCanvasSize(canvas) {
 class CommitRangeView extends React.Component {
   constructor(props) {
     super(props);
-    console.log(props);
-    this.state = {
-      url: props.url,
-    };
     this.canvasRef = React.createRef();
   }
 
@@ -61,7 +57,7 @@ class CommitRangeView extends React.Component {
     const canvas = this.canvasRef.current;
     const canvasContext = canvas.getContext('2d');
     configCanvasSize(canvas);
-    loadData(this.state.url)
+    loadData(this.props.url)
       .then(draw.bind(null, canvasContext))
       .catch((error) => console.log(error));
   }
