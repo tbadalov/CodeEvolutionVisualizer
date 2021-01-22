@@ -247,6 +247,17 @@ class CommitRangeView extends React.Component {
         return data;
       })
       .then(draw.bind(null, stage, chartLayer, axisLayer))
+      .then(() => {
+        const items = [];
+        for (let className in classNameColorMapping) {
+          items.push({
+            label: className,
+            color: classNameColorMapping[className].color,
+            checked: true,
+          });
+        }
+        this.props.onReady({items});
+      })
       .catch((error) => console.log(error));
 
     function repositionStage() {

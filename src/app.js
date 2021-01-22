@@ -1,5 +1,5 @@
 const uiConfig = require('./ui_config');
-const CommitRangeView = require('./commit_range_view');
+const CommitRangeView = require('./commit_range_full');
 const ClassOverviewView = require('./class_overview_view');
 const React = require('react');
 const ReactDOM = require('react-dom');
@@ -32,15 +32,7 @@ class App extends React.Component {
   render() {
     const Diagram = this.diagrams[this.state.currentDiagram];
     return(
-      <div id="container">
-        <div id="flexbox">
-          <div id="leftMenu">
-          </div>
-          <div id="rightMenu">
-            <Diagram url={uiConfig[this.state.currentDiagram].apiUrl} {...this.state.data.diagramData} />
-          </div>
-        </div>
-      </div>
+      <Diagram url={uiConfig[this.state.currentDiagram].apiUrl} {...this.state.data.diagramData} />
     );
   }
 }

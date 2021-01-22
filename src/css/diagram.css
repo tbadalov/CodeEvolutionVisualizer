@@ -2,3 +2,27 @@
   width: 100%;
   height: 100%;
 }
+
+/* new stuff added below */
+
+.minu-container div {
+}
+
+.minu-container {
+  display: flex;
+  overflow: hidden;
+  height: 100vh;
+}
+
+.box-1 {
+  flex: 1;
+  max-width: 25%;
+  min-width: 20%;
+  border-right: 1px solid #000;
+  overflow: auto;
+}
+
+.box-2 {
+  flex: 2;
+  overflow: hidden;
+}
