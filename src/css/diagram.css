@@ -5,9 +5,6 @@
 
 /* new stuff added below */
 
-.minu-container div {
-}
-
 .minu-container {
   display: flex;
   overflow: hidden;
