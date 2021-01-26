@@ -1,5 +1,6 @@
 const React = require('react');
 const Konva = require('konva');
+const BarDataManager = require('./bar_data_manager');
 
 const BAR_WIDTH = 30;
 const BAR_PADDING = 2;
@@ -9,6 +10,7 @@ const Y_AXIS_LINE_WIDTH = 6;
 const LABEL_HEIGHT = 40;
 const BAR_BOTTOM_MARGIN = LABEL_HEIGHT + 5;
 const PADDING = 250;
+const EMPTY_SPACE_TOP_PERCENTAGE = 10;
 
 const classNameColorMapping = {};
 let lastDx = 0;
@@ -40,21 +42,12 @@ function drawLabel(layer, label) {
   }));
 }
 
-function getRandomColor() {
-  var letters = '0123456789ABCDEF';
-  var color = '#';
-  for (var i = 0; i < 6; i++) {
-    color += letters[Math.floor(Math.random() * 16)];
-  }
-  return color;
-}
-
 function drawBar(layer, bar, order) {
   for (let i = 0; i < bar.stack.length; i++) {
     const stack = bar.stack[i];
     drawStack(layer, stack);
-    drawLabel(layer, bar.label);
   }
+  drawLabel(layer, bar.label);
 }
 
 function drawAxis(layer, axis) {
@@ -73,10 +66,12 @@ function drawAxis(layer, axis) {
     layer.add(new Konva.Text({
       text: segment.label,
       x: segment.x - 20,
-      y: segment.y,
+      y: segment.y-6,
     }));
   }
 }
+
+
 
 function convertToViewData(commitsData, stageHeight) {
   const data = {
@@ -98,11 +93,11 @@ function convertToViewData(commitsData, stageHeight) {
       width: 10,
       height: 4,
       scaleY: -1,
-      label: Math.floor(i * largestCommitSize / 5),
-      full: '#000000',
+      label: Math.floor(i * (largestCommitSize + Math.ceil(EMPTY_SPACE_TOP_PERCENTAGE / 100.0 * largestCommitSize)) / 5),
+      fill: '#000000',
     })
   }
-  const heightPerLine = stageHeight / largestCommitSize;
+  const heightPerLine = stageHeight / (largestCommitSize + Math.ceil(EMPTY_SPACE_TOP_PERCENTAGE / 100.0 * largestCommitSize));
 
   for (let i = 0; i < commitsData.commits.length; i++) {
     const commit = commitsData.commits[i];
@@ -162,13 +157,17 @@ function convertToViewData(commitsData, stageHeight) {
   return data;
 }
 
-function draw(stage, chartLayer, axisLayer, visualData) {
-  drawAxis(axisLayer, visualData.axis);
-  axisLayer.draw();
-  //window.layer = layer;
+function draw(stage, chartLayer, axisLayer, visualData, skipAxis) {
+  if (!skipAxis) {
+    drawAxis(axisLayer, visualData.axis);
+    axisLayer.draw();
+  }
+  window.layer = chartLayer;
   window.stage = stage;
   window.Konva = Konva;
   visualData.bars.forEach((bar, index) => {
+    //const barGroup = new Konva.Group();
+    //chartLayer.add(barGroup);
     drawBar(chartLayer, bar, index);
   });
   chartLayer.draw();
@@ -195,6 +194,16 @@ function calcStageWidth(data) {
   return BAR_LAYER_LEFT_MARGIN + data.commits.length * (BAR_WIDTH + BAR_PADDING);
 }
 
+function barsByRange(xStart, xEnd, visualData) {
+  const startBarIndex = Math.floor(Math.max(0, (xStart - BAR_LAYER_LEFT_MARGIN)) / (BAR_PADDING + BAR_WIDTH));
+  const endBarIndex = Math.ceil(Math.max(0, (xEnd - BAR_LAYER_LEFT_MARGIN)) / (BAR_PADDING + BAR_WIDTH));
+  return visualData.bars.slice(startBarIndex, endBarIndex);
+}
+
+function barByCoordinate(x, y, visualData) {
+  const barIndex = Math.floor(Math.max(0, (x - BAR_LAYER_LEFT_MARGIN)) / (BAR_PADDING + BAR_WIDTH));
+}
+
 class CommitRangeView extends React.Component {
   constructor(props) {
     super(props);
@@ -204,103 +213,65 @@ class CommitRangeView extends React.Component {
   }
 
   componentDidMount() {
-    const scaleBy = 1.02;
+    console.log("mounting....")
     const diagramContainer = this.diagramContainerRef.current;
     const scrollContainer = this.scrollContainer.current;
     const largeContainer = this.largeContainer.current;
-    console.log("stage height = " + (scrollContainer.parentElement.clientHeight ));
-    console.log(scrollContainer.offsetHeight);
-    console.log(scrollContainer.clientHeight);
+
     const stage = new Konva.Stage({
       container: diagramContainer,
       width: scrollContainer.parentElement.clientWidth + PADDING * 2,
       height: scrollContainer.parentElement.clientHeight,
     });
-    window.stage = stage;
-    stage.x(-PADDING);
+    stage.x(-PADDING); // make a room for padding
     const axisLayer = new Konva.Layer({
-      x: PADDING,
+      x: PADDING, // since stage starts counting from -PADDING, we need to start from PADDING, so that visually we start from 0 but have PADDING amount of empty space in the left
     });
     const chartLayer = new Konva.Layer({
-      x: Y_AXIS_WIDTH+PADDING,
+      x: PADDING+Y_AXIS_WIDTH,
     });
     stage.add(chartLayer);
     stage.add(axisLayer);
-    loadData(this.props.url)
-      .then(data => {
-        return { commits: data.commits.concat(data.commits).concat(data.commits) };
-      })
-      .then(data => {
-        console.log(data);
-        const stageWidth = calcStageWidth(data);
-        console.log("stageWidth=" + stageWidth);
-        largeContainer.style.width = (stageWidth+Y_AXIS_WIDTH) + 'px';
-        const scrollbarHeight = scrollContainer.offsetHeight - scrollContainer.clientHeight;
-        console.log(scrollbarHeight);
-        largeContainer.style.height = scrollContainer.clientHeight + 'px';
-        stage.height(scrollContainer.clientHeight);
-        return data;
-      })
-      .then(data => convertToViewData(data, stage.height()-BAR_BOTTOM_MARGIN))
-      .then(data => {
-        data.bars = data.bars.concat(data.bars).concat(data.bars);
-        return data;
-      })
-      .then(draw.bind(null, stage, chartLayer, axisLayer))
-      .then(() => {
-        const items = [];
-        for (let className in classNameColorMapping) {
-          items.push({
-            label: className,
-            color: classNameColorMapping[className].color,
-            checked: true,
-          });
-        }
-        this.props.onReady({items});
-      })
-      .catch((error) => console.log(error));
+    this.stageData = {
+      stage,
+      axisLayer,
+      chartLayer,
+    };
+  }
 
-    function repositionStage() {
-      const currentTimestamp = Date.now();
-      lastTimestamp = currentTimestamp;
+  componentDidUpdate() {
+    console.log("updating...")
+    const diagramContainer = this.diagramContainerRef.current;
+    const scrollContainer = this.scrollContainer.current;
+    const largeContainer = this.largeContainer.current;
+    this.barDataManager = new BarDataManager(this.props.data, largeContainer);
+
+    const stage = this.stageData.stage;
+    const chartLayer = this.stageData.chartLayer;
+    const axisLayer = this.stageData.axisLayer;
+    const stageWidth = this.barDataManager.calculateStageWidth();
+    largeContainer.style.width = (stageWidth+Y_AXIS_WIDTH) + 'px';
+    //height should be assigned after width because of appearing scrollbar
+    largeContainer.style.height = scrollContainer.clientHeight + 'px';
+    stage.height(this.barDataManager.calculateStageHeight());
+
+    function repositionStage(barDataManager) {
       var dx = scrollContainer.scrollLeft
       var dy = 0;
+      chartLayer.destroyChildren();
+      const visualData = barDataManager.dataFromRange(dx-PADDING, dx+scrollContainer.clientWidth+PADDING);
+      const axis = barDataManager.axisData();
+      console.log(visualData);
       stage.container().style.transform = 'translate(' + dx + 'px, ' + dy + 'px)';
-      stage.x(-PADDING);
-      chartLayer.x(-dx + PADDING+Y_AXIS_WIDTH);
+      //console.log(bars);
+      chartLayer.x(PADDING+Y_AXIS_WIDTH-dx);
+      draw(stage, chartLayer, axisLayer, { axis: axis, bars: visualData.bars }, false);
       //stage.y(-dy);
       chartLayer.draw();
     }
-    /*stage.on('wheel', (e) => {
-      console.log(e);
-      if (Math.abs(e.evt.deltaX) > 0) {
-        return;
-      }
-      e.evt.preventDefault();
-      var oldScale = stage.scaleX();
 
-      var pointer = stage.getPointerPosition();
-
-      var mousePointTo = {
-        x: (pointer.x - stage.x()) / oldScale,
-        y: (pointer.y - stage.y()) / oldScale,
-      };
-
-      var newScale =
-        e.evt.deltaY > 0 ? oldScale * scaleBy : oldScale / scaleBy;
-
-      stage.scale({ x: newScale, y: newScale });
-
-      var newPos = {
-        x: pointer.x - mousePointTo.x * newScale,
-        y: pointer.y - mousePointTo.y * newScale,
-      };
-      stage.position(newPos);
-      stage.batchDraw();
-    });*/
-    scrollContainer.addEventListener('scroll', repositionStage);
-    repositionStage();
-    
+    scrollContainer.addEventListener('scroll', () => repositionStage(this.barDataManager));
+    repositionStage(this.barDataManager);
   }
 
   render() {
