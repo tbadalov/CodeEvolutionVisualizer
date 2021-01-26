@@ -20,14 +20,14 @@ class CommitDataManager {
     this.rawData.commits
       .flatMap(commit => commit.changedClasses)
       .map(changedClass => changedClass.className)
-      .forEach(this.disable);
+      .forEach(className => this.disable(className));
   }
 
   enableAll() {
     this.rawData.commits
       .flatMap(commit => commit.changedClasses)
       .map(changedClass => changedClass.className)
-      .forEach(this.enable);
+      .forEach(className => this.enable(className));
   }
 
   getRawCommits() {

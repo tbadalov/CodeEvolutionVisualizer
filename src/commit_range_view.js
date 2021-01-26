@@ -43,11 +43,13 @@ function drawLabel(layer, label) {
 }
 
 function drawBar(layer, bar, order) {
+  const barGroup = new Konva.Group();
+  layer.add(barGroup);
   for (let i = 0; i < bar.stack.length; i++) {
     const stack = bar.stack[i];
-    drawStack(layer, stack);
+    drawStack(barGroup, stack);
   }
-  drawLabel(layer, bar.label);
+  drawLabel(barGroup, bar.label);
 }
 
 function drawAxis(layer, axis) {
@@ -204,6 +206,20 @@ function barByCoordinate(x, y, visualData) {
   const barIndex = Math.floor(Math.max(0, (x - BAR_LAYER_LEFT_MARGIN)) / (BAR_PADDING + BAR_WIDTH));
 }
 
+function repositionStage(barDataManager, stageData, containers) {
+  var dx = containers.scrollContainer.scrollLeft
+  var dy = 0;
+  stageData.chartLayer.destroyChildren();
+  const visualData = barDataManager.dataFromRange(dx-PADDING, dx+containers.scrollContainer.clientWidth+PADDING);
+  const axis = barDataManager.axisData();
+  //console.log(visualData);
+  stageData.stage.container().style.transform = 'translate(' + dx + 'px, ' + dy + 'px)';
+  //console.log(bars);
+  stageData.chartLayer.x(PADDING+Y_AXIS_WIDTH-dx);
+  draw(stageData.stage, stageData.chartLayer, stageData.axisLayer, { axis: axis, bars: visualData.bars }, false);
+  //stage.y(-dy);
+}
+
 class CommitRangeView extends React.Component {
   constructor(props) {
     super(props);
@@ -217,6 +233,11 @@ class CommitRangeView extends React.Component {
     const diagramContainer = this.diagramContainerRef.current;
     const scrollContainer = this.scrollContainer.current;
     const largeContainer = this.largeContainer.current;
+    this.containers = {
+      diagramContainer,
+      scrollContainer,
+      largeContainer,
+    };
 
     const stage = new Konva.Stage({
       container: diagramContainer,
@@ -237,6 +258,7 @@ class CommitRangeView extends React.Component {
       axisLayer,
       chartLayer,
     };
+    scrollContainer.addEventListener('scroll', () => repositionStage(this.barDataManager, this.stageData, this.containers));
   }
 
   componentDidUpdate() {
@@ -244,7 +266,8 @@ class CommitRangeView extends React.Component {
     const diagramContainer = this.diagramContainerRef.current;
     const scrollContainer = this.scrollContainer.current;
     const largeContainer = this.largeContainer.current;
-    this.barDataManager = new BarDataManager(this.props.data, largeContainer);
+    this.barDataManager = new BarDataManager(this.props.data, this.props.classToColorMapping, largeContainer);
+    Object.keys(this.props.disabledClasses).forEach(className => this.barDataManager.disable(className));
 
     const stage = this.stageData.stage;
     const chartLayer = this.stageData.chartLayer;
@@ -254,24 +277,8 @@ class CommitRangeView extends React.Component {
     //height should be assigned after width because of appearing scrollbar
     largeContainer.style.height = scrollContainer.clientHeight + 'px';
     stage.height(this.barDataManager.calculateStageHeight());
-
-    function repositionStage(barDataManager) {
-      var dx = scrollContainer.scrollLeft
-      var dy = 0;
-      chartLayer.destroyChildren();
-      const visualData = barDataManager.dataFromRange(dx-PADDING, dx+scrollContainer.clientWidth+PADDING);
-      const axis = barDataManager.axisData();
-      console.log(visualData);
-      stage.container().style.transform = 'translate(' + dx + 'px, ' + dy + 'px)';
-      //console.log(bars);
-      chartLayer.x(PADDING+Y_AXIS_WIDTH-dx);
-      draw(stage, chartLayer, axisLayer, { axis: axis, bars: visualData.bars }, false);
-      //stage.y(-dy);
-      chartLayer.draw();
-    }
-
-    scrollContainer.addEventListener('scroll', () => repositionStage(this.barDataManager));
-    repositionStage(this.barDataManager);
+    
+    repositionStage(this.barDataManager, this.stageData, this.containers);
   }
 
   render() {

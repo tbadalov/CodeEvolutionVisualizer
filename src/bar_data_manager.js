@@ -11,20 +11,10 @@ const PADDING = 250;
 const EMPTY_SPACE_TOP_PERCENTAGE = 10;
 const AXIS_SEGMENT_COUNT = 5;
 
-const classNameColorMapping = {};
-
-function getRandomColor() {
-  var letters = '0123456789ABCDEF';
-  var color = '#';
-  for (var i = 0; i < 6; i++) {
-    color += letters[Math.floor(Math.random() * 16)];
-  }
-  return color;
-}
-
 class BarDataManager {
-  constructor(rawData, containerDomElement) {
+  constructor(rawData, classToColorMapping, containerDomElement) {
     this.commitDataManager = new CommitDataManager(rawData);
+    this.classToColorMapping = classToColorMapping;
     this.containerDomElement = containerDomElement;
     this.largestCommitSize = this.commitDataManager.getRawCommits().reduce((max, commit) => Math.max(max, commit.totalChangedLinesCount), 0);
     this.zoomValueY = 1.0;
@@ -103,61 +93,57 @@ class BarDataManager {
       })
     }*/
     const heightPerLine = this.calculateStageHeight() / (this.largestCommitSize + Math.ceil(EMPTY_SPACE_TOP_PERCENTAGE / 100.0 * this.largestCommitSize));
-    
-    const bars = this.commitDataManager.getRawCommits()
-      .slice(startBarIndex, endBarIndex)
-      .map((commit, index) => {
-        const barY = this.calculateStageHeight()-BAR_BOTTOM_MARGIN;
-        const barX = BAR_LAYER_LEFT_MARGIN + (startBarIndex + index) * (BAR_PADDING + BAR_WIDTH);
-        const barWidth = BAR_WIDTH;
+    const commits = this.commitDataManager.getRawCommits();
+    const bars = [];
+    for (let index = startBarIndex; index <= endBarIndex; index++) {
+      const commit = commits[index];
+      const barY = this.calculateStageHeight()-BAR_BOTTOM_MARGIN;
+      const barX = BAR_LAYER_LEFT_MARGIN + (index) * (BAR_PADDING + BAR_WIDTH);
+      const barWidth = BAR_WIDTH;
 
-        const stack = [];
-        let currentStackHeight = 0;
-        for (let j = 0; j < commit.changedClasses.length; j++) {
-          const changedClass = commit.changedClasses[j];
+      const stack = [];
+      let currentStackHeight = 0;
+      for (let j = 0; j < commit.changedClasses.length; j++) {
+        const changedClass = commit.changedClasses[j];
 
-          if (this.commitDataManager.isClassDisabled(changedClass.className)) {
-            continue;
-          }
-
-          if (!classNameColorMapping[changedClass.className]) {
-            classNameColorMapping[changedClass.className] = { color: getRandomColor() };
-          }
-
-          const stackX = barX;
-          const stackY = barY - currentStackHeight;
-          const stackHeight = changedClass.changedLinesCount * heightPerLine;
-          const stackWidth = barWidth;
-          const stackColor = classNameColorMapping[changedClass.className].color;
-          stack.push({
-            x: stackX,
-            y: stackY,
-            height: stackHeight,
-            width: stackWidth,
-            color: stackColor,
-            scaleY: -1,
-          });
-          currentStackHeight += stackHeight;
+        if (this.commitDataManager.isClassDisabled(changedClass.className)) {
+          continue;
         }
 
-        const barHeight = currentStackHeight * heightPerLine;
+        const stackX = barX;
+        const stackY = barY - currentStackHeight;
+        const stackHeight = changedClass.changedLinesCount * heightPerLine;
+        const stackWidth = barWidth;
+        const stackColor = this.classToColorMapping[changedClass.className];
+        stack.push({
+          x: stackX,
+          y: stackY,
+          height: stackHeight,
+          width: stackWidth,
+          color: stackColor,
+          scaleY: -1,
+        });
+        currentStackHeight += stackHeight;
+      }
 
-        const label = {
-          text: commit.commitHash.substr(0, Math.min(commit.commitHash.length, 7)),
-          rotation: -45,
-          x: barX-15,
-          y: barY + 35,
-        }
+      const barHeight = currentStackHeight * heightPerLine;
 
-        return {
-          x: barX,
-          y: barY,
-          height: barHeight,
-          width: barWidth,
-          label: label,
-          stack: stack,
-        }
+      const label = {
+        text: commit.commitHash.substr(0, Math.min(commit.commitHash.length, 7)),
+        rotation: -45,
+        x: barX-15,
+        y: barY + 35,
+      }
+
+      bars.push({
+        x: barX,
+        y: barY,
+        height: barHeight,
+        width: barWidth,
+        label: label,
+        stack: stack,
       });
+    }
     return {
       bars: bars,
     };

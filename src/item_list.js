@@ -2,21 +2,19 @@ const React = require('react');
 const ColorfulCheckbox = require('./colorful_checkbox');
 const itemListStyle = require('./css/item_list.css');
 
-
 class ItemList extends React.Component {
   constructor(props) {
     super(props);
   }
 
   render() {
-    const items = (this.props.items || []).map(item => {
-      console.log("opana");
+    const items = (this.props.items || []).map((item, index) => {
       return(
-      <li>
-        <ColorfulCheckbox label={item.label} color={item.color} checked={item.checked}/>
+      <li key={index}>
+        <ColorfulCheckbox label={item.label} color={item.color} checked={item.checked} onChange={() => this.props.onItemChange(index)}/>
       </li>);
     });
-    console.log(items);
+
     return(
       <div className="minu-menu">
         <div className="item-list">
