@@ -1,0 +1,28 @@
+.colorful-checkbox p {
+  line-height: 20px;
+  font-size: 20px;
+  display: inline;
+}
+
+.colorful-checkbox > input[type="checkbox"] + label {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  /*border: 2px solid #bcbcbc;*/
+  border-radius: 2px;
+  cursor: pointer;
+  line-height: 20px;
+  margin-right: 10px;
+}
+
+.colorful-checkbox > input[type="checkbox"]:checked + label:after {
+  position: relative;
+  top: -4px;
+  left: 2px;
+  content: '\2714';
+  line-height: 20px;
+}
+
+.colorful-checkbox > input[type="checkbox"] {
+  display: none;
+}
