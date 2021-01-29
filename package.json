@@ -45,6 +45,8 @@
     "cors": "^2.8.5",
     "css-loader": "^5.0.1",
     "html-webpack-plugin": "^4.5.0",
+    "less": "^4.1.0",
+    "less-loader": "^7.3.0",
     "style-loader": "^2.0.0",
     "ts-loader": "^8.0.14",
     "webpack": "^5.11.1",
