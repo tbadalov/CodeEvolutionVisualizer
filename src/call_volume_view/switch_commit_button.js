@@ -1,9 +1,27 @@
 const React = require('react');
 const switchCommitButtonStyle = require('./css/switch_commit_button.less');
 
+function onKeyboardArrowPress(event) {
+  if (event.key == 'ArrowLeft' || event.key == 'ArrowRight') {
+    console.log(this.props.direction);
+    this.props.onSwitchCommitButtonClick(this.props.direction);
+  }
+}
+
 class SwitchCommitButton extends React.PureComponent {
   constructor(props) {
     super(props);
+    this.state = {
+      onKeyboardArrowPressListener: onKeyboardArrowPress.bind(this),
+    };
+  }
+
+  componentDidMount() {
+    document.addEventListener('keydown', this.state.onKeyboardArrowPressListener);
+  }
+
+  componentWillUnmount() {
+    document.removeEventListener('keydown', this.state.onKeyboardArrowPressListener);
   }
 
   render() {
