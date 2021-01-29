@@ -1,0 +1,73 @@
+@circle-size: 100px;
+@outside-circle-size: @circle-size + 10px;
+@outside-circle-border: 2px;
+@outside-circle-margin: ((@outside-circle-size / 2) + @outside-circle-border) * -1;
+@button-absolute-horizontal-margin: 5%;
+@button-absolute-vertical-margin: 50vh;
+
+.switch-commit-button {
+  text-align: center;
+  text-transform: uppercase;
+  text-decoration: none;
+  font-size: 60px;
+  font-weight: 100;
+  font-family: "Segoe UI";
+  letter-spacing: 1px;
+  position: absolute;
+  top: calc(@button-absolute-vertical-margin - @circle-size / 2);
+  opacity: 0.5;
+
+  &:hover {
+    opacity: 1;
+  }
+
+  &:before{
+    border-radius: @circle-size;
+    border: @outside-circle-border solid #468cdc;
+    box-shadow: 0 0 15px rgba(0, 255, 204, 0.15), 0 0 15px rgba(0, 255, 204, 0.15) inset;
+    content: "";
+    display: block;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    height: @outside-circle-size;
+    width: @outside-circle-size;
+    margin-left: @outside-circle-margin;
+    margin-top: @outside-circle-margin;    
+    opacity: 1;
+    transform: scale(1);
+    transition: all 300ms;
+  }
+  
+  &:hover:before{
+    transform: scale(1.05);
+  }
+  
+  &.switch-commit-button-circle {
+    background: #23466e;
+    border: none;
+    border-radius: 900px;
+    color: #e4ecfa;
+    cursor: pointer;
+    display: block;
+    width: @circle-size;
+    height: @circle-size;  
+    line-height: @circle-size;
+    margin: auto;
+    margin-top: 25px;
+    transition: 0.5s;
+    
+    &:hover {
+      background: #3e70aa;
+      padding: -2px;
+    }
+  }
+}
+
+.prev-commit-button {
+  left: @button-absolute-horizontal-margin;
+}
+
+.next-commit-button {
+  right: @button-absolute-horizontal-margin;
+}

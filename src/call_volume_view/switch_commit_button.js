@@ -10,9 +10,9 @@ class SwitchCommitButton extends React.PureComponent {
     const direction = this.props.direction;
     const classNames = [ "switch-commit-button", "switch-commit-button-circle" ];
     if (direction == 'prev') {
-      classNames.append("prev-commit-button");
+      classNames.push("prev-commit-button");
     } else if (direction == 'next' ) {
-      classNames.append("next-commit-button");
+      classNames.push("next-commit-button");
     };
 
     return(
