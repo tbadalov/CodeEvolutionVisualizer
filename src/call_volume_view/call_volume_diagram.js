@@ -1,6 +1,7 @@
 const React = require('react');
 const CallVolumeDiagramPositioner = require('./call_volume_diagram_positioner');
 const SwitchCommitButton = require('./switch_commit_button');
+const PlayButton = require('./buttons/play_button');
 
 const scale = 5;
 const circleMarginX = 6;
@@ -349,7 +350,6 @@ class CallVolumeView extends React.Component {
 
     var layer = new Konva.Layer();
     stage.add(layer);
-
     drawBranches(layer, branchesVisualData);
     stage.scale({x: 3, y: 3});
     layer.draw();
@@ -374,6 +374,7 @@ class CallVolumeView extends React.Component {
         </div>
         <SwitchCommitButton direction='prev' />
         <SwitchCommitButton direction='next' />
+        <PlayButton />
       </div>
     );
   }
