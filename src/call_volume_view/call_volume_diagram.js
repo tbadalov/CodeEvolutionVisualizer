@@ -1,6 +1,6 @@
 const React = require('react');
 const CallVolumeDiagramPositioner = require('./call_volume_diagram_positioner');
-const SwitchCommitButton = require('./switch_commit_button');
+const SwitchCommitButton = require('./buttons/switch_commit_button');
 const PlayButton = require('./buttons/play_button');
 
 const scale = 5;
