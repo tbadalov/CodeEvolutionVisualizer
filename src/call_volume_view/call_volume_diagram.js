@@ -1,5 +1,6 @@
 const React = require('react');
 const CallVolumeDiagramPositioner = require('./call_volume_diagram_positioner');
+const SwitchCommitButton = require('./switch_commit_button');
 
 const scale = 5;
 const circleMarginX = 6;
@@ -326,8 +327,6 @@ class CallVolumeView extends React.Component {
   }
 
   componentDidMount() {
-    console.log("props");
-    console.log(this.props);
     const stage = new Konva.Stage({
       container: this.diagramContainerRef.current,
       width: width,
@@ -350,27 +349,9 @@ class CallVolumeView extends React.Component {
 
     var layer = new Konva.Layer();
     stage.add(layer);
-    var arc = new Konva.Arc({
-        x: 10,
-        y: 0,
-        innerRadius: 5,
-        outerRadius: 10,
-        angle: 90,
-        scaleX: -1, // 1 to draw arc to left (default), -1 to draw to right
-        fill: 'blue'
-      });
-      var rect = new Konva.Rect({
-        x: 100,
-        y: 100,
-        width: 100,
-        height: 50,
-        scaleX: -1, //1 to draw rect to right (default), -1 to draw rect to left
-        fill: 'blue'
-      });
+
     drawBranches(layer, branchesVisualData);
     stage.scale({x: 3, y: 3});
-    layer.add(arc);
-    layer.add(rect);
     layer.draw();
   }
 
@@ -391,6 +372,8 @@ class CallVolumeView extends React.Component {
             ref={this.diagramContainerRef} >
           </div>
         </div>
+        <SwitchCommitButton direction='prev' />
+        <SwitchCommitButton direction='next' />
       </div>
     );
   }
