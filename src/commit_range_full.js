@@ -115,13 +115,21 @@ class CommitRangeViewFull extends React.Component {
     return(
       <div className="minu-container">
         <div className="box-1">
+          <div class="select">
+            <select name="slct" id="slct">
+              <option value="1" selected="selected">master</option>
+              <option value="2">dev</option>
+              <option value="3">feature1</option>
+            </select>
+          </div>
           <ItemList items={this.state.items} onItemChange={this.handleItemClick.bind(this)} />
         </div>
         <div className="box-2">
           <CommitRangeView
             data={this.state.data}
             disabledClasses={this.state.disabledClasses}
-            classToColorMapping={this.state.classToColorMapping} />
+            classToColorMapping={this.state.classToColorMapping}
+            onDiagramChange={this.props.changeDiagram} />
         </div>
       </div>
     );
