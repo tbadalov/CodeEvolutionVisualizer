@@ -76,6 +76,7 @@ class CallVolumeDiagram extends React.Component {
     largeContainer.style.height = this.scrollContainerRef.current.clientHeight + 'px';
     const stage = new Konva.Stage({
       container: this.diagramContainerRef.current,
+      draggable: true,
       scale: {
         x: 3,
         y: 3,
