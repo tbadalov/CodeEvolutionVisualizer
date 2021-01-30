@@ -8,7 +8,6 @@ const stemLength = 10;
 const stemWidth = 6;
 var width = 1600;
 var height = 1000;
-const centerX = width / 5;
 const centerY = 0;
 const marginTop = 0;
 const trunkHeight = 45; //todo remove and use INITIAL_TRUNK_HEIGHT
@@ -18,13 +17,14 @@ const INIT_STEM_LENGTH = 10;
 const floors = [];
 
 class CallVolumeDiagramPositioner {
-  constructor(classesArray) {
+  constructor(classesArray, stageSize) {
     this.classesArray = classesArray;
     this.trunkHeightCache = new Array(classesArray.length);
     this.branchXCache = new Array(classesArray.length);
     this.trunkXCache = new Array(classesArray.length);
     this.midIndex = Math.floor(classesArray.length / 2);
     this.stemData = new Array(classesArray.length);
+    this.centerX = stageSize.width / 2;
     for (let i = 0; i < this.stemData.length; i++){
       this.stemData[i] = new Array(this.stemData.length);
     }
@@ -218,7 +218,7 @@ class CallVolumeDiagramPositioner {
     }
 
     if (index == 0) {
-      this.trunkXCache[index] = Math.floor(centerX - this.classesArray.reduce((sum, classData, classIndex) => sum + this.pipeWidth(classIndex), 0) / 2);
+      this.trunkXCache[index] = Math.floor(this.centerX - this.classesArray.reduce((sum, classData, classIndex) => sum + this.pipeWidth(classIndex), 0) / 2);
       return this.trunkXCache[index];
     }
 
