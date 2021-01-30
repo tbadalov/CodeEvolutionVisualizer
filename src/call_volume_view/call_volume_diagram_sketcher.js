@@ -192,12 +192,13 @@ class CallVolumeDiagramSketcher {
     const branches = this.convertToVisualizationData(
       this.rawData.commits[selectedCommit].classesArray,
       {
-        width: stage.width() / stage.scaleX(),
-        height: stage.height() / stage.scaleX(),
+        width: stage.width(),
+        height: stage.height(),
       },
     );
+    
     this.drawBranches(layer, branches);
-    layer.draw();
+    stage.batchDraw();
   }
 }
 

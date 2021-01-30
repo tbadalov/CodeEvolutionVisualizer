@@ -71,33 +71,56 @@ class CallVolumeDiagram extends React.Component {
   }
 
   componentDidMount() {
+    function dragBoundary(pos) {
+      var newY = Math.min(0, pos.y);
+      return {
+        x: pos.x,
+        y: newY,
+      };
+    }
     const largeContainer = this.largeContainerRef.current;
     largeContainer.style.width = this.scrollContainerRef.current.clientWidth + 'px';
     largeContainer.style.height = this.scrollContainerRef.current.clientHeight + 'px';
     const stage = new Konva.Stage({
       container: this.diagramContainerRef.current,
       draggable: true,
+      dragBoundFunc: dragBoundary,
       scale: {
         x: 3,
         y: 3,
       },
     });
-    var scaleBy = 1.03;
-    stage.on('wheel', (e) => {
-      e.evt.preventDefault();
-      //console.log(e);
-      if (e.evt.deltaY > 0) {
-        //console.log(stage.scaleX());
-        stage.scale({x: stage.scaleX() * scaleBy, y: stage.scaleX() * scaleBy});
-      } else if (e.evt.deltaY < 0) {
-        stage.scale({x: stage.scaleX() / scaleBy, y: stage.scaleX() / scaleBy});
-      }
-      stage.destroyChildren();
-      redraw.call(this);
-    });
+    console.log("stage wiiiiidth");
     this.stageData = {
       stage,
     };
+    updateSize.call(this);
+    console.log(stage.width());
+    stage.position(dragBoundary({x: -(stage.width()/2)*stage.scaleX() + this.scrollContainerRef.current.clientWidth / 2, y: stage.y()}));
+    var scaleBy = 1.03;
+    window.stage = stage;
+    stage.on('wheel', (e) => {
+      e.evt.preventDefault();
+      var pointer = stage.getPointerPosition();
+      var oldScale = stage.scaleX();
+      var mousePointTo = {
+        x: (pointer.x - stage.x()) / oldScale,
+        y: (pointer.y - stage.y()) / oldScale,
+      };
+      var newScale =
+          e.evt.deltaY > 0 ? oldScale * scaleBy : (e.evt.deltaY < 0 ? oldScale / scaleBy : oldScale);
+
+      stage.scale({ x: newScale, y: newScale });
+
+      stage.destroyChildren();
+
+      var newPos = {
+        x: pointer.x - mousePointTo.x * newScale,
+        y: pointer.y - mousePointTo.y * newScale,
+      };
+      stage.position(dragBoundary(newPos));
+      redraw.call(this);
+    });
     redraw.call(this);
   }
 
