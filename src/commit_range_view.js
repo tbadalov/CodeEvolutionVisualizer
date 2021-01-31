@@ -78,28 +78,6 @@ function drawBar(layer, bar, onLabelClick) {
     drawStack(stackGroup, stack);
   }
   drawLabel(barGroup, bar.label, onLabelClick);
-  let rect = null;
-  stackGroup.on('mousemove', function (e) {
-    console.log(e);
-    if (rect) {
-      rect.destroy();
-    }
-    /*rect = new Konva.Rect();
-    rect.x(e.evt.layerX-Y_AXIS_WIDTH);
-    rect.y(e.evt.layerY);
-    rect.width(50);
-    rect.height(50);
-    rect.fill('#fff');
-    barGroup.add(rect);
-    barGroup.draw();*/
-  });
-  barGroup.on('mouseleave', function (e) {
-    if (rect) {
-      rect.destroy();
-      rect = null;
-    }
-    barGroup.draw();
-  });
 }
 
 function drawAxis(layer, axis) {
@@ -192,7 +170,9 @@ class CommitRangeView extends React.Component {
       axisLayer,
       chartLayer,
     };
-    scrollContainer.addEventListener('scroll', () => repositionStage(this.barDataManager, this.stageData, this.containers));
+    scrollContainer.addEventListener('scroll', () => repositionStage(this.barDataManager, this.stageData, this.containers, (commit) => {
+      this.props.onDiagramChange('callVolumeView', {label: commit, classToColorMapping: this.props.classToColorMapping});
+    }));
     //largeContainer.addEventListener('mousemove', (event) => mouseMoveListener(event, this.barDataManager, this.containers.scrollContainer));
   }
 
