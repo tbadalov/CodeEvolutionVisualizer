@@ -1,6 +1,7 @@
 const React = require('react');
 const Konva = require('konva');
 const BarDataManager = require('./bar_data_manager');
+const selectionRectangleStyle = require('./css/selection-rectangle.css');
 
 const BAR_WIDTH = 30;
 const BAR_PADDING = 2;
@@ -13,6 +14,8 @@ const PADDING = 250;
 const EMPTY_SPACE_TOP_PERCENTAGE = 10;
 let isMouseDown = false;
 let isMouseMoving = false;
+let selectionClickStartX;
+let selectionClickStartY;
 
 function mouseMoveListener(event, barDataManager, scrollContainer) {
   event.preventDefault();
@@ -138,6 +141,7 @@ class CommitRangeView extends React.Component {
     this.diagramContainerRef = React.createRef();
     this.scrollContainer = React.createRef();
     this.largeContainer = React.createRef();
+    this.selectionRectangleRef = React.createRef();
   }
 
   componentDidMount() {
@@ -145,6 +149,7 @@ class CommitRangeView extends React.Component {
     const diagramContainer = this.diagramContainerRef.current;
     const scrollContainer = this.scrollContainer.current;
     const largeContainer = this.largeContainer.current;
+    const selectionRectangle = this.selectionRectangleRef.current;
     this.containers = {
       diagramContainer,
       scrollContainer,
@@ -173,7 +178,39 @@ class CommitRangeView extends React.Component {
     scrollContainer.addEventListener('scroll', () => repositionStage(this.barDataManager, this.stageData, this.containers, (commit) => {
       this.props.onDiagramChange('callVolumeView', {label: commit, classToColorMapping: this.props.classToColorMapping});
     }));
-    //largeContainer.addEventListener('mousemove', (event) => mouseMoveListener(event, this.barDataManager, this.containers.scrollContainer));
+    
+    scrollContainer.addEventListener('mousedown', (e) => {
+      isMouseDown = true;
+      selectionStartX = e.pageX - scrollContainer.offsetLeft + scrollContainer.scrollLeft;
+      selectionStartY = e.pageY - scrollContainer.offsetTop + scrollContainer.scrollTop;
+      console.log(selectionStartX, selectionStartY);
+      console.log(e);
+    });
+    scrollContainer.addEventListener('mousemove', (e) => {
+      if (!isMouseDown) {
+        return;
+      }
+      console.log(scrollContainer);
+      e.preventDefault();
+      console.log("nya");
+      let currentX = e.pageX - scrollContainer.offsetLeft + scrollContainer.scrollLeft;
+      let currentY = e.pageY - scrollContainer.offsetTop + scrollContainer.scrollTop;
+      console.log("currentX=" + currentX);
+      console.log("currentY=" + currentY);
+      let selectionRectangleLeftX = Math.min(selectionStartX, currentX);
+      let selectionRectangleTopY = Math.min(selectionStartY, currentY);
+      let selectionWidth = Math.max(selectionStartX, currentX) - selectionRectangleLeftX;
+      let selectionHeight = Math.max(selectionStartY, currentY) - selectionRectangleTopY;
+      selectionRectangle.style.display = 'block';
+      selectionRectangle.style.width = selectionWidth + 'px';
+      selectionRectangle.style.height = selectionHeight + 'px';
+      selectionRectangle.style.left = selectionRectangleLeftX + 'px';
+      selectionRectangle.style.top = selectionRectangleTopY + 'px';
+    })
+    document.addEventListener('mouseup', () => {
+      selectionRectangle.style.display = 'none';
+      isMouseDown = false;
+    });
   }
 
   componentDidUpdate() {
@@ -217,6 +254,11 @@ class CommitRangeView extends React.Component {
           <div
             className="container"
             ref={this.diagramContainerRef}
+          >
+          </div>
+          <div
+            className="selection-rectangle"
+            ref={this.selectionRectangleRef}
           >
           </div>
         </div>
