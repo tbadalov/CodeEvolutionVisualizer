@@ -1,0 +1,7 @@
+.selection-rectangle {
+  display: none;
+  background-color: aqua;
+  opacity: 0.5;
+  border: 1px solid aquamarine;
+  position: absolute;
+}
