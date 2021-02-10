@@ -5,4 +5,7 @@ module.exports = {
   classOverviewView: {
     apiUrl: 'http://localhost:3000/class_overview',
   },
+  callVolumeView: {
+    apiUrl: 'http://localhost:3000/call_volume',
+  },
 };
