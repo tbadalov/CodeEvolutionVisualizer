@@ -14,8 +14,13 @@ const PADDING = 250;
 const EMPTY_SPACE_TOP_PERCENTAGE = 10;
 let isMouseDown = false;
 let isMouseMoving = false;
+let isAutoScrolling = false;
 let selectionClickStartX;
 let selectionClickStartY;
+let scrollInterval;
+let currentX;
+let currentY;
+
 
 function mouseMoveListener(event, barDataManager, scrollContainer) {
   event.preventDefault();
@@ -190,11 +195,12 @@ class CommitRangeView extends React.Component {
       if (!isMouseDown) {
         return;
       }
+      isMouseMoving = true;
       console.log(scrollContainer);
       e.preventDefault();
       console.log("nya");
-      let currentX = e.pageX - scrollContainer.offsetLeft + scrollContainer.scrollLeft;
-      let currentY = e.pageY - scrollContainer.offsetTop + scrollContainer.scrollTop;
+      currentX = e.pageX - scrollContainer.offsetLeft + scrollContainer.scrollLeft;
+      currentY = e.pageY - scrollContainer.offsetTop + scrollContainer.scrollTop;
       console.log("currentX=" + currentX);
       console.log("currentY=" + currentY);
       let selectionRectangleLeftX = Math.min(selectionStartX, currentX);
@@ -203,13 +209,62 @@ class CommitRangeView extends React.Component {
       let selectionHeight = Math.max(selectionStartY, currentY) - selectionRectangleTopY;
       selectionRectangle.style.display = 'block';
       selectionRectangle.style.width = selectionWidth + 'px';
-      selectionRectangle.style.height = selectionHeight + 'px';
+      selectionRectangle.style.height = (scrollContainer.clientHeight-2) + 'px'; // -2 for each border: top and bottom
       selectionRectangle.style.left = selectionRectangleLeftX + 'px';
-      selectionRectangle.style.top = selectionRectangleTopY + 'px';
-    })
+      //selectionRectangle.style.top = selectionRectangleTopY + 'px';
+      let scrollDelta = 0;
+      let viewportPositionX = currentX - scrollContainer.scrollLeft;
+      let viewportPositionY = currentY - scrollContainer.scrollTop;
+      const SCROLL_AREA_WIDTH = 30;
+      const MAX_SCROLL_SPEED = 30; // pixels per interval
+      if (viewportPositionX > scrollContainer.clientWidth - SCROLL_AREA_WIDTH) {
+        scrollDelta = (Math.min(viewportPositionX, scrollContainer.clientWidth) - (scrollContainer.clientWidth - SCROLL_AREA_WIDTH)) / SCROLL_AREA_WIDTH * MAX_SCROLL_SPEED;
+        isAutoScrolling = true;
+      } else if (viewportPositionX < SCROLL_AREA_WIDTH) {
+        scrollDelta = (Math.max(0, viewportPositionX) - SCROLL_AREA_WIDTH) / SCROLL_AREA_WIDTH * MAX_SCROLL_SPEED;
+        isAutoScrolling = true;
+      }
+      currentX += scrollDelta;
+      scrollContainer.scrollBy(scrollDelta, 0);
+      if (isAutoScrolling && !scrollInterval) {
+        scrollInterval = setInterval(() => {
+          let scrollDelta = 0;
+          let viewportPositionX = currentX - scrollContainer.scrollLeft;
+          console.log("viewPortPositionX = " + viewportPositionX);
+          console.log("scroll width=" + scrollContainer.clientWidth);
+          console.log("scroll left = " + scrollContainer.scrollLeft);
+          let viewportPositionY = currentY - scrollContainer.scrollTop;
+          if (viewportPositionX > scrollContainer.clientWidth - SCROLL_AREA_WIDTH) {
+            console.log((Math.min(viewportPositionX, scrollContainer.clientWidth) - (scrollContainer.clientWidth - SCROLL_AREA_WIDTH)));
+            scrollDelta = (Math.min(viewportPositionX, scrollContainer.clientWidth) - (scrollContainer.clientWidth - SCROLL_AREA_WIDTH)) / SCROLL_AREA_WIDTH * MAX_SCROLL_SPEED;
+          } else if (viewportPositionX < SCROLL_AREA_WIDTH) {
+            scrollDelta = (Math.max(0, viewportPositionX) - SCROLL_AREA_WIDTH) / SCROLL_AREA_WIDTH * MAX_SCROLL_SPEED;
+          }
+          currentX += scrollDelta;
+          console.log("scrollDelta=" + scrollDelta);
+          scrollContainer.scrollBy(scrollDelta, 0);
+        }, 10);
+      }
+    });
     document.addEventListener('mouseup', () => {
       selectionRectangle.style.display = 'none';
       isMouseDown = false;
+      if (isMouseMoving) {
+        clearInterval(scrollInterval);
+        scrollInterval = null;
+        isMouseMoving = false;
+        isAutoScrolling = false;
+      }
+      const bars = this.barDataManager.dataFromRange(Math.min(selectionStartX, currentX)-Y_AXIS_WIDTH-BAR_LAYER_LEFT_MARGIN, Math.max(selectionStartX, currentX)-Y_AXIS_WIDTH-BAR_LAYER_LEFT_MARGIN);
+      const commits = bars.bars.map(bar => bar.label.text);
+      console.log(commits);
+      this.props.onDiagramChange(
+        'classOverviewView',
+        {
+          classToColorMapping: this.props.classToColorMapping,
+          commits: commits,
+        }
+      );
     });
   }
 
