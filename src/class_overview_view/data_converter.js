@@ -6,7 +6,7 @@ function buildColumn(convertationState, commit, commitData) {
   const { methodNameToRowMapping } = convertationState;
   const columnData = {
     commit: commit,
-    rows: {},
+    row: {},
   };
   const rows = commitData.reduce(
     (rows, record) => {
@@ -23,7 +23,7 @@ function buildColumn(convertationState, commit, commitData) {
     },
     {},
   );
-  columnData.rows = rows;
+  columnData.row = rows;
   return columnData;
 }
 
@@ -48,7 +48,10 @@ function mapMethodNamesToRows(methodNames) {
 class DataConverter {
   groupDataIntoCommitColumnsAndMethodRows(rawData) {
     const methodNameToRowMapping = mapMethodNamesToRows(getAllMethodNames(rawData));
-    const data = {columns: []};
+    const data = {
+      columns: [],
+      methodNameToRowMapping,
+    };
     let recordsGroupedByCommitHash = groupBy(records, 'commit');
     for (let commit in recordsGroupedByCommitHash) {
       const columnData = buildColumn(
@@ -69,7 +72,7 @@ class DataConverter {
   columns: [
     {
       commit: 'hhhhdddsdfsdfjsldkfjas',
-      rows: {
+      row: {
         3: {
           methodName: 'hello()',
           status: 'new' | 'changed' | 'same',
