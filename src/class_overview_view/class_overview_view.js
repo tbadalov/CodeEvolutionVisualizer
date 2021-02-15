@@ -38,7 +38,7 @@ class ClassOverviewView extends React.Component {
             rawData={this.state.rawData}
             startCommit={this.props.startCommit}
             endCommit={this.props.endCommit}
-            classToColorMapping={this.props.props.classToColorMapping} />
+            classToColorMapping={this.props.classToColorMapping} />
         </div>
       </div>
     );

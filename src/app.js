@@ -1,6 +1,6 @@
 const uiConfig = require('./ui_config');
 const CommitRangeView = require('./commit_range_full');
-const ClassOverviewView = require('./class_overview_view');
+const ClassOverviewView = require('./class_overview_view/class_overview_view');
 const React = require('react');
 const ReactDOM = require('react-dom');
 const diagramStyle = require('./css/diagram.css');
@@ -32,7 +32,7 @@ class App extends React.Component {
   render() {
     const Diagram = this.diagrams[this.state.currentDiagram];
     return(
-      <Diagram url={uiConfig[this.state.currentDiagram].apiUrl} {...this.state.data.diagramData} />
+      <Diagram url={uiConfig[this.state.currentDiagram].apiUrl} changeDiagram={this.state.data.diagramData.changeDiagram} {...this.state.data.diagramData.props} />
     );
   }
 }

@@ -131,7 +131,7 @@ const rawData = {
   }
 };
 
-class CallVolumeViewFull extends React.Component {
+class CallVolumeView extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -154,11 +154,11 @@ class CallVolumeViewFull extends React.Component {
           <CallVolumeDiagram
             rawData={this.state.rawData}
             selectedCommit={this.state.selectedCommit}
-            classToColorMapping={this.props.props.classToColorMapping} />
+            classToColorMapping={this.props.classToColorMapping} />
         </div>
       </div>
     );
   }
 }
 
-module.exports = CallVolumeViewFull;
+module.exports = CallVolumeView;

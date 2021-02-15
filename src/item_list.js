@@ -11,7 +11,7 @@ class ItemList extends React.Component {
     const items = (this.props.items || []).map((item, index) => {
       return(
       <li key={index}>
-        <ColorfulCheckbox label={item.label} color={item.color} checked={item.checked} onChange={() => this.props.onItemChange(index)}/>
+        <ColorfulCheckbox {...item} onChange={() => this.props.onItemChange(index)}/>
       </li>);
     });
 
