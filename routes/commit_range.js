@@ -18,7 +18,7 @@ router.get('/', function(req, res, next) {
       if (branches.includes('main')) {
         mainBranch = 'main'
       } else if (branches.includes('master')) {
-        mainBranch = 'master';
+        mainBranch = 'master\\\n';
       } else {
         mainBranch = branches[0];
       }
@@ -28,7 +28,7 @@ router.get('/', function(req, res, next) {
       const result = [];
       mainQuerySession.run(`
         MATCH (app:App)
-        WHERE app.branch='` + mainBranch + `'
+        WHERE app.branch="master\\\n"
         CALL {
           MATCH (c:Class)
             WITH distinct c.name as className, toInteger(RAND() * 10) as changedLinesCount, RAND() * 100 as randomOrder
@@ -41,7 +41,7 @@ router.get('/', function(req, res, next) {
           RETURN collect( { className: className, changedLinesCount: changedLinesCount } ) as changedClasses, sum(changedLinesCount) as totalChangedLinesCount
         }
         RETURN app.commit as commitHash, app.version_number as versionNumber, app.branch as branchName, changedClasses, totalChangedLinesCount
-        ORDER BY app.version_number
+        ORDER BY app.version
       `).subscribe({
         onNext: record => {
           result.push({
