@@ -1,3 +1,4 @@
+const ClassOverviewDiagramPositioner = require('./class_overview_diagram_positioner');
 const Konva = require('konva');
 const constants = require('./constants');
 const contants = require('./constants');
@@ -21,7 +22,9 @@ function drawColumnMethodArrows(layer, arrows) {
 }
 
 function buildMethods(columnIndex, stageSize, columnRows, diagramPositioner) {
-  Object.keys(columnRows).map(rowNumber => ({
+  console.log("build methods for column " + columnIndex);
+  console.log(columnRows);
+  return Object.keys(columnRows).map(rowNumber => ({
     ...columnRows[rowNumber],
     row: rowNumber,
   })).map(rowElement => {
@@ -29,7 +32,9 @@ function buildMethods(columnIndex, stageSize, columnRows, diagramPositioner) {
       circleRadius,
       circleX,
       circleY,
-    } = diagramPositioner.methodPosition(columnIndex, rowElement.rowNumber);
+    } = diagramPositioner.methodPosition(columnIndex, rowElement.row);
+    console.log("circle");
+    console.log(diagramPositioner.methodPosition(columnIndex, rowElement.row));
     return {
       type: 'circle',
       x: circleX,
@@ -64,7 +69,7 @@ function buildColumnLine(columnIndex, stageSize, diagramPositioner) {
 
 class ClassOverviewDiagramSketcher {
   constructor() {
-    this.diagramPositioner = new DiagramPositioner();
+    this.diagramPositioner = new ClassOverviewDiagramPositioner();
   }
 
   convertToVisualizationData(groupedData, stageSize) {
@@ -73,7 +78,7 @@ class ClassOverviewDiagramSketcher {
     };
     for (let i = 0; i < groupedData.columns.length; i++) {
       const columnLine = buildColumnLine(i, stageSize, this.diagramPositioner);
-      const methods = buildMethods(i, stageSize, groupedData.columns[i].methods, this.diagramPositioner);
+      const methods = buildMethods(i, stageSize, groupedData.columns[i].row, this.diagramPositioner);
       const arrows = [];
       data.columns.push({
         columnLine,
@@ -85,6 +90,7 @@ class ClassOverviewDiagramSketcher {
   }
 
   draw(stage, groupedData) {
+    console.log(groupedData);
     const visualizationData = this.convertToVisualizationData(
       groupedData,
       {
@@ -92,7 +98,9 @@ class ClassOverviewDiagramSketcher {
         width: stage.width(),
       }
     );
+    console.log(visualizationData);
     const layer = new Konva.Layer();
+    stage.add(layer);
     for (let i = 0; i < visualizationData.columns.length; i++) {
       drawColumnLine(layer, visualizationData.columns[i].columnLine);
       drawColumnMethods(layer, visualizationData.columns[i].methods);
@@ -100,3 +108,5 @@ class ClassOverviewDiagramSketcher {
     }
   }
 }
+
+module.exports = ClassOverviewDiagramSketcher;
