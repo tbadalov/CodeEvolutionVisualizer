@@ -77,25 +77,11 @@ class BarDataManager {
     };
   }
 
-  dataFromRange(xStart, xEnd) {
-    const startBarIndex = Math.floor(Math.max(0, (xStart - BAR_LAYER_LEFT_MARGIN)) / (BAR_PADDING + BAR_WIDTH));
-    const endBarIndex = Math.ceil(Math.max(0, (xEnd - BAR_LAYER_LEFT_MARGIN)) / (BAR_PADDING + BAR_WIDTH));
-    const commitsData = this.commitDataManager.getRawCommits();
-    /*for (let i = 0; i < 6; i++) {
-      segments.push({
-        x: axisX - 5,
-        y: stageHeight - i * (stageHeight / 5) + 4 / 2,
-        width: 10,
-        height: 4,
-        scaleY: -1,
-        label: Math.floor(i * (largestCommitSize + Math.ceil(EMPTY_SPACE_TOP_PERCENTAGE / 100.0 * largestCommitSize)) / 5),
-        full: '#000000',
-      })
-    }*/
+  barsFromRange(xStart, xEnd) {
+    const commits = this.dataFromRange(xStart, xEnd);
     const heightPerLine = this.calculateStageHeight() / (this.largestCommitSize + Math.ceil(EMPTY_SPACE_TOP_PERCENTAGE / 100.0 * this.largestCommitSize));
-    const commits = this.commitDataManager.getRawCommits();
     const bars = [];
-    for (let index = startBarIndex; index <= endBarIndex; index++) {
+    for (let index = 0; index < commits.length; index++) {
       const commit = commits[index];
       const barY = this.calculateStageHeight()-BAR_BOTTOM_MARGIN;
       const barX = BAR_LAYER_LEFT_MARGIN + (index) * (BAR_PADDING + BAR_WIDTH);
@@ -147,6 +133,13 @@ class BarDataManager {
     return {
       bars: bars,
     };
+  }
+
+  dataFromRange(xStart, xEnd) {
+    const startBarIndex = Math.floor(Math.max(0, (xStart - BAR_LAYER_LEFT_MARGIN)) / (BAR_PADDING + BAR_WIDTH));
+    const endBarIndex = Math.ceil(Math.max(0, (xEnd - BAR_LAYER_LEFT_MARGIN)) / (BAR_PADDING + BAR_WIDTH));
+    const commits = this.commitDataManager.getRawCommits();
+    return commits.slice(startBarIndex, endBarIndex+1);
   }
 
   commitByPosition(x, y) {

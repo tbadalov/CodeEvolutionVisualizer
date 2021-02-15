@@ -130,7 +130,7 @@ function repositionStage(barDataManager, stageData, containers, onLabelClick) {
   var dx = containers.scrollContainer.scrollLeft
   var dy = 0;
   stageData.chartLayer.destroyChildren();
-  const visualData = barDataManager.dataFromRange(dx-PADDING, dx+containers.scrollContainer.clientWidth+PADDING);
+  const visualData = barDataManager.barsFromRange(dx-PADDING, dx+containers.scrollContainer.clientWidth+PADDING);
   const axis = barDataManager.axisData();
   //console.log(visualData);
   stageData.stage.container().style.transform = 'translate(' + dx + 'px, ' + dy + 'px)';
