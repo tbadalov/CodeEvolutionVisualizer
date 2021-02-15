@@ -8,24 +8,30 @@ router.get('/', function(req, res, next) {
   const session = driver.session();
   const dataFromDb = [];
   session.run(`
-    MATCH (app:App)-[APP_OWNS_CLASS]->(c:Class)-[:CLASS_OWNS_METHOD]->(m:Method)
-    WHERE c.name = '` + req.query.className + `' AND app.branch = '` + req.query.branch + `' AND app.version_number >= ` + req.query.startVersion + ` AND app.version_number <= ` + req.query.endVersion + `
-    OPTIONAL MATCH (previousApp:App)-[:CHANGED_TO]->(app), (previousApp)-->(:Class)-->(m)
-    OPTIONAL MATCH (m)-[changed_to:CHANGED_TO]->(new_method:Method)
-    OPTIONAL MATCH (m)<-[changed_from:CHANGED_TO]-(old_method:Method)
-    OPTIONAL MATCH (m)-[called:CALLED]-(called_method:Method)
-    RETURN app.commit as commit,
-      app.version_number as version,
-        CASE
-          WHEN previousApp IS NOT NULL THEN 'same'
-          WHEN old_method IS NULL THEN 'new'
-          ELSE 'changed'
-        END as status,
-        m,
-        new_method,
-        called,
-        collect(called_method.name) as calls
-        ORDER BY version
+  MATCH p=(origin:App)-[:CHANGED_TO*]->(destination:App)
+  WHERE origin.commit='` + req.query.startCommit + `' AND destination.commit='` +req.query.endCommit + `'
+  WITH p LIMIT 1
+  WITH nodes(p) as path_nodes
+  UNWIND(path_nodes) as app
+  WITH distinct app
+  WHERE app.branch="master\\\n"
+  MATCH (app)-[APP_OWNS_CLASS]->(c:Class)-[:CLASS_OWNS_METHOD]->(m:Method)
+      WHERE c.name = '` + req.query.className + `'
+      OPTIONAL MATCH (previousApp:App)-[:CHANGED_TO]->(app), (previousApp)-->(:Class)-->(m)
+      OPTIONAL MATCH (m)-[changed_to:CHANGED_TO]->(new_method:Method)
+      OPTIONAL MATCH (m)<-[changed_from:CHANGED_TO]-(old_method:Method)
+      OPTIONAL MATCH (m)-[called:CALLED]-(called_method:Method)
+      RETURN app.commit as commit,
+        app.version_number as version,
+          CASE
+            WHEN previousApp IS NOT NULL THEN 'same'
+            WHEN old_method IS NULL THEN 'new'
+            ELSE 'changed'
+          END as status,
+          m,
+          new_method,
+          collect(called_method.name) as calls
+          ORDER BY version
   `).subscribe({
     onNext: record => {
       dataFromDb.push({
