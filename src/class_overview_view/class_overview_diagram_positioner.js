@@ -27,7 +27,7 @@ class ClassOverviewDiagramPositioner {
 
   columnLineDashPosition(columnIndex, dashNumber) {
     const { columnCenterX } = this.columnPosition(columnIndex);
-    const dashStartY = constants.COLUMN_TOP_Y + i * (constants.DASH_VERTICAL_MARGIN + constants.DASH_HEIGHT);
+    const dashStartY = constants.COLUMN_TOP_Y + dashNumber * (constants.DASH_VERTICAL_MARGIN + constants.DASH_HEIGHT);
     const dashStartX = columnCenterX - constants.DASH_WIDTH/2;
     const dashHeight = constants.DASH_HEIGHT;
     const dashWidth = constants.DASH_WIDTH;
@@ -42,9 +42,12 @@ class ClassOverviewDiagramPositioner {
   rowPosition(columnIndex, rowIndex) {
     const rowStartY = constants.COLUMN_TOP_Y + rowIndex * constants.ROW_HEIGHT;
     const rowCenterY = rowStartY + constants.ROW_HEIGHT / 2;
+    console.log("row position #" + rowIndex + ": " + rowCenterY);
     return {
       rowCenterY,
       rowStartY,
     };
   }
 }
+
+module.exports = ClassOverviewDiagramPositioner;
