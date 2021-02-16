@@ -39,9 +39,37 @@ class ClassOverviewDiagramPositioner {
     };
   }
 
+  columnTitlePosition(columnIndex, title) {
+    const { columnCenterX } = this.columnPosition(columnIndex);
+    const titleTextWidth = Math.min(title.length * 0.5 * constants.TITLE_FONT_SIZE, constants.COLUMN_WIDTH - constants.TITLE_FRAME_HORIZONTAL_PADDING*2);
+    const titleFrameWidth = Math.min(titleTextWidth + constants.TITLE_FRAME_HORIZONTAL_PADDING*2, constants.COLUMN_WIDTH);
+    const titleFrameStartX = columnCenterX - titleFrameWidth / 2;
+    const titleFrameStartY = constants.COLUMN_TOP_Y;
+    const titleFrameHeight = constants.TITLE_FONT_SIZE + constants.TITLE_FRAME_VERTICAL_PADDING * 2;
+    const titleTextStartY = titleFrameStartY + constants.TITLE_FRAME_VERTICAL_PADDING;
+    const titleTextHeight = titleFrameHeight - constants.TITLE_FRAME_VERTICAL_PADDING * 2;
+    const titleTextStartX = columnCenterX - titleTextWidth / 2;
+    return {
+      frame: {
+        x: titleFrameStartX,
+        y: titleFrameStartY,
+        width: titleFrameWidth,
+        height: titleFrameHeight,
+        cornerRadius: 100,
+      },
+      text: {
+        x: titleTextStartX,
+        y: titleTextStartY,
+        width: titleTextWidth,
+        height: titleTextHeight,
+        fontSize: constants.TITLE_FONT_SIZE,
+      },
+    };
+  }
+
   rowPosition(columnIndex, rowIndex) {
     const rowStartY = constants.COLUMN_TOP_Y + rowIndex * constants.ROW_HEIGHT;
-    const rowCenterY = rowStartY + constants.ROW_HEIGHT / 2;
+    const rowCenterY = rowStartY + constants.VERTICAL_MARGIN_FROM_TOP + constants.ROW_HEIGHT / 2;
     console.log("row position #" + rowIndex + ": " + rowCenterY);
     return {
       rowCenterY,

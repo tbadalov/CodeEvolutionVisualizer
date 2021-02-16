@@ -9,6 +9,11 @@ function drawColumnLine(layer, columnLine) {
   }
 }
 
+function drawColumnTitle(layer, columnTitle) {
+  layer.add(new Konva.Rect(columnTitle.frame));
+  layer.add(new Konva.Text(columnTitle.text));
+}
+
 function drawColumnMethods(layer, columnMethods) {
   for (let i = 0; i < columnMethods.length; i++) {
     layer.add(new Konva.Circle(columnMethods[i]));
@@ -19,6 +24,24 @@ function drawColumnMethodArrows(layer, arrows) {
   for (let i = 0; i < arrows.length; i++) {
     //layer.add(new Konva.Circle(columnMethods[i]));
   }
+}
+
+function buildColumnTitle(columnIndex, title, diagramPositioner) {
+  const columnTitleText = title.substr(0, 8);
+  const columnTitlePosition = diagramPositioner.columnTitlePosition(columnIndex, columnTitleText);
+  columnTitlePosition.frame = {
+    type: 'rect',
+    fill: '#ffffff',
+    stroke: '#000000',
+    ...columnTitlePosition.frame,
+  };
+  columnTitlePosition.text = {
+    type: 'text',
+    text: columnTitleText,
+    fill: '#000000',
+    ...columnTitlePosition.text,
+  };
+  return columnTitlePosition;
 }
 
 function buildMethods(columnIndex, stageSize, columnRows, diagramPositioner) {
@@ -78,10 +101,12 @@ class ClassOverviewDiagramSketcher {
     };
     for (let i = 0; i < groupedData.columns.length; i++) {
       const columnLine = buildColumnLine(i, stageSize, this.diagramPositioner);
+      const columnTitle = buildColumnTitle(i, groupedData.columns[i].commit, this.diagramPositioner);
       const methods = buildMethods(i, stageSize, groupedData.columns[i].row, this.diagramPositioner);
       const arrows = [];
       data.columns.push({
         columnLine,
+        columnTitle,
         methods,
         arrows,
       });
@@ -103,6 +128,7 @@ class ClassOverviewDiagramSketcher {
     stage.add(layer);
     for (let i = 0; i < visualizationData.columns.length; i++) {
       drawColumnLine(layer, visualizationData.columns[i].columnLine);
+      drawColumnTitle(layer, visualizationData.columns[i].columnTitle);
       drawColumnMethods(layer, visualizationData.columns[i].methods);
       drawColumnMethodArrows(layer, visualizationData.columns[i].arrows);
     }
