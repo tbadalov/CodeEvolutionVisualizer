@@ -1,6 +1,7 @@
 const uiConfig = require('./ui_config');
 const CommitRangeView = require('./commit_range_full');
 const ClassOverviewView = require('./class_overview_view/class_overview_view');
+const CallVolumeView = require('./call_volume_view/call_volume_view');
 const React = require('react');
 const ReactDOM = require('react-dom');
 const diagramStyle = require('./css/diagram.css');
@@ -11,6 +12,7 @@ class App extends React.Component {
     this.diagrams = {
       commitRangeView: CommitRangeView,
       classOverviewView: ClassOverviewView,
+      callVolumeView: CallVolumeView,
     }
     this.state = {
       currentDiagram: 'commitRangeView',
@@ -25,8 +27,9 @@ class App extends React.Component {
 
   changeDiagram(diagramName, props) {
     this.state.currentDiagram = diagramName;
-    this.state.data.diagramData.props = props;
-    this.setState(this.state);
+    const data = {...this.state.data};
+    data.diagramData.props = props;
+    this.setState({currentDiagram: diagramName, data: data});
   }
 
   render() {
