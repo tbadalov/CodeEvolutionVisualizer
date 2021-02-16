@@ -39,6 +39,22 @@ class ClassOverviewDiagramPositioner {
     };
   }
 
+  methodNamePosition(rowNumber) {
+    const { rowCenterY } = this.rowPosition(0, rowNumber);
+    const height = constants.METHOD_LEGEND_FONT_SIZE * 3;
+    const methodNameStartY = rowCenterY - height / 2;
+    const methodNameStartX = constants.METHOD_LEGEND_LEFT_PADDING;
+    const width = constants.METHOD_NAME_COLUMN_WIDTH - constants.METHOD_LEGEND_LEFT_PADDING;
+    return {
+      x: methodNameStartX,
+      y: methodNameStartY,
+      wrap: 'char',
+      width: width,
+      height: height,
+      fontSize: constants.METHOD_LEGEND_FONT_SIZE,
+    };
+  }
+
   columnTitlePosition(columnIndex, title) {
     const { columnCenterX } = this.columnPosition(columnIndex);
     const titleTextWidth = Math.min(title.length * 0.5 * constants.TITLE_FONT_SIZE, constants.COLUMN_WIDTH - constants.TITLE_FRAME_HORIZONTAL_PADDING*2);
