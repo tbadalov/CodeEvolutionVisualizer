@@ -155,7 +155,13 @@ class ClassOverviewDiagram extends React.Component {
 
   componentDidUpdate() {
     if (this.props.rawData) {
-      this.diagramSketcher.draw(this.stage, this.props.rawData);
+      this.diagramSketcher.draw(
+          this.stage,
+          this.props.rawData,
+          (commit) => {
+            this.props.onDiagramChange('callVolumeView', {label: commit, classToColorMapping: this.props.classToColorMapping});
+          }
+      );
       this.stage.batchDraw();
     }
   }

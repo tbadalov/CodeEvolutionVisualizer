@@ -10,8 +10,11 @@ function drawColumnLine(layer, columnLine) {
 }
 
 function drawColumnTitle(layer, columnTitle) {
-  layer.add(new Konva.Rect(columnTitle.frame));
-  layer.add(new Konva.Text(columnTitle.text));
+  const group = new Konva.Group();
+  group.add(new Konva.Rect(columnTitle.frame))
+  group.add(new Konva.Text(columnTitle.text));
+  layer.add(group);
+  return group;
 }
 
 function drawColumnMethods(layer, columnMethods) {
@@ -133,7 +136,7 @@ class ClassOverviewDiagramSketcher {
     return data;
   }
 
-  draw(stage, groupedData) {
+  draw(stage, groupedData, onCommitClick) {
     console.log(groupedData);
     const visualizationData = this.convertToVisualizationData(
       groupedData,
@@ -148,7 +151,14 @@ class ClassOverviewDiagramSketcher {
     drawMethodLegend(layer, visualizationData.methodLegend);
     for (let i = 0; i < visualizationData.columns.length; i++) {
       drawColumnLine(layer, visualizationData.columns[i].columnLine);
-      drawColumnTitle(layer, visualizationData.columns[i].columnTitle);
+      const columnTitle = drawColumnTitle(layer, visualizationData.columns[i].columnTitle);
+      columnTitle.on('mouseenter', function () {
+        stage.container().style.cursor = 'pointer';
+      });
+      columnTitle.on('mouseleave', function () {
+        stage.container().style.cursor = 'auto';
+      });
+      columnTitle.on('click', () => onCommitClick(groupedData.columns[i].commit));
       drawColumnMethods(layer, visualizationData.columns[i].methods);
       drawColumnMethodArrows(layer, visualizationData.columns[i].arrows);
     }
