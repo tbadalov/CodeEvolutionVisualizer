@@ -16,11 +16,21 @@ class ClassOverviewView extends React.Component {
     new DiagramDataLoader().load(
       this.props.url,
       {
+        className: 'BrewViewController',
         startCommit,
         endCommit,
       }
-    ).then(rawData => new DataConverter().groupDataIntoCommitColumnsAndMethodRows(rawData))
-    .then(groupedData => this.setState({rawData: groupedData}));
+    ).then(rawData => {
+      console.log(rawData);
+      return rawData;
+    })
+    .then(rawData => new DataConverter().groupDataIntoCommitColumnsAndMethodRows(rawData))
+    .then(groupedData => {
+      console.log(groupedData);
+      return groupedData;
+    })
+    .then(groupedData => this.setState({rawData: groupedData}))
+    .catch(error => console.log(error));
   }
 
   handleItemClick() {

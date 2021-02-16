@@ -13,7 +13,7 @@ function buildColumn(convertationState, commit, commitData) {
       const methodName = record.method;
       const methodRow = methodNameToRowMapping[methodName];
       const status = record.status;
-      const calls = record.called_methods.map(called_method_name => methodNameToRowMapping[called_method_name]);
+      const calls = record.calls.map(called_method_name => methodNameToRowMapping[called_method_name]);
       rows[methodRow] = {
         methodName,
         status,
@@ -52,7 +52,7 @@ class ClassOverviewDataConverter {
       columns: [],
       methodNameToRowMapping,
     };
-    let recordsGroupedByCommitHash = groupBy(records, 'commit');
+    let recordsGroupedByCommitHash = groupBy(rawData, 'commit');
     for (let commit in recordsGroupedByCommitHash) {
       const columnData = buildColumn(
         {

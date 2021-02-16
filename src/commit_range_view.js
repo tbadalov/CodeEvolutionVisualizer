@@ -255,14 +255,16 @@ class CommitRangeView extends React.Component {
         isMouseMoving = false;
         isAutoScrolling = false;
       }
-      const bars = this.barDataManager.dataFromRange(Math.min(selectionStartX, currentX)-Y_AXIS_WIDTH-BAR_LAYER_LEFT_MARGIN, Math.max(selectionStartX, currentX)-Y_AXIS_WIDTH-BAR_LAYER_LEFT_MARGIN);
-      const commits = bars.bars.map(bar => bar.label.text);
-      console.log(commits);
+      const rawSubData = this.barDataManager.dataFromRange(Math.min(selectionStartX, currentX)-Y_AXIS_WIDTH-BAR_LAYER_LEFT_MARGIN, Math.max(selectionStartX, currentX)-Y_AXIS_WIDTH-BAR_LAYER_LEFT_MARGIN);
+      const commitHashes = rawSubData.map(commit => commit.commitHash);
+      console.log(commitHashes);
+      console.log("first:" + commitHashes[0]);
       this.props.onDiagramChange(
         'classOverviewView',
         {
           classToColorMapping: this.props.classToColorMapping,
-          commits: commits,
+          startCommit: commitHashes[0],
+          endCommit: commitHashes[commitHashes.length-1],
         }
       );
     });

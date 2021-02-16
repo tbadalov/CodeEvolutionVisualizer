@@ -148,12 +148,15 @@ class ClassOverviewDiagram extends React.Component {
   componentDidMount() {
     this.stage = new Konva.Stage({
         container: this.diagramContainerRef.current,
+        height: this.scrollContainerRef.current.clientHeight,
+        width: this.scrollContainerRef.current.clientWidth,
     });
   }
 
   componentDidUpdate() {
     if (this.props.rawData) {
       this.diagramSketcher.draw(this.stage, this.props.rawData);
+      this.stage.batchDraw();
     }
   }
 
