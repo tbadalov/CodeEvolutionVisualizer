@@ -78,13 +78,14 @@ class BarDataManager {
   }
 
   barsFromRange(xStart, xEnd) {
+    const startBarIndex = Math.floor(Math.max(0, (xStart - BAR_LAYER_LEFT_MARGIN)) / (BAR_PADDING + BAR_WIDTH));
     const commits = this.dataFromRange(xStart, xEnd);
     const heightPerLine = this.calculateStageHeight() / (this.largestCommitSize + Math.ceil(EMPTY_SPACE_TOP_PERCENTAGE / 100.0 * this.largestCommitSize));
     const bars = [];
     for (let index = 0; index < commits.length; index++) {
       const commit = commits[index];
       const barY = this.calculateStageHeight()-BAR_BOTTOM_MARGIN;
-      const barX = BAR_LAYER_LEFT_MARGIN + (index) * (BAR_PADDING + BAR_WIDTH);
+      const barX = BAR_LAYER_LEFT_MARGIN + (index+startBarIndex) * (BAR_PADDING + BAR_WIDTH);
       const barWidth = BAR_WIDTH;
 
       const stack = [];
