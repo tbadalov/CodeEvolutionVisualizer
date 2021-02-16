@@ -1,7 +1,7 @@
 const React = require('react');
-const DiagramSketcher = require('./class_overview_diagram_sketcher');
+const ClassOverviewDiagramSketcher = require('./class_overview_diagram_sketcher');
 const ItemList = require('../item_list');
-const { default: Konva } = require('konva');
+const Konva = require('konva');
 
 const data = [
   {
@@ -138,7 +138,7 @@ class ClassOverviewDiagram extends React.Component {
     this.diagramContainerRef = React.createRef();
     this.scrollContainerRef = React.createRef();
     this.largeContainerRef = React.createRef();
-    this.diagramSketcher = new DiagramSketcher();
+    this.diagramSketcher = new ClassOverviewDiagramSketcher();
     this.state = {
       rawData: rawData,
       selectedCommit: 'hhffee',

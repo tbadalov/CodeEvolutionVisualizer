@@ -45,7 +45,7 @@ function mapMethodNamesToRows(methodNames) {
 }
 
 
-class DataConverter {
+class ClassOverviewDataConverter {
   groupDataIntoCommitColumnsAndMethodRows(rawData) {
     const methodNameToRowMapping = mapMethodNamesToRows(getAllMethodNames(rawData));
     const data = {
@@ -66,6 +66,8 @@ class DataConverter {
     return data;
   }
 }
+
+module.exports = ClassOverviewDataConverter;
 
 /*
 {

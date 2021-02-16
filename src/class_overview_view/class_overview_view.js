@@ -45,4 +45,4 @@ class ClassOverviewView extends React.Component {
   }
 }
 
-module.exports = CallVolumeViewFull;
+module.exports = ClassOverviewView;
