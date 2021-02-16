@@ -20,7 +20,7 @@ router.get('/', function(req, res, next) {
       OPTIONAL MATCH (previousApp:App)-[:CHANGED_TO]->(app), (previousApp)-->(:Class)-->(m)
       OPTIONAL MATCH (m)-[changed_to:CHANGED_TO]->(new_method:Method)
       OPTIONAL MATCH (m)<-[changed_from:CHANGED_TO]-(old_method:Method)
-      OPTIONAL MATCH (m)-[called:CALLED]-(called_method:Method)
+      OPTIONAL MATCH (m)-[calles:CALLES]-(called_method:Method)
       RETURN app.commit as commit,
         app.version_number as version,
           CASE
