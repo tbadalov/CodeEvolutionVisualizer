@@ -65,9 +65,7 @@ function buildMethodLegend(allMethodNames, diagramPositioner) {
   });
 }
 
-function buildColumnMethods(columnIndex, stageSize, columnRows, diagramPositioner) {
-  console.log("build methods for column " + columnIndex);
-  console.log(columnRows);
+function buildColumnMethods(columnIndex, columnRows, diagramPositioner) {
   return Object.keys(columnRows).map(rowNumber => ({
     ...columnRows[rowNumber],
     row: rowNumber,
@@ -77,8 +75,6 @@ function buildColumnMethods(columnIndex, stageSize, columnRows, diagramPositione
       circleX,
       circleY,
     } = diagramPositioner.methodPosition(columnIndex, rowElement.row);
-    console.log("circle");
-    console.log(diagramPositioner.methodPosition(columnIndex, rowElement.row));
     return {
       type: 'circle',
       x: circleX,
@@ -89,8 +85,8 @@ function buildColumnMethods(columnIndex, stageSize, columnRows, diagramPositione
   });
 }
 
-function buildColumnLine(columnIndex, stageSize, diagramPositioner) {
-  const numberOfDashes = Math.ceil((stageSize.height - constants.COLUMN_TOP_Y - contants.DASH_HEIGHT) / (constants.DASH_HEIGHT+constants.DASH_VERTICAL_MARGIN)) + 1;
+function buildColumnLine(columnIndex, totalRowCount, diagramPositioner) {
+  const numberOfDashes = (totalRowCount * constants.ROW_HEIGHT) / (constants.DASH_HEIGHT+constants.DASH_VERTICAL_MARGIN);
   const dashes = [];
   for (let i = 0; i < numberOfDashes; i++) {
     const {
@@ -111,6 +107,14 @@ function buildColumnLine(columnIndex, stageSize, diagramPositioner) {
   return dashes;
 }
 
+function calculateStageHeight(totalMethodCount) {
+  return constants.COLUMN_TOP_Y + constants.VERTICAL_MARGIN_FROM_TOP + totalMethodCount * constants.ROW_HEIGHT;
+}
+
+function calculateStageWidth(totalCommitsCount) {
+  return constants.METHOD_NAME_COLUMN_WIDTH + totalCommitsCount * constants.COLUMN_WIDTH;
+}
+
 class ClassOverviewDiagramSketcher {
   constructor() {
     this.diagramPositioner = new ClassOverviewDiagramPositioner();
@@ -122,9 +126,10 @@ class ClassOverviewDiagramSketcher {
     };
     data.methodLegend = buildMethodLegend(Object.keys(groupedData.methodNameToRowMapping), this.diagramPositioner);
     for (let i = 0; i < groupedData.columns.length; i++) {
-      const columnLine = buildColumnLine(i, stageSize, this.diagramPositioner);
+      const columnLine = buildColumnLine(i, data.methodLegend.length, this.diagramPositioner);
       const columnTitle = buildColumnTitle(i, groupedData.columns[i].commit, this.diagramPositioner);
-      const methods = buildColumnMethods(i, stageSize, groupedData.columns[i].row, this.diagramPositioner);
+      const methods = buildColumnMethods(i, groupedData.columns[i].row, this.diagramPositioner);
+      console.log(methods);
       const arrows = [];
       data.columns.push({
         columnLine,
@@ -139,12 +144,12 @@ class ClassOverviewDiagramSketcher {
   draw(stage, groupedData, onCommitClick) {
     console.log(groupedData);
     const visualizationData = this.convertToVisualizationData(
-      groupedData,
-      {
-        height: stage.height(),
-        width: stage.width(),
-      }
+      groupedData
     );
+    const stageSize = {
+      width: calculateStageWidth(visualizationData.columns.length),
+      height: calculateStageHeight(visualizationData.methodLegend.length),
+    };
     console.log(visualizationData);
     const layer = new Konva.Layer();
     stage.add(layer);
@@ -162,6 +167,7 @@ class ClassOverviewDiagramSketcher {
       drawColumnMethods(layer, visualizationData.columns[i].methods);
       drawColumnMethodArrows(layer, visualizationData.columns[i].arrows);
     }
+    return stageSize;
   }
 }
 
