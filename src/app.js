@@ -2,7 +2,7 @@ const uiConfig = require('./ui_config');
 const CommitRangeView = require('./commit_range_full');
 const ClassOverviewView = require('./class_overview_view/class_overview_view');
 const CallVolumeView = require('./call_volume_view/call_volume_view');
-const ItemList = require('./item_list');
+const Menu = require('./menu');
 const React = require('react');
 const ReactDOM = require('react-dom');
 const diagramStyle = require('./css/diagram.css');
@@ -52,10 +52,10 @@ class App extends React.Component {
               <option value="3">feature1</option>
             </select>
           </div>
-          <ItemList items={this.state.items} />
+          <Menu items={this.state.menuItems} />
         </div>
         <div className="box-2">
-          <Diagram url={uiConfig[this.state.currentDiagram].apiUrl} addMenuItem={this.addMenuItem} changeDiagram={this.state.data.diagramData.changeDiagram} {...this.state.data.diagramData.props} />
+          <Diagram url={uiConfig[this.state.currentDiagram].apiUrl} addMenuItem={this.addMenuItem.bind(this)} changeDiagram={this.state.data.diagramData.changeDiagram} {...this.state.data.diagramData.props} />
         </div>
       </div>
     );
