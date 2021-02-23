@@ -16,12 +16,10 @@ class ItemList extends React.Component {
     });
 
     return(
-      <div className="minu-menu">
-        <div className="item-list">
-          <ul className="real-list">
-            { items }
-          </ul>
-        </div>
+      <div className="item-list">
+        <ul className="real-list">
+          { items }
+        </ul>
       </div>
     );
   }

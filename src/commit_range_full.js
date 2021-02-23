@@ -36,7 +36,7 @@ class CommitRangeViewFull extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      items: undefined,
+      items: [],
       disabledClasses: {},
       classToColorMapping: {},
       data: {
@@ -71,6 +71,9 @@ class CommitRangeViewFull extends React.Component {
 
     this.setState({ data, classToColorMapping });
     this.setState({ items: alpahebticallySortedItems });
+    this.props.addMenuItem(
+      <ItemList items={this.state.items} onItemChange={this.handleItemClick.bind(this)} />
+    );
   }
 
   handleItemClick(changedItemIndex) {
