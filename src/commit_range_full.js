@@ -115,10 +115,10 @@ class CommitRangeViewFull extends React.Component {
   render() {
     return(
       <CommitRangeView
-            data={this.state.data}
-            disabledClasses={this.state.disabledClasses}
-            classToColorMapping={this.state.classToColorMapping}
-            onDiagramChange={this.props.changeDiagram} />
+        data={this.state.data}
+        disabledClasses={this.state.disabledClasses}
+        classToColorMapping={this.state.classToColorMapping}
+        onDiagramChange={this.props.changeDiagram} />
     );
   }
 }

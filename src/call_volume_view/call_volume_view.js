@@ -1,6 +1,5 @@
 const React = require('react');
 const CallVolumeDiagram = require('./call_volume_diagram');
-const ItemList = require('../item_list');
 
 const data = [
   {
@@ -146,17 +145,10 @@ class CallVolumeView extends React.Component {
 
   render() {
     return(
-      <div className="minu-container">
-        <div className="box-1">
-          <ItemList items={this.state.items} onItemChange={this.handleItemClick.bind(this)} />
-        </div>
-        <div className="box-2">
-          <CallVolumeDiagram
-            rawData={this.state.rawData}
-            selectedCommit={this.state.selectedCommit}
-            classToColorMapping={this.props.classToColorMapping} />
-        </div>
-      </div>
+      <CallVolumeDiagram
+        rawData={this.state.rawData}
+        selectedCommit={this.state.selectedCommit}
+        classToColorMapping={this.props.classToColorMapping} />
     );
   }
 }
