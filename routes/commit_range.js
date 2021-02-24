@@ -30,13 +30,13 @@ router.get('/', function(req, res, next) {
         MATCH (app:App)
         WHERE app.branch="master\\\n"
         CALL {
-          MATCH (c:Class)
-            WITH distinct c.name as className
-            WITH className, toInteger(RAND() * 10) as changedLinesCount, RAND() * 100 as randomOrder
-            ORDER BY randomOrder
+          WITH app
+          MATCH (app)-[:APP_OWNS_CLASS]->(c:Class)
+          OPTIONAL MATCH (app)<-[:CHANGED_TO]-(prev_app:App)-[:APP_OWNS_CLASS]->(c)
+          WITH app, prev_app, c
+          WHERE prev_app IS NULL
+            WITH c.name as className, (toInteger(RAND() * 10)+1) as changedLinesCount
             WHERE changedLinesCount > 0
-            WITH className, changedLinesCount
-          LIMIT (toInteger(RAND() * 10) + 1)
           WITH className, changedLinesCount
           ORDER BY className
           RETURN collect( { className: className, changedLinesCount: changedLinesCount } ) as changedClasses, sum(changedLinesCount) as totalChangedLinesCount
