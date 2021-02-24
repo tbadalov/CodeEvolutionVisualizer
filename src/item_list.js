@@ -6,13 +6,13 @@ const itemListStyle = require('./css/item_list.css');
 function buildRadioForm(items, onChange) {
   const radioButtons = items.map((item, index) => {
     return(
-      <RadioButton value={Number(index).toString()} rootColor={'black'} pointColor="black" >
+      <RadioButton value={Number(index).toString()} rootColor={'black'} pointColor="black">
         {item.label}
       </RadioButton>
     );
   });
   return(
-    <RadioGroup onChange={onChange} vertical>
+    <RadioGroup onChange={onChange} value="0" vertical>
       {radioButtons}
     </RadioGroup>
   );
