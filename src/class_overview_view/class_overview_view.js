@@ -12,6 +12,11 @@ class ClassOverviewView extends React.Component {
     };
   }
 
+  handleItemChange(index) {
+    console.log("selecting " + index);
+    this.setState({selectedClassName: this.state.items[index].label});
+  }
+
   componentDidMount() {
     const { startCommit, endCommit } = this.props;
     const diagramDataLoader = new DiagramDataLoader();
