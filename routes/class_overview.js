@@ -15,7 +15,7 @@ router.get('/', function(req, res, next) {
   UNWIND(path_nodes) as app
   MATCH (app)-[APP_OWNS_CLASS]->(c:Class)-[:CLASS_OWNS_METHOD]->(m:Method)
       WHERE c.name = '` + req.query.className + `'
-      OPTIONAL MATCH (previousApp:App)-[:CHANGED_TO]->(app), (previousApp)-->(:Class)-->(m)
+      OPTIONAL MATCH (app)<-[:CHANGED_TO]-(previousApp:App {branch:"master\\\n"})-[:APP_OWNS_CLASS]->(:Class)-[:CLASS_OWNS_METHOD]->(m)
       OPTIONAL MATCH (m)-[changed_to:CHANGED_TO]->(new_method:Method)
       OPTIONAL MATCH (m)<-[changed_from:CHANGED_TO]-(old_method:Method)
       OPTIONAL MATCH (m)-[calles:CALLES]-(called_method:Method)
