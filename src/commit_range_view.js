@@ -313,12 +313,12 @@ class CommitRangeView extends React.Component {
             ref={this.diagramContainerRef}
           >
           </div>
-          <div
+        </div>
+        <div
             className="selection-rectangle"
             ref={this.selectionRectangleRef}
           >
           </div>
-        </div>
       </div>
     );
   }

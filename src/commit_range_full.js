@@ -97,7 +97,7 @@ class CommitRangeViewFull extends React.Component {
   componentDidMount() {
     loadData(this.props.url)
       .then(data => {
-        data.commits = data.commits.concat(data.commits).concat(data.commits).concat(data.commits);
+        //data.commits = data.commits.concat(data.commits).concat(data.commits).concat(data.commits);
         /*data.commits = data.commits.concat(data.commits).concat(data.commits).concat(data.commits);
         data.commits = data.commits.concat(data.commits).concat(data.commits).concat(data.commits);
         data.commits = data.commits.concat(data.commits).concat(data.commits).concat(data.commits);
