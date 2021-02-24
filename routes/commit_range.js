@@ -31,13 +31,14 @@ router.get('/', function(req, res, next) {
         WHERE app.branch="master\\\n"
         CALL {
           MATCH (c:Class)
-            WITH distinct c.name as className, toInteger(RAND() * 10) as changedLinesCount, RAND() * 100 as randomOrder
+            WITH distinct c.name as className
+            WITH className, toInteger(RAND() * 10) as changedLinesCount, RAND() * 100 as randomOrder
             ORDER BY randomOrder
             WHERE changedLinesCount > 0
             WITH className, changedLinesCount
           LIMIT (toInteger(RAND() * 10) + 1)
           WITH className, changedLinesCount
-          ORDER BY changedLinesCount
+          ORDER BY className
           RETURN collect( { className: className, changedLinesCount: changedLinesCount } ) as changedClasses, sum(changedLinesCount) as totalChangedLinesCount
         }
         RETURN app.commit as commitHash, app.version_number as versionNumber, app.branch as branchName, changedClasses, totalChangedLinesCount
