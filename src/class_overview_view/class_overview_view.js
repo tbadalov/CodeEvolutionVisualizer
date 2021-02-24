@@ -28,31 +28,38 @@ class ClassOverviewView extends React.Component {
         checked: index === 0,
       }));
       this.props.addMenuItem(
-        <ItemList items={items} />
+        <ItemList items={items} isRadio onItemChange={this.handleItemChange.bind(this)}/>
       );
       this.setState({items: items});
+      this.setState({selectedClassName: classNames[0]});
       return classNames[0];
     })
-    .then(className => {
-      return diagramDataLoader.load(
-        this.props.url,
-        {
-          className: className,
-          startCommit,
-          endCommit,
-        }
-      );
-    }).then(rawData => {
-      console.log(rawData);
-      return rawData;
-    })
-    .then(rawData => new DataConverter().groupDataIntoCommitColumnsAndMethodRows(rawData))
-    .then(groupedData => {
-      console.log(groupedData);
-      return groupedData;
-    })
-    .then(groupedData => this.setState({rawData: groupedData}))
     .catch(error => console.log(error));
+  }
+
+  componentDidUpdate() {
+    if (this.state.lastClassName === this.state.selectedClassName) {
+      return;
+    }
+    const diagramDataLoader = new DiagramDataLoader();
+    diagramDataLoader.load(
+      this.props.url,
+      {
+        className: this.state.selectedClassName,
+        startCommit: this.props.startCommit,
+        endCommit: this.props.endCommit,
+      }
+    ).then(rawData => {
+    console.log(rawData);
+    return rawData;
+  })
+  .then(rawData => new DataConverter().groupDataIntoCommitColumnsAndMethodRows(rawData))
+  .then(groupedData => {
+    console.log(groupedData);
+    return groupedData;
+  })
+  .then(groupedData => this.setState({rawData: groupedData, lastClassName: this.state.selectedClassName}))
+  .catch(error => console.log(error));
   }
 
   handleItemClick() {

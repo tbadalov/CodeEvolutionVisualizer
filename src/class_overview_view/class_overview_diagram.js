@@ -155,6 +155,7 @@ class ClassOverviewDiagram extends React.Component {
 
   componentDidUpdate() {
     if (this.props.rawData) {
+    this.stage.destroyChildren();
       const stageSize = this.diagramSketcher.draw(
           this.stage,
           this.props.rawData,
