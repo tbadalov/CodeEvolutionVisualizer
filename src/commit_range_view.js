@@ -45,7 +45,7 @@ function mouseMoveListener(event, barDataManager, scrollContainer) {
 }
 
 function drawStack(layer, stack) {
-  layer.add(new Konva.Rect({
+  const konvaStack = new Konva.Rect({
     fill: stack.color,
     x: stack.x,
     y: stack.y,
@@ -53,7 +53,9 @@ function drawStack(layer, stack) {
     height: stack.height,
     scaleY: stack.scaleY,
     scaleX: stack.scaleX,
-  }));
+  });
+  layer.add(konvaStack);
+  return konvaStack;
 }
 
 function drawLabel(layer, label, onLabelClick) {
@@ -76,14 +78,32 @@ function drawLabel(layer, label, onLabelClick) {
   });
 }
 
-function drawBar(layer, bar, onLabelClick) {
+function strokeStack(layer, event) {
+  const stack = event.currentTarget;
+  stack.strokeEnabled(true);
+  stack.stroke('black');
+  layer.draw();
+}
+
+function unstrokeStack(layer, event) {
+  const stack = event.currentTarget;
+  stack.strokeEnabled(false);
+  layer.draw();
+}
+
+function drawBar(layer, bar, onLabelClick, stackMouseEnterEventListener, stackMouseLeaveEventListener) {
   const barGroup = new Konva.Group();
   const stackGroup = new Konva.Group();
   barGroup.add(stackGroup);
   layer.add(barGroup);
   for (let i = 0; i < bar.stack.length; i++) {
     const stack = bar.stack[i];
-    drawStack(stackGroup, stack);
+    const drawnStack = drawStack(stackGroup, stack);
+    drawnStack.on('mouseenter', stackMouseEnterEventListener);
+    drawnStack.on('mousemove', (e) => {
+      console.log(stack.payload);
+    });
+    drawnStack.on('mouseleave', stackMouseLeaveEventListener);
   }
   drawLabel(barGroup, bar.label, onLabelClick);
 }
@@ -118,10 +138,14 @@ function draw(stage, chartLayer, axisLayer, visualData, skipAxis, onLabelClick) 
   window.layer = chartLayer;
   window.stage = stage;
   window.Konva = Konva;
+  // To save memory, we create only one instance of listeners and pass it to each stack instead of creating one per each stack
+  // Enabling and disabling stroke needs redrawing of the layer, otherwise some thin surrounding stroke is left, so we pass chart layer too
+  const stackMouseEnterEventListener = strokeStack.bind(null, chartLayer);
+  const stackMouseLeaveEventListener = unstrokeStack.bind(null, chartLayer);
   visualData.bars.forEach((bar, index) => {
     //const barGroup = new Konva.Group();
     //chartLayer.add(barGroup);
-    drawBar(chartLayer, bar, onLabelClick);
+    drawBar(chartLayer, bar, onLabelClick, stackMouseEnterEventListener, stackMouseLeaveEventListener);
   });
   chartLayer.draw();
 }
