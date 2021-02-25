@@ -102,6 +102,11 @@ class BarDataManager {
         const stackHeight = changedClass.changedLinesCount * heightPerLine;
         const stackWidth = barWidth;
         const stackColor = this.classToColorMapping[changedClass.className];
+        const payload = {
+          changedLinesCount: changedClass.changedLinesCount,
+          changedLinesCountPercentage: changedClass.changedLinesCount / commit.totalChangedLinesCount * 100.0,
+          changedClassName: changedClass.className,
+        };
         stack.push({
           x: stackX,
           y: stackY,
@@ -109,6 +114,7 @@ class BarDataManager {
           width: stackWidth,
           color: stackColor,
           scaleY: -1,
+          payload: payload,
         });
         currentStackHeight += stackHeight;
       }
