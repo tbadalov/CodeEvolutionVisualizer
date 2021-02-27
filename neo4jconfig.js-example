@@ -1,0 +1,5 @@
+module.exports = {
+  user: 'neo4j',
+  password: 'some_pass',
+  uri: 'bolt://localhost:7687'
+}
