@@ -19,7 +19,6 @@ body, html {
 .item-list {
   width: 100%;
   height: 100%;
-  background-color: #bbb;
   position: relative;
 }
 
@@ -27,13 +26,11 @@ body, html {
   width: 100%;
   height: auto;
   list-style: none;
-  background-color: orange;
 }
 
 .real-list li {
   width: calc(100% - 10px);
   height: 20px;
-  background-color: purple;
   margin: 5px 0;
   padding: 5px;
 }
