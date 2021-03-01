@@ -134,7 +134,7 @@ class CommitRangeView extends React.Component {
     this.largeContainer = React.createRef();
     this.selectionRectangleRef = React.createRef();
     this.clickCommit = this.clickCommit.bind(this);
-    this.refresh = this.refresh.bind(this);
+    this.refreshDiagram = this.refreshDiagram.bind(this);
   }
 
   clickCommit(commit) {
@@ -147,7 +147,7 @@ class CommitRangeView extends React.Component {
     );
   }
 
-  refresh() {
+  refreshDiagram() {
     const dx = this.scrollContainer.current.scrollLeft;
     const dy = 0;
     this.stageData.chartLayer.destroyChildren();
@@ -189,7 +189,7 @@ class CommitRangeView extends React.Component {
       axisLayer,
       chartLayer,
     };
-    scrollContainer.addEventListener('scroll', this.refresh);
+    scrollContainer.addEventListener('scroll', this.refreshDiagram);
     
     scrollContainer.addEventListener('mousedown', (e) => {
       isMouseDown = true;
@@ -297,7 +297,7 @@ class CommitRangeView extends React.Component {
     largeContainer.style.height = scrollContainer.clientHeight + 'px';
     stage.height(this.barDataManager.calculateStageHeight());
     
-    this.refresh();
+    this.refreshDiagram();
   }
 
   render() {
