@@ -235,6 +235,13 @@ class CommitRangeView extends React.Component {
   }
 
   refreshDiagram() {
+    if (this.state.tooltipVisible) {
+      clearTimeout(tooltipTimeout);
+      this.stageData.stage.container().style.cursor = 'auto';
+      this.setState({
+        tooltipVisible: false,
+      });
+    }
     const dx = this.scrollContainer.current.scrollLeft;
     const dy = 0;
     this.stageData.chartLayer.destroyChildren();
