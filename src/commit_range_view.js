@@ -4,6 +4,7 @@ const BarDataManager = require('./bar_data_manager');
 const selectionRectangleStyle = require('./css/selection-rectangle.css');
 const Tooltip = require('./tooltip');
 const TooltipCommitRangeItem = require('./tooltip_commit_range_item');
+const CommitDetailTooltipItem = require('./commit_detail_tooltip_item');
 
 const BAR_WIDTH = 30;
 const BAR_PADDING = 2;
@@ -61,7 +62,7 @@ function drawStack(layer, stack) {
   return konvaStack;
 }
 
-function drawLabel(layer, label, onLabelClick) {
+function drawLabel(layer, label, onLabelClick, onLabelMouseEnter, onLabelMouseLeave) {
   const text = new Konva.Text({
     text: label.text,
     x: label.x,
@@ -69,9 +70,7 @@ function drawLabel(layer, label, onLabelClick) {
     rotation: label.rotation,
   });
   layer.add(text);
-  text.on('mouseenter', function () {
-    stage.container().style.cursor = 'pointer';
-  });
+  text.on('mouseenter', onLabelMouseEnter);
   text.on('mouseleave', function () {
     stage.container().style.cursor = 'auto';
   });
@@ -94,9 +93,40 @@ function unstrokeStack(layer, event) {
   layer.draw();
 }
 
+function labelMouseEnter(labelData) {
+  return (function(event) {
+    this.stageData.stage.container().style.cursor = 'pointer';
+    clearTimeout(tooltipTimeout);
+    tooltipTimeout = setTimeout(() => {
+      console.log(labelData);
+      this.setState({
+        tooltipLeft: event.evt.pageX - 10,
+        tooltipTop: event.evt.pageY - (Object.keys(labelData.commitDetails).length + labelData.stacks.length + 1) * 25 - 25,
+        tooltipVisible: true,
+        tooltipTitle: labelData.commitHash,
+        tooltipItems: Object.keys(labelData.commitDetails)
+          .map((commitDetail, index) => <CommitDetailTooltipItem
+            key={index}
+            detailName={commitDetail}
+            detailValue={labelData.commitDetails[commitDetail]}
+          />)
+          .concat(
+            labelData.stacks.map((stackPayload, index) => <TooltipCommitRangeItem
+              key={index + Object.keys(labelData.commitDetails).length}
+              markerColor={this.props.classToColorMapping[stackPayload.changedClassName]}
+              className={stackPayload.changedClassName}
+              amount={`${stackPayload.changedLinesCount} line${stackPayload.changedLinesCount > 1 ? 's were' : ' was'} changed (${stackPayload.changedLinesCountPercentage.toFixed(2)}%)`}
+            />)
+          ),
+      });
+    }, 700);
+  }).bind(this);
+}
+
 function mouseLeaveStack(unstrokeStack, event) {
-  if (!this.state.tooltipVisible || Math.abs(this.state.tooltipLeft - (event.evt.pageX - this.scrollContainer.current.offsetLeft)) > 4) { // mouse out of tooltip
+  if (Math.abs(this.state.tooltipLeft - (event.evt.pageX)) > 4) { // mouse out of tooltip
     unstrokeStack(event);
+    clearTimeout(tooltipTimeout);
     this.setState({
       tooltipVisible: false,
     });
@@ -107,7 +137,7 @@ function mouseMoveStack(event, payload) {
   clearTimeout(tooltipTimeout);
   tooltipTimeout = setTimeout(() => {
     this.setState({
-      tooltipLeft: event.evt.pageX - this.scrollContainer.current.offsetLeft + this.scrollContainer.current.scrollLeft + 5,
+      tooltipLeft: event.evt.pageX + 5,
       tooltipTop: event.evt.pageY - 16,
       tooltipVisible: true,
       tooltipTitle: payload.commitHash,
@@ -135,7 +165,7 @@ function drawBar(layer, bar, onLabelClick, stackMouseEnterEventListener, stackMo
     drawnStack.on('mousemove', (e) => stackMouseMoveEventListener(e, stack.payload));
     drawnStack.on('mouseleave', stackMouseLeaveEventListener);
   }
-  drawLabel(barGroup, bar.label, onLabelClick);
+  drawLabel(barGroup, bar.label, onLabelClick, labelMouseEnter.call(this, bar.label.payload));
 }
 
 function drawAxis(layer, axis) {
@@ -176,7 +206,7 @@ function draw(stage, chartLayer, axisLayer, visualData, skipAxis, onLabelClick) 
   visualData.bars.forEach((bar, index) => {
     //const barGroup = new Konva.Group();
     //chartLayer.add(barGroup);
-    drawBar(chartLayer, bar, onLabelClick, stackMouseEnterEventListener, stackMouseMoveEventListener, stackMouseLeaveEventListener);
+    drawBar.call(this, chartLayer, bar, onLabelClick, stackMouseEnterEventListener, stackMouseMoveEventListener, stackMouseLeaveEventListener);
   });
   chartLayer.draw();
 }
@@ -363,25 +393,7 @@ class CommitRangeView extends React.Component {
 
   render() {
     return(
-      <div
-        className="scroll-container"
-        ref={this.scrollContainer}
-      >
-        <div
-          className="large-container"
-          ref={this.largeContainer}
-        >
-          <div
-            className="container"
-            ref={this.diagramContainerRef}
-          >
-          </div>
-        </div>
-        <div
-            className="selection-rectangle"
-            ref={this.selectionRectangleRef}
-          >
-          </div>
+      <div>
         <Tooltip
           visible={this.state.tooltipVisible}
           left={this.state.tooltipLeft}
@@ -389,6 +401,26 @@ class CommitRangeView extends React.Component {
           title={this.state.tooltipTitle}
           items={this.state.tooltipItems}
         />
+        <div
+          className="scroll-container"
+          ref={this.scrollContainer}
+        >
+          <div
+            className="large-container"
+            ref={this.largeContainer}
+          >
+            <div
+              className="container"
+              ref={this.diagramContainerRef}
+            >
+            </div>
+          </div>
+          <div
+              className="selection-rectangle"
+              ref={this.selectionRectangleRef}
+            >
+            </div>
+        </div>
       </div>
     );
   }

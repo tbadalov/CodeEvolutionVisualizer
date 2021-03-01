@@ -11,6 +11,7 @@
   top: 150px;
   left: 200px;
   opacity: 0;
+  z-index: 99;
 }
 
 .tooltip-title {

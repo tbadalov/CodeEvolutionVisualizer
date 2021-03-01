@@ -122,9 +122,13 @@ class BarDataManager {
 
       const barHeight = currentStackHeight * heightPerLine;
       const labelPayload = {
-        commitMessage: commit.message,
-        commitAuthor: commit.author,
-        commitTime: commit.time,
+        commitDetails: {
+          commitMessage: commit.message,
+          commitAuthor: commit.author,
+          commitTime: commit.time,
+        },
+        commitHash: commit.commitHash,
+        stacks: stack.map(stackData => stackData.payload),
       };
       const label = {
         text: commit.commitHash.substr(0, Math.min(commit.commitHash.length, 7)),
