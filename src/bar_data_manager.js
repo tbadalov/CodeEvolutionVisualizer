@@ -121,12 +121,17 @@ class BarDataManager {
       }
 
       const barHeight = currentStackHeight * heightPerLine;
-
+      const labelPayload = {
+        commitMessage: commit.message,
+        commitAuthor: commit.author,
+        commitTime: commit.time,
+      };
       const label = {
         text: commit.commitHash.substr(0, Math.min(commit.commitHash.length, 7)),
         rotation: -45,
         x: barX-15,
         y: barY + 35,
+        payload: labelPayload,
       }
 
       bars.push({
