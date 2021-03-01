@@ -62,7 +62,7 @@ function drawStack(layer, stack) {
   return konvaStack;
 }
 
-function drawLabel(layer, label, onLabelClick, onLabelMouseEnter) {
+function drawLabel(layer, label, onLabelClick, onLabelMouseEnter, onLabelMouseLeave) {
   const text = new Konva.Text({
     text: label.text,
     x: label.x,
@@ -71,6 +71,7 @@ function drawLabel(layer, label, onLabelClick, onLabelMouseEnter) {
   });
   layer.add(text);
   text.on('mouseenter', onLabelMouseEnter);
+  text.on('mouseleave', onLabelMouseLeave);
   text.on('click', function (e) {
     console.log(e);
     onLabelClick(e.target.attrs.text);
@@ -88,6 +89,10 @@ function unstrokeStack(layer, event) {
   const stack = event.currentTarget;
   stack.strokeEnabled(false);
   layer.draw();
+}
+
+function labelMouseLeave() {
+  this.stageData.stage.container().style.cursor = 'auto';
 }
 
 function labelMouseEnter(labelData) {
@@ -162,7 +167,7 @@ function drawBar(layer, bar, onLabelClick, stackMouseEnterEventListener, stackMo
     drawnStack.on('mousemove', (e) => stackMouseMoveEventListener(e, stack.payload));
     drawnStack.on('mouseleave', stackMouseLeaveEventListener);
   }
-  drawLabel(barGroup, bar.label, onLabelClick, labelMouseEnter.call(this, bar.label.payload));
+  drawLabel(barGroup, bar.label, onLabelClick, labelMouseEnter.call(this, bar.label.payload), labelMouseLeave.bind(this));
 }
 
 function drawAxis(layer, axis) {
