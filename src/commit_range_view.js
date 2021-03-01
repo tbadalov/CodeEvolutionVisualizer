@@ -13,7 +13,7 @@ const BAR_BOTTOM_MARGIN = LABEL_HEIGHT + 5;
 const PADDING = 250;
 const EMPTY_SPACE_TOP_PERCENTAGE = 10;
 let isMouseDown = false;
-let isMouseMoving = false;
+let isSelecting = false;
 let isAutoScrolling = false;
 let selectionClickStartX;
 let selectionClickStartY;
@@ -202,7 +202,7 @@ class CommitRangeView extends React.Component {
       if (!isMouseDown) {
         return;
       }
-      isMouseMoving = true;
+      isSelecting = true;
       console.log(scrollContainer);
       e.preventDefault();
       console.log("nya");
@@ -256,10 +256,10 @@ class CommitRangeView extends React.Component {
     document.addEventListener('mouseup', () => {
       selectionRectangle.style.display = 'none';
       isMouseDown = false;
-      if (isMouseMoving) {
+      if (isSelecting) {
         clearInterval(scrollInterval);
         scrollInterval = null;
-        isMouseMoving = false;
+        isSelecting = false;
         isAutoScrolling = false;
         const rawSubData = this.barDataManager.dataFromRange(Math.min(selectionStartX, currentX)-Y_AXIS_WIDTH-BAR_LAYER_LEFT_MARGIN, Math.max(selectionStartX, currentX)-Y_AXIS_WIDTH-BAR_LAYER_LEFT_MARGIN);
         const commitHashes = rawSubData.map(commit => commit.commitHash);
