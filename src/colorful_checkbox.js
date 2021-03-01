@@ -22,7 +22,7 @@ class ColorfulCheckbox extends React.PureComponent {
     return(
       <div className="colorful-checkbox">
         <input type="checkbox" id={randomUuid} defaultChecked={this.props.checked || false} onChange={this.props.onChange} />
-        <label htmlFor={randomUuid} style={{border: '2px solid ' + (this.props.color || '#000')}}></label>
+        <label htmlFor={randomUuid} style={{border: '5px solid ' + (this.props.color || '#000')}}></label>
         <p>{this.props.label}</p>
       </div>
     );
