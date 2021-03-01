@@ -147,6 +147,17 @@ class CommitRangeView extends React.Component {
     this.scrollContainer = React.createRef();
     this.largeContainer = React.createRef();
     this.selectionRectangleRef = React.createRef();
+    this.clickCommit = this.clickCommit.bind(this);
+  }
+
+  clickCommit(commit) {
+    this.props.onDiagramChange(
+      'callVolumeView',
+      {
+        label: commit,
+        classToColorMapping: this.props.classToColorMapping,
+      }
+    );
   }
 
   componentDidMount() {
@@ -180,9 +191,7 @@ class CommitRangeView extends React.Component {
       axisLayer,
       chartLayer,
     };
-    scrollContainer.addEventListener('scroll', () => repositionStage(this.barDataManager, this.stageData, this.containers, (commit) => {
-      this.props.onDiagramChange('callVolumeView', {label: commit, classToColorMapping: this.props.classToColorMapping});
-    }));
+    scrollContainer.addEventListener('scroll', () => repositionStage(this.barDataManager, this.stageData, this.containers, this.clickCommit));
     
     scrollContainer.addEventListener('mousedown', (e) => {
       isMouseDown = true;
@@ -292,9 +301,7 @@ class CommitRangeView extends React.Component {
       this.barDataManager,
       this.stageData,
       this.containers,
-      (commit) => {
-        this.props.onDiagramChange('callVolumeView', {label: commit, classToColorMapping: this.props.classToColorMapping});
-      }
+      this.clickCommit
     );
   }
 
