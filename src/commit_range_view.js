@@ -126,20 +126,6 @@ function draw(stage, chartLayer, axisLayer, visualData, skipAxis, onLabelClick) 
   chartLayer.draw();
 }
 
-function repositionStage(barDataManager, stageData, containers, onLabelClick) {
-  var dx = containers.scrollContainer.scrollLeft
-  var dy = 0;
-  stageData.chartLayer.destroyChildren();
-  const visualData = barDataManager.barsFromRange(dx-PADDING, dx+containers.scrollContainer.clientWidth+PADDING);
-  const axis = barDataManager.axisData();
-  //console.log(visualData);
-  stageData.stage.container().style.transform = 'translate(' + dx + 'px, ' + dy + 'px)';
-  //console.log(bars);
-  stageData.chartLayer.x(PADDING+Y_AXIS_WIDTH-dx);
-  draw(stageData.stage, stageData.chartLayer, stageData.axisLayer, { axis: axis, bars: visualData.bars }, false, onLabelClick);
-  //stage.y(-dy);
-}
-
 class CommitRangeView extends React.Component {
   constructor(props) {
     super(props);
@@ -148,6 +134,7 @@ class CommitRangeView extends React.Component {
     this.largeContainer = React.createRef();
     this.selectionRectangleRef = React.createRef();
     this.clickCommit = this.clickCommit.bind(this);
+    this.refresh = this.refresh.bind(this);
   }
 
   clickCommit(commit) {
@@ -158,6 +145,17 @@ class CommitRangeView extends React.Component {
         classToColorMapping: this.props.classToColorMapping,
       }
     );
+  }
+
+  refresh() {
+    const dx = this.scrollContainer.current.scrollLeft;
+    const dy = 0;
+    this.stageData.chartLayer.destroyChildren();
+    const visualData = this.barDataManager.barsFromRange(dx-PADDING, dx+this.scrollContainer.current.clientWidth+PADDING);
+    const axis = this.barDataManager.axisData();
+    this.stageData.stage.container().style.transform = 'translate(' + dx + 'px, ' + dy + 'px)';
+    this.stageData.chartLayer.x(PADDING+Y_AXIS_WIDTH-dx);
+    draw(this.stageData.stage, this.stageData.chartLayer, this.stageData.axisLayer, { axis: axis, bars: visualData.bars }, false, this.clickCommit);
   }
 
   componentDidMount() {
@@ -191,7 +189,7 @@ class CommitRangeView extends React.Component {
       axisLayer,
       chartLayer,
     };
-    scrollContainer.addEventListener('scroll', () => repositionStage(this.barDataManager, this.stageData, this.containers, this.clickCommit));
+    scrollContainer.addEventListener('scroll', this.refresh);
     
     scrollContainer.addEventListener('mousedown', (e) => {
       isMouseDown = true;
@@ -279,13 +277,15 @@ class CommitRangeView extends React.Component {
     });
   }
 
-  componentDidUpdate() {
+  componentDidUpdate(prevProps) {
     console.log("updating...")
     console.log(this.props);
     const diagramContainer = this.diagramContainerRef.current;
     const scrollContainer = this.scrollContainer.current;
     const largeContainer = this.largeContainer.current;
-    this.barDataManager = new BarDataManager(this.props.data, this.props.classToColorMapping, largeContainer);
+    if (this.props.data !== prevProps.data) {
+      this.barDataManager = new BarDataManager(this.props.data, this.props.classToColorMapping, largeContainer);
+    }
     Object.keys(this.props.disabledClasses).forEach(className => this.barDataManager.disable(className));
 
     const stage = this.stageData.stage;
@@ -297,12 +297,7 @@ class CommitRangeView extends React.Component {
     largeContainer.style.height = scrollContainer.clientHeight + 'px';
     stage.height(this.barDataManager.calculateStageHeight());
     
-    repositionStage(
-      this.barDataManager,
-      this.stageData,
-      this.containers,
-      this.clickCommit
-    );
+    this.refresh();
   }
 
   render() {
