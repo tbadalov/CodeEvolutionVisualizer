@@ -2,6 +2,7 @@ const React = require('react');
 const Konva = require('konva');
 const BarDataManager = require('./bar_data_manager');
 const selectionRectangleStyle = require('./css/selection-rectangle.css');
+const Tooltip = require('./tooltip');
 
 const BAR_WIDTH = 30;
 const BAR_PADDING = 2;
@@ -91,7 +92,16 @@ function unstrokeStack(layer, event) {
   layer.draw();
 }
 
-function drawBar(layer, bar, onLabelClick, stackMouseEnterEventListener, stackMouseLeaveEventListener) {
+function mouseLeaveStack(unstrokeStack, event) {
+  if (1==1) { // mouse out of tooltip
+    this.setState({
+      tooltipVisible: false,
+    });
+    unstrokeStack(event);
+  }
+}
+
+function drawBar(layer, bar, onLabelClick, stackMouseEnterEventListener, stackMouseMoveEventListener, stackMouseLeaveEventListener) {
   const barGroup = new Konva.Group();
   const stackGroup = new Konva.Group();
   barGroup.add(stackGroup);
@@ -100,9 +110,7 @@ function drawBar(layer, bar, onLabelClick, stackMouseEnterEventListener, stackMo
     const stack = bar.stack[i];
     const drawnStack = drawStack(stackGroup, stack);
     drawnStack.on('mouseenter', stackMouseEnterEventListener);
-    drawnStack.on('mousemove', (e) => {
-      console.log(stack.payload);
-    });
+    drawnStack.on('mousemove', stackMouseMoveEventListener);
     drawnStack.on('mouseleave', stackMouseLeaveEventListener);
   }
   drawLabel(barGroup, bar.label, onLabelClick);
@@ -141,7 +149,8 @@ function draw(stage, chartLayer, axisLayer, visualData, skipAxis, onLabelClick) 
   // To save memory, we create only one instance of listeners and pass it to each stack instead of creating one per each stack
   // Enabling and disabling stroke needs redrawing of the layer, otherwise some thin surrounding stroke is left, so we pass chart layer too
   const stackMouseEnterEventListener = strokeStack.bind(null, chartLayer);
-  const stackMouseLeaveEventListener = unstrokeStack.bind(null, chartLayer);
+  const stackMouseMoveEventListener = mouseMove.bind(null, chartLayer);
+  const stackMouseLeaveEventListener = mouseLeaveStack.bind(this, unstrokeStack.bind(this, chartLayer));
   visualData.bars.forEach((bar, index) => {
     //const barGroup = new Konva.Group();
     //chartLayer.add(barGroup);
@@ -159,6 +168,11 @@ class CommitRangeView extends React.Component {
     this.selectionRectangleRef = React.createRef();
     this.clickCommit = this.clickCommit.bind(this);
     this.refreshDiagram = this.refreshDiagram.bind(this);
+    this.state = {
+      tooltipVisible: false,
+      tooltipLeft: 0,
+      tooltipTop: 0,
+    }
   }
 
   clickCommit(commit) {
@@ -345,6 +359,7 @@ class CommitRangeView extends React.Component {
             ref={this.selectionRectangleRef}
           >
           </div>
+        <Tooltip visible={this.state.tooltipVisible} left={this.state.tooltipLeft} top={this.state.tooltipTop} />
       </div>
     );
   }
