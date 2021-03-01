@@ -3,6 +3,7 @@ const Konva = require('konva');
 const BarDataManager = require('./bar_data_manager');
 const selectionRectangleStyle = require('./css/selection-rectangle.css');
 const Tooltip = require('./tooltip');
+const TooltipCommitRangeItem = require('./tooltip_commit_range_item');
 
 const BAR_WIDTH = 30;
 const BAR_PADDING = 2;
@@ -111,11 +112,12 @@ function mouseMoveStack(event, payload) {
       tooltipVisible: true,
       tooltipTitle: payload.commitHash,
       tooltipItems: [
-        {
-          color: this.props.classToColorMapping[payload.changedClassName],
-          className: payload.changedClassName,
-          amount: `${payload.changedLinesCount} (${payload.changedLinesCountPercentage})`,
-        }
+        <TooltipCommitRangeItem
+          key='1'
+          markerColor={this.props.classToColorMapping[payload.changedClassName]}
+          className={payload.changedClassName}
+          amount={`${payload.changedLinesCount} line${payload.changedLinesCount > 1 ? 's were' : ' was'} changed (${payload.changedLinesCountPercentage.toFixed(2)}%)`}
+        />
       ]
     });
   }, 700);
@@ -385,6 +387,7 @@ class CommitRangeView extends React.Component {
           left={this.state.tooltipLeft}
           top={this.state.tooltipTop}
           title={this.state.tooltipTitle}
+          items={this.state.tooltipItems}
         />
       </div>
     );
