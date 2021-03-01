@@ -4,30 +4,11 @@ const tooltipStyle = require('./css/tooltip.css');
 class Tooltip extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {
-      visible: this.props.visible || false,
-      left: this.props.left || 0,
-      top: this.props.top || 0,
-    };
-  }
-
-  show(position) {
-    this.setState({
-      visible: true,
-      left: position.left,
-      top: position.top,
-    });
-  }
-
-  hide() {
-    this.setState({
-      visible: false,
-    });
   }
 
   render() {
     return(
-      <div className={"tooltip" + (this.state.visible ? " tooltip-active" : "")} style={{left: this.state.left + 'px', top: this.state.top + 'px'}}>
+      <div className={"tooltip" + (this.props.visible ? " tooltip-active" : "")} style={{left: this.props.left + 'px', top: this.props.top + 'px'}}>
         <div className="tooltip-title">
           { this.props.title }
         </div>

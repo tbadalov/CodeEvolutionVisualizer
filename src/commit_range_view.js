@@ -21,6 +21,7 @@ let selectionClickStartY;
 let scrollInterval;
 let currentX;
 let currentY;
+let tooltipTimeout;
 
 
 function mouseMoveListener(event, barDataManager, scrollContainer) {
@@ -93,12 +94,31 @@ function unstrokeStack(layer, event) {
 }
 
 function mouseLeaveStack(unstrokeStack, event) {
-  if (1==1) { // mouse out of tooltip
+  if (!this.state.tooltipVisible || Math.abs(this.state.tooltipLeft - (event.evt.pageX - this.scrollContainer.current.offsetLeft)) > 4) { // mouse out of tooltip
+    unstrokeStack(event);
     this.setState({
       tooltipVisible: false,
     });
-    unstrokeStack(event);
   }
+}
+
+function mouseMoveStack(event, payload) {
+  clearTimeout(tooltipTimeout);
+  tooltipTimeout = setTimeout(() => {
+    this.setState({
+      tooltipLeft: event.evt.pageX - this.scrollContainer.current.offsetLeft + this.scrollContainer.current.scrollLeft + 5,
+      tooltipTop: event.evt.pageY - 16,
+      tooltipVisible: true,
+      tooltipTitle: payload.commitHash,
+      tooltipItems: [
+        {
+          color: this.props.classToColorMapping[payload.changedClassName],
+          className: payload.changedClassName,
+          amount: `${payload.changedLinesCount} (${payload.changedLinesCountPercentage})`,
+        }
+      ]
+    });
+  }, 700);
 }
 
 function drawBar(layer, bar, onLabelClick, stackMouseEnterEventListener, stackMouseMoveEventListener, stackMouseLeaveEventListener) {
@@ -110,7 +130,7 @@ function drawBar(layer, bar, onLabelClick, stackMouseEnterEventListener, stackMo
     const stack = bar.stack[i];
     const drawnStack = drawStack(stackGroup, stack);
     drawnStack.on('mouseenter', stackMouseEnterEventListener);
-    drawnStack.on('mousemove', stackMouseMoveEventListener);
+    drawnStack.on('mousemove', (e) => stackMouseMoveEventListener(e, stack.payload));
     drawnStack.on('mouseleave', stackMouseLeaveEventListener);
   }
   drawLabel(barGroup, bar.label, onLabelClick);
@@ -149,12 +169,12 @@ function draw(stage, chartLayer, axisLayer, visualData, skipAxis, onLabelClick) 
   // To save memory, we create only one instance of listeners and pass it to each stack instead of creating one per each stack
   // Enabling and disabling stroke needs redrawing of the layer, otherwise some thin surrounding stroke is left, so we pass chart layer too
   const stackMouseEnterEventListener = strokeStack.bind(null, chartLayer);
-  const stackMouseMoveEventListener = mouseMove.bind(null, chartLayer);
+  const stackMouseMoveEventListener = mouseMoveStack.bind(this);
   const stackMouseLeaveEventListener = mouseLeaveStack.bind(this, unstrokeStack.bind(this, chartLayer));
   visualData.bars.forEach((bar, index) => {
     //const barGroup = new Konva.Group();
     //chartLayer.add(barGroup);
-    drawBar(chartLayer, bar, onLabelClick, stackMouseEnterEventListener, stackMouseLeaveEventListener);
+    drawBar(chartLayer, bar, onLabelClick, stackMouseEnterEventListener, stackMouseMoveEventListener, stackMouseLeaveEventListener);
   });
   chartLayer.draw();
 }
@@ -193,7 +213,7 @@ class CommitRangeView extends React.Component {
     const axis = this.barDataManager.axisData();
     this.stageData.stage.container().style.transform = 'translate(' + dx + 'px, ' + dy + 'px)';
     this.stageData.chartLayer.x(PADDING+Y_AXIS_WIDTH-dx);
-    draw(this.stageData.stage, this.stageData.chartLayer, this.stageData.axisLayer, { axis: axis, bars: visualData.bars }, false, this.clickCommit);
+    draw.call(this, this.stageData.stage, this.stageData.chartLayer, this.stageData.axisLayer, { axis: axis, bars: visualData.bars }, false, this.clickCommit);
   }
 
   componentDidMount() {
@@ -317,13 +337,14 @@ class CommitRangeView extends React.Component {
 
   componentDidUpdate(prevProps) {
     console.log("updating...")
+    if (this.props.data === prevProps.data && this.props.disabledClasses === prevProps.disabledClasses) {
+      return;
+    }
     console.log(this.props);
     const diagramContainer = this.diagramContainerRef.current;
     const scrollContainer = this.scrollContainer.current;
     const largeContainer = this.largeContainer.current;
-    if (this.props.data !== prevProps.data) {
-      this.barDataManager = new BarDataManager(this.props.data, this.props.classToColorMapping, largeContainer);
-    }
+    this.barDataManager = new BarDataManager(this.props.data, this.props.classToColorMapping, largeContainer);
     Object.keys(this.props.disabledClasses).forEach(className => this.barDataManager.disable(className));
 
     const stage = this.stageData.stage;
@@ -359,7 +380,12 @@ class CommitRangeView extends React.Component {
             ref={this.selectionRectangleRef}
           >
           </div>
-        <Tooltip visible={this.state.tooltipVisible} left={this.state.tooltipLeft} top={this.state.tooltipTop} />
+        <Tooltip
+          visible={this.state.tooltipVisible}
+          left={this.state.tooltipLeft}
+          top={this.state.tooltipTop}
+          title={this.state.tooltipTitle}
+        />
       </div>
     );
   }

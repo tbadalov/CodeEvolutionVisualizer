@@ -106,6 +106,7 @@ class BarDataManager {
           changedLinesCount: changedClass.changedLinesCount,
           changedLinesCountPercentage: changedClass.changedLinesCount / commit.totalChangedLinesCount * 100.0,
           changedClassName: changedClass.className,
+          commitHash: commit.commitHash,
         };
         stack.push({
           x: stackX,
