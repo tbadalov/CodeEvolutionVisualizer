@@ -62,7 +62,7 @@ function drawStack(layer, stack) {
   return konvaStack;
 }
 
-function drawLabel(layer, label, onLabelClick, onLabelMouseEnter, onLabelMouseLeave) {
+function drawLabel(layer, label, onLabelClick, onLabelMouseEnter) {
   const text = new Konva.Text({
     text: label.text,
     x: label.x,
@@ -71,9 +71,6 @@ function drawLabel(layer, label, onLabelClick, onLabelMouseEnter, onLabelMouseLe
   });
   layer.add(text);
   text.on('mouseenter', onLabelMouseEnter);
-  text.on('mouseleave', function () {
-    stage.container().style.cursor = 'auto';
-  });
   text.on('click', function (e) {
     console.log(e);
     onLabelClick(e.target.attrs.text);
@@ -289,6 +286,13 @@ class CommitRangeView extends React.Component {
       console.log(e);
     });
     scrollContainer.addEventListener('mousemove', (e) => {
+      if (this.state.tooltipVisible && e.pageX - this.state.tooltipLeft < -20 && e.pageY - this.state.tooltipTop < -20) {
+        clearTimeout(tooltipTimeout);
+        this.stageData.stage.container().style.cursor = 'auto';
+        this.setState({
+          tooltipVisible: false,
+        });
+      }
       if (!isMouseDown) {
         return;
       }
