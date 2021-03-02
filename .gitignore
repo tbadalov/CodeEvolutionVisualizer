@@ -1,4 +1,5 @@
 node_modules/
 uploads/
 session_data/
+views/index.ejs
 *.swp
