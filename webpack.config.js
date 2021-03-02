@@ -70,7 +70,14 @@ module.exports = (env, options) => {
     output: {
       filename: '[name].bundle.js',
       path: path.resolve(__dirname, options.mode !== 'production' ? 'dist' : 'public/javascripts'),
-      publicPath: '/javascripts',
+      publicPath: options.mode !== 'production' ? undefined : '/javascripts',
     },
+    devServer: {
+      proxy: {
+        '/commit_range_data': 'http://localhost:3000',
+        '/class_overview': 'http://localhost:3000',
+        '/call_volume': 'http://localhost:3000',
+      }
+    }
   };
 };
