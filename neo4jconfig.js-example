@@ -1,5 +1,5 @@
 module.exports = {
   user: 'neo4j',
-  password: 'some_pass',
-  uri: 'bolt://localhost:7687'
+  password: process.env.NEO4J_PASS,
+  uri: process.env.NEO4J_URI,
 }

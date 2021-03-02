@@ -7,7 +7,7 @@
     "dev:start-server": "node ./bin/www",
     "dev:start-ui": "./node_modules/.bin/webpack serve --mode development",
     "prod:build": "./node_modules/.bin/webpack bundle --mode production",
-    "heroku-postbuild": "npm run prod:build",
+    "heroku-postbuild": "npm run prod:build && mv neo4jconfig.js-example neo4jconfig.js",
     "start": "node ./bin/www",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
