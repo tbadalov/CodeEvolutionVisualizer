@@ -41,9 +41,8 @@ function shuffle(array) {
   return array;
 }
 
-
-
 function redraw() {
+  this.stageData.stage.destroyChildren();
   updateSize.call(this);
   this.callVolumeDiagramSketcher.draw(this.stageData.stage, this.state.selectedCommit);
 }
@@ -140,6 +139,10 @@ class CallVolumeDiagram extends React.Component {
   }
 
   render() {
+    const randomDiagramGenerator = () => {
+      this.props.rawData.commits[this.state.selectedCommit].classesArray = shuffle(this.props.rawData.commits[this.state.selectedCommit].classesArray);
+      this.forceUpdate();
+      };
     return(
       <div
         className="scroll-container"
@@ -152,8 +155,8 @@ class CallVolumeDiagram extends React.Component {
             ref={this.diagramContainerRef} >
           </div>
         </div>
-        <SwitchCommitButton direction='prev' />
-        <SwitchCommitButton direction='next' />
+        <SwitchCommitButton direction='prev' onSwitchCommitButtonClick={randomDiagramGenerator} />
+        <SwitchCommitButton direction='next' onSwitchCommitButtonClick={randomDiagramGenerator} />
         <PlayButton />
       </div>
     );
