@@ -198,6 +198,22 @@ class CallVolumeDiagramSketcher {
     );
     
     this.drawBranches(layer, branches);
+    layer.add(new Konva.Rect({
+      x: 600,
+      y: 0,
+      width: 1,
+      height: 100,
+      fill: 'green',
+    }));
+    for (let i = 0; i < 1000; i++) {
+      layer.add(new Konva.Rect({
+        x: 602 + i * 0.001 - 0.0001,
+        y: 0,
+        width: 0.0011,
+        height: 100,
+        fill: 'green',
+      }));
+    }
     stage.batchDraw();
   }
 }

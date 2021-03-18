@@ -211,6 +211,44 @@ function draw(stage, chartLayer, axisLayer, visualData, skipAxis, onLabelClick) 
     drawBar.call(this, chartLayer, bar, onLabelClick, stackMouseEnterEventListener, stackMouseMoveEventListener, stackMouseLeaveEventListener);
   });
   chartLayer.draw();
+  var scaleBy = 1.03;
+  document.addEventListener('keydown', event => {
+    console.log(event);
+    if (event.key === '-') {
+      var oldScale = chartLayer.scaleX();
+      /*var mousePointTo = {
+        x: (pointer.x - chartLayer.x()) / oldScale,
+        y: (pointer.y - chartLayer.y()) / oldScale,
+      };*/
+      var newScale = oldScale / scaleBy;
+
+          chartLayer.scale({ x: newScale });
+      chartLayer.draw();
+    }
+  })
+  stage.on('wheel', (e) => {
+      if (e.evt.deltaX != 0) {
+        return;
+      }
+      e.evt.preventDefault();
+      //var pointer = chartLayer.getPointerPosition();
+      var oldScale = chartLayer.scaleX();
+      /*var mousePointTo = {
+        x: (pointer.x - chartLayer.x()) / oldScale,
+        y: (pointer.y - chartLayer.y()) / oldScale,
+      };*/
+      var newScale =
+          e.evt.deltaY > 0 ? oldScale * scaleBy : (e.evt.deltaY < 0 ? oldScale / scaleBy : oldScale);
+
+          chartLayer.scale({ x: newScale });
+      chartLayer.draw();
+    });
+  /*if (!intervaluwka) {
+    intervaluwka = setInterval(() => {
+      chartLayer.scaleX(chartLayer.scaleX()-0.02);
+      this.refreshDiagram();
+    }, 300);
+  }*/
 }
 
 class CommitRangeView extends React.Component {
