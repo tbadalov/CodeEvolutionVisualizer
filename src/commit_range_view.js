@@ -1,10 +1,10 @@
 const React = require('react');
 const Konva = require('konva');
 const BarDataManager = require('./bar_data_manager');
-const selectionRectangleStyle = require('./css/selection-rectangle.css');
 const Tooltip = require('./tooltip');
 const TooltipCommitRangeItem = require('./tooltip_commit_range_item');
 const CommitDetailTooltipItem = require('./commit_detail_tooltip_item');
+const MouseSelectionArea = require('./mouse_selection_area');
 
 const BAR_WIDTH = 30;
 const BAR_PADDING = 2;
@@ -226,6 +226,13 @@ class CommitRangeView extends React.Component {
       tooltipVisible: false,
       tooltipLeft: 0,
       tooltipTop: 0,
+      mouseSelectionAreaProps: {
+        x: 0,
+        y: 0,
+        width: 0,
+        height: 0,
+        isActive: false,
+      },
     }
   }
 
@@ -262,7 +269,6 @@ class CommitRangeView extends React.Component {
     const diagramContainer = this.diagramContainerRef.current;
     const scrollContainer = this.scrollContainer.current;
     const largeContainer = this.largeContainer.current;
-    const selectionRectangle = this.selectionRectangleRef.current;
     this.containers = {
       diagramContainer,
       scrollContainer,
@@ -360,7 +366,12 @@ class CommitRangeView extends React.Component {
       }
     });
     document.addEventListener('mouseup', () => {
-      selectionRectangle.style.display = 'none';
+      this.setState({
+        mouseSelectionAreaProps: {
+          ...this.state.mouseSelectionAreaProps,
+          isActive: false,
+        },
+      });
       isMouseDown = false;
       if (isSelecting) {
         clearInterval(scrollInterval);
@@ -431,11 +442,7 @@ class CommitRangeView extends React.Component {
             >
             </div>
           </div>
-          <div
-              className="selection-rectangle"
-              ref={this.selectionRectangleRef}
-            >
-            </div>
+          <MouseSelectionArea {...this.state.mouseSelectionAreaProps}/>
         </div>
       </div>
     );
