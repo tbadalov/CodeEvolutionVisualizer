@@ -259,22 +259,11 @@ class CommitRangeView extends React.Component {
     }
   }
 
-  onScrollContainerMouseMove(e) {
-    this.ensureTooltipCloses(e.pageX, e.pageY);
+  adjustMouseSelectionAreaSize(mousePositionPageX) {
     const scrollContainer = this.scrollContainer.current;
-    if (!isMouseDown) {
-      return;
-    }
-    isSelecting = true;
-    console.log(scrollContainer);
-    e.preventDefault();
-    console.log("nya");
-    currentX = e.pageX - scrollContainer.offsetLeft + scrollContainer.scrollLeft;
-    currentY = e.pageY - scrollContainer.offsetTop + scrollContainer.scrollTop;
-    console.log("currentX=" + currentX);
-    console.log("currentY=" + currentY);
-    let selectionRectangleLeftX = Math.min(selectionStartX, currentX);
-    let selectionWidth = Math.max(selectionStartX, currentX) - selectionRectangleLeftX;
+    currentX = mousePositionPageX - scrollContainer.offsetLeft + scrollContainer.scrollLeft;
+    const selectionRectangleLeftX = Math.min(selectionStartX, currentX);
+    const selectionWidth = Math.max(selectionStartX, currentX) - selectionRectangleLeftX;
     this.setState({
       mouseSelectionAreaProps: {
         ...this.state.mouseSelectionAreaProps,
@@ -284,9 +273,19 @@ class CommitRangeView extends React.Component {
         isActive: true,
       },
     });
+  }
+
+  onScrollContainerMouseMove(e) {
+    this.ensureTooltipCloses(e.pageX, e.pageY);
+    const scrollContainer = this.scrollContainer.current;
+    if (!isMouseDown) {
+      return;
+    }
+    isSelecting = true;
+    e.preventDefault();
+    this.adjustMouseSelectionAreaSize(e.pageX);
     let scrollDelta = 0;
     let viewportPositionX = currentX - scrollContainer.scrollLeft;
-    let viewportPositionY = currentY - scrollContainer.scrollTop;
     const SCROLL_AREA_WIDTH = 30;
     const MAX_SCROLL_SPEED = 30; // pixels per interval
     if (viewportPositionX > scrollContainer.clientWidth - SCROLL_AREA_WIDTH) {
@@ -305,7 +304,6 @@ class CommitRangeView extends React.Component {
         console.log("viewPortPositionX = " + viewportPositionX);
         console.log("scroll width=" + scrollContainer.clientWidth);
         console.log("scroll left = " + scrollContainer.scrollLeft);
-        let viewportPositionY = currentY - scrollContainer.scrollTop;
         if (viewportPositionX > scrollContainer.clientWidth - SCROLL_AREA_WIDTH) {
           console.log((Math.min(viewportPositionX, scrollContainer.clientWidth) - (scrollContainer.clientWidth - SCROLL_AREA_WIDTH)));
           scrollDelta = (Math.min(viewportPositionX, scrollContainer.clientWidth) - (scrollContainer.clientWidth - SCROLL_AREA_WIDTH)) / SCROLL_AREA_WIDTH * MAX_SCROLL_SPEED;
