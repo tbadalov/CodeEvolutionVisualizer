@@ -365,8 +365,6 @@ class CommitRangeView extends React.Component {
       axisLayer,
       chartLayer,
     };
-    scrollContainer.addEventListener('scroll', this.refreshDiagram);
-    
     scrollContainer.addEventListener('mousedown', (e) => {
       isMouseDown = true;
       selectionStartX = e.pageX - scrollContainer.offsetLeft + scrollContainer.scrollLeft;
@@ -374,7 +372,6 @@ class CommitRangeView extends React.Component {
       console.log(selectionStartX, selectionStartY);
       console.log(e);
     });
-    scrollContainer.addEventListener('mousemove', this.onScrollContainerMouseMove);
     document.addEventListener('mouseup', () => {
       this.setState({
         mouseSelectionAreaProps: {
@@ -445,6 +442,8 @@ class CommitRangeView extends React.Component {
         />
         <div
           className="scroll-container"
+          onScroll={this.refreshDiagram}
+          onMouseMove={this.onScrollContainerMouseMove}
           ref={this.scrollContainer}
         >
           <div
