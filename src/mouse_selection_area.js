@@ -1,28 +1,38 @@
 const React = require('react');
 const selectionRectangleStyle = require('./css/selection-rectangle.css');
 
-function MouseSelectionArea(props) {
-  const classNames = ['selection-rectangle'];
-  const style = {};
-  if (props.isActive) {
-    classNames.push('selection-rectangle-active');
-    Object.assign(
-      style,
-      {
-        left: props.x,
-        top: props.y,
-        width: props.width,
-        height: props.height,
-      }
-    );
+class MouseSelectionArea extends React.PureComponent {
+  constructor(props) {
+    super(props);
+    this.rectangleAreaRef = React.createRef();
   }
 
-  return(
-    <div
-      className={classNames.join(' ')}
-      style={style}
-    ></div>
-  );
+  render() {
+    const classNames = ['selection-rectangle'];
+    const style = {};
+    if (this.props.isActive) {
+      classNames.push('selection-rectangle-active');
+      const sumOfTopAndBottomBorderWidths = this.rectangleAreaRef.current.offsetWidth - this.rectangleAreaRef.current.clientWidth;
+      const divHeight = this.props.height - sumOfTopAndBottomBorderWidths;
+      Object.assign(
+        style,
+        {
+          left: this.props.x,
+          top: this.props.y,
+          width: this.props.width,
+          height: divHeight,
+        }
+      );
+    }
+
+    return(
+      <div
+        className={classNames.join(' ')}
+        style={style}
+        ref={this.rectangleAreaRef}
+      ></div>
+    );
+  }
 }
 
 module.exports = MouseSelectionArea;
