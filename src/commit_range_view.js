@@ -222,6 +222,7 @@ class CommitRangeView extends React.Component {
     this.selectionRectangleRef = React.createRef();
     this.clickCommit = this.clickCommit.bind(this);
     this.refreshDiagram = this.refreshDiagram.bind(this);
+    this.onScrollContainerMouseMove = this.onScrollContainerMouseMove.bind(this);
     this.state = {
       tooltipVisible: false,
       tooltipLeft: 0,
@@ -244,6 +245,79 @@ class CommitRangeView extends React.Component {
         classToColorMapping: this.props.classToColorMapping,
       }
     );
+  }
+
+  ensureTooltipCloses(mousePositionPageX, mousePositionPageY) {
+    if (this.state.tooltipVisible && mousePositionPageX - this.state.tooltipLeft < -20 && mousePositionPageY - this.state.tooltipTop < -20) {
+      clearTimeout(tooltipTimeout);
+      this.stageData.stage.container().style.cursor = 'auto';
+      this.setState({
+        tooltipVisible: false,
+      });
+    }
+  }
+
+  onScrollContainerMouseMove(e) {
+    this.ensureTooltipCloses(e.pageX, e.pageY);
+    const scrollContainer = this.scrollContainer.current;
+    if (!isMouseDown) {
+      return;
+    }
+    isSelecting = true;
+    console.log(scrollContainer);
+    e.preventDefault();
+    console.log("nya");
+    currentX = e.pageX - scrollContainer.offsetLeft + scrollContainer.scrollLeft;
+    currentY = e.pageY - scrollContainer.offsetTop + scrollContainer.scrollTop;
+    console.log("currentX=" + currentX);
+    console.log("currentY=" + currentY);
+    let selectionRectangleLeftX = Math.min(selectionStartX, currentX);
+    let selectionRectangleTopY = Math.min(selectionStartY, currentY);
+    let selectionWidth = Math.max(selectionStartX, currentX) - selectionRectangleLeftX;
+    let selectionHeight = Math.max(selectionStartY, currentY) - selectionRectangleTopY;
+    this.setState({
+      mouseSelectionAreaProps: {
+        ...this.state.mouseSelectionAreaProps,
+        x: selectionRectangleLeftX,
+        width: selectionWidth,
+        height: scrollContainer.clientHeight - 2,
+        isActive: true,
+      },
+    });
+    //selectionRectangle.style.top = selectionRectangleTopY + 'px';
+    let scrollDelta = 0;
+    let viewportPositionX = currentX - scrollContainer.scrollLeft;
+    let viewportPositionY = currentY - scrollContainer.scrollTop;
+    const SCROLL_AREA_WIDTH = 30;
+    const MAX_SCROLL_SPEED = 30; // pixels per interval
+    if (viewportPositionX > scrollContainer.clientWidth - SCROLL_AREA_WIDTH) {
+      scrollDelta = (Math.min(viewportPositionX, scrollContainer.clientWidth) - (scrollContainer.clientWidth - SCROLL_AREA_WIDTH)) / SCROLL_AREA_WIDTH * MAX_SCROLL_SPEED;
+      isAutoScrolling = true;
+    } else if (viewportPositionX < SCROLL_AREA_WIDTH) {
+      scrollDelta = (Math.max(0, viewportPositionX) - SCROLL_AREA_WIDTH) / SCROLL_AREA_WIDTH * MAX_SCROLL_SPEED;
+      isAutoScrolling = true;
+    }
+    currentX += scrollDelta;
+    scrollContainer.scrollBy(scrollDelta, 0);
+    if (isAutoScrolling && !scrollInterval) {
+      scrollInterval = setInterval(() => {
+        let scrollDelta = 0;
+        let viewportPositionX = currentX - scrollContainer.scrollLeft;
+        console.log("viewPortPositionX = " + viewportPositionX);
+        console.log("scroll width=" + scrollContainer.clientWidth);
+        console.log("scroll left = " + scrollContainer.scrollLeft);
+        let viewportPositionY = currentY - scrollContainer.scrollTop;
+        if (viewportPositionX > scrollContainer.clientWidth - SCROLL_AREA_WIDTH) {
+          console.log((Math.min(viewportPositionX, scrollContainer.clientWidth) - (scrollContainer.clientWidth - SCROLL_AREA_WIDTH)));
+          scrollDelta = (Math.min(viewportPositionX, scrollContainer.clientWidth) - (scrollContainer.clientWidth - SCROLL_AREA_WIDTH)) / SCROLL_AREA_WIDTH * MAX_SCROLL_SPEED;
+        } else if (viewportPositionX < SCROLL_AREA_WIDTH) {
+          scrollDelta = (Math.max(0, viewportPositionX) - SCROLL_AREA_WIDTH) / SCROLL_AREA_WIDTH * MAX_SCROLL_SPEED;
+        }
+        currentX += scrollDelta;
+        console.log("scrollDelta=" + scrollDelta);
+        scrollContainer.scrollBy(scrollDelta, 0);
+      }, 10);
+    }
   }
 
   refreshDiagram() {
@@ -303,68 +377,7 @@ class CommitRangeView extends React.Component {
       console.log(selectionStartX, selectionStartY);
       console.log(e);
     });
-    scrollContainer.addEventListener('mousemove', (e) => {
-      if (this.state.tooltipVisible && e.pageX - this.state.tooltipLeft < -20 && e.pageY - this.state.tooltipTop < -20) {
-        clearTimeout(tooltipTimeout);
-        this.stageData.stage.container().style.cursor = 'auto';
-        this.setState({
-          tooltipVisible: false,
-        });
-      }
-      if (!isMouseDown) {
-        return;
-      }
-      isSelecting = true;
-      console.log(scrollContainer);
-      e.preventDefault();
-      console.log("nya");
-      currentX = e.pageX - scrollContainer.offsetLeft + scrollContainer.scrollLeft;
-      currentY = e.pageY - scrollContainer.offsetTop + scrollContainer.scrollTop;
-      console.log("currentX=" + currentX);
-      console.log("currentY=" + currentY);
-      let selectionRectangleLeftX = Math.min(selectionStartX, currentX);
-      let selectionRectangleTopY = Math.min(selectionStartY, currentY);
-      let selectionWidth = Math.max(selectionStartX, currentX) - selectionRectangleLeftX;
-      let selectionHeight = Math.max(selectionStartY, currentY) - selectionRectangleTopY;
-      selectionRectangle.style.display = 'block';
-      selectionRectangle.style.width = selectionWidth + 'px';
-      selectionRectangle.style.height = (scrollContainer.clientHeight-2) + 'px'; // -2 for each border: top and bottom
-      selectionRectangle.style.left = selectionRectangleLeftX + 'px';
-      //selectionRectangle.style.top = selectionRectangleTopY + 'px';
-      let scrollDelta = 0;
-      let viewportPositionX = currentX - scrollContainer.scrollLeft;
-      let viewportPositionY = currentY - scrollContainer.scrollTop;
-      const SCROLL_AREA_WIDTH = 30;
-      const MAX_SCROLL_SPEED = 30; // pixels per interval
-      if (viewportPositionX > scrollContainer.clientWidth - SCROLL_AREA_WIDTH) {
-        scrollDelta = (Math.min(viewportPositionX, scrollContainer.clientWidth) - (scrollContainer.clientWidth - SCROLL_AREA_WIDTH)) / SCROLL_AREA_WIDTH * MAX_SCROLL_SPEED;
-        isAutoScrolling = true;
-      } else if (viewportPositionX < SCROLL_AREA_WIDTH) {
-        scrollDelta = (Math.max(0, viewportPositionX) - SCROLL_AREA_WIDTH) / SCROLL_AREA_WIDTH * MAX_SCROLL_SPEED;
-        isAutoScrolling = true;
-      }
-      currentX += scrollDelta;
-      scrollContainer.scrollBy(scrollDelta, 0);
-      if (isAutoScrolling && !scrollInterval) {
-        scrollInterval = setInterval(() => {
-          let scrollDelta = 0;
-          let viewportPositionX = currentX - scrollContainer.scrollLeft;
-          console.log("viewPortPositionX = " + viewportPositionX);
-          console.log("scroll width=" + scrollContainer.clientWidth);
-          console.log("scroll left = " + scrollContainer.scrollLeft);
-          let viewportPositionY = currentY - scrollContainer.scrollTop;
-          if (viewportPositionX > scrollContainer.clientWidth - SCROLL_AREA_WIDTH) {
-            console.log((Math.min(viewportPositionX, scrollContainer.clientWidth) - (scrollContainer.clientWidth - SCROLL_AREA_WIDTH)));
-            scrollDelta = (Math.min(viewportPositionX, scrollContainer.clientWidth) - (scrollContainer.clientWidth - SCROLL_AREA_WIDTH)) / SCROLL_AREA_WIDTH * MAX_SCROLL_SPEED;
-          } else if (viewportPositionX < SCROLL_AREA_WIDTH) {
-            scrollDelta = (Math.max(0, viewportPositionX) - SCROLL_AREA_WIDTH) / SCROLL_AREA_WIDTH * MAX_SCROLL_SPEED;
-          }
-          currentX += scrollDelta;
-          console.log("scrollDelta=" + scrollDelta);
-          scrollContainer.scrollBy(scrollDelta, 0);
-        }, 10);
-      }
-    });
+    scrollContainer.addEventListener('mousemove', this.onScrollContainerMouseMove);
     document.addEventListener('mouseup', () => {
       this.setState({
         mouseSelectionAreaProps: {
