@@ -224,6 +224,8 @@ class CommitRangeView extends React.Component {
     this.refreshDiagram = this.refreshDiagram.bind(this);
     this.onScrollContainerMouseMove = this.onScrollContainerMouseMove.bind(this);
     this.state = {
+      width: 0,
+      height: 0,
       tooltipVisible: false,
       tooltipLeft: 0,
       tooltipTop: 0,
@@ -272,19 +274,16 @@ class CommitRangeView extends React.Component {
     console.log("currentX=" + currentX);
     console.log("currentY=" + currentY);
     let selectionRectangleLeftX = Math.min(selectionStartX, currentX);
-    let selectionRectangleTopY = Math.min(selectionStartY, currentY);
     let selectionWidth = Math.max(selectionStartX, currentX) - selectionRectangleLeftX;
-    let selectionHeight = Math.max(selectionStartY, currentY) - selectionRectangleTopY;
     this.setState({
       mouseSelectionAreaProps: {
         ...this.state.mouseSelectionAreaProps,
         x: selectionRectangleLeftX,
         width: selectionWidth,
-        height: scrollContainer.clientHeight - 2,
+        height: this.state.height,
         isActive: true,
       },
     });
-    //selectionRectangle.style.top = selectionRectangleTopY + 'px';
     let scrollDelta = 0;
     let viewportPositionX = currentX - scrollContainer.scrollLeft;
     let viewportPositionY = currentY - scrollContainer.scrollTop;
@@ -423,12 +422,17 @@ class CommitRangeView extends React.Component {
     const chartLayer = this.stageData.chartLayer;
     const axisLayer = this.stageData.axisLayer;
     const stageWidth = this.barDataManager.calculateStageWidth();
-    largeContainer.style.width = (stageWidth+Y_AXIS_WIDTH) + 'px';
+    const canvasWidth = stageWidth + Y_AXIS_WIDTH;
+    largeContainer.style.width = canvasWidth + 'px';
     //height should be assigned after width because of appearing scrollbar
-    largeContainer.style.height = scrollContainer.clientHeight + 'px';
+    const canvasHeight = scrollContainer.clientHeight;
+    largeContainer.style.height = canvasHeight + 'px';
     stage.height(this.barDataManager.calculateStageHeight());
-    
     this.refreshDiagram();
+    this.setState({
+      width: canvasWidth,
+      height: canvasHeight,
+    });
   }
 
   render() {
