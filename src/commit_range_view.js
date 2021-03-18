@@ -211,7 +211,7 @@ function draw(stage, chartLayer, axisLayer, visualData, skipAxis, onLabelClick) 
     drawBar.call(this, chartLayer, bar, onLabelClick, stackMouseEnterEventListener, stackMouseMoveEventListener, stackMouseLeaveEventListener);
   });
   chartLayer.draw();
-  var scaleBy = 1.03;
+  var scaleBy = 1.02;
   document.addEventListener('keydown', event => {
     console.log(event);
     if (event.key === '-') {
@@ -366,7 +366,7 @@ class CommitRangeView extends React.Component {
     const dx = this.scrollContainer.current.scrollLeft;
     const dy = 0;
     this.stageData.chartLayer.destroyChildren();
-    const visualData = this.barDataManager.barsFromRange(dx-PADDING, dx+this.scrollContainer.current.clientWidth+PADDING);
+    const visualData = this.barDataManager.barsFromRange(dx-PADDING, dx+this.scrollContainer.current.clientWidth+100*PADDING);
     const axis = this.barDataManager.axisData();
     this.stageData.stage.container().style.transform = 'translate(' + dx + 'px, ' + dy + 'px)';
     this.stageData.chartLayer.x(PADDING+Y_AXIS_WIDTH-dx);
