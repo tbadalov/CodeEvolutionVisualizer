@@ -282,6 +282,7 @@ class CommitRangeView extends React.Component {
         width: 0,
         height: 0,
         scale: 1.0,
+        x: -PADDING,
       },
     };
   }
@@ -394,7 +395,6 @@ class CommitRangeView extends React.Component {
     };
 
     const stage = this.stageRef.current;
-    stage.x(-PADDING); // make a room for padding
     const axisLayer = new Konva.Layer({
       x: PADDING, // since stage starts counting from -PADDING, we need to start from PADDING, so that visually we start from 0 but have PADDING amount of empty space in the left
     });
