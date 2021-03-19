@@ -8,7 +8,7 @@ const MouseSelectionArea = require('./mouse_selection_area');
 
 const BAR_WIDTH = 30;
 const BAR_PADDING = 2;
-const SCALE_BY = 1.02;
+const SCALE_BY = 1.03;
 const BAR_LAYER_LEFT_MARGIN = 40;
 const Y_AXIS_WIDTH = 100;
 const Y_AXIS_LINE_WIDTH = 6;
@@ -218,6 +218,12 @@ function scaleChartLayer(chartLayer, scaleBy) {
   var oldScale = chartLayer.scaleX();
   var newScale = oldScale * scaleBy;
   chartLayer.scale({ x: newScale });
+  this.setState({
+    stageProps: {
+      ...this.state.stageProps,
+      scale: newScale,
+    },
+  });
   this.refreshDiagram();
 }
 
@@ -271,7 +277,10 @@ class CommitRangeView extends React.Component {
         height: 0,
         isActive: false,
       },
-    }
+      stageProps: {
+        scale: 1.0,
+      },
+    };
   }
 
   clickCommit(commit) {
@@ -363,7 +372,7 @@ class CommitRangeView extends React.Component {
     const dx = this.scrollContainer.current.scrollLeft;
     const dy = 0;
     this.stageData.chartLayer.destroyChildren();
-    const visualData = this.barDataManager.barsFromRange(dx-PADDING, (dx+this.scrollContainer.current.clientWidth+PADDING)/this.stageData.stage.scaleX());
+    const visualData = this.barDataManager.barsFromRange(dx-PADDING, (dx+this.scrollContainer.current.clientWidth+PADDING)/this.state.stageProps.scale);
     const axis = this.barDataManager.axisData();
     this.stageData.stage.container().style.transform = 'translate(' + dx + 'px, ' + dy + 'px)';
     this.stageData.chartLayer.x(PADDING+Y_AXIS_WIDTH-dx);
@@ -385,7 +394,7 @@ class CommitRangeView extends React.Component {
       container: diagramContainer,
       width: scrollContainer.parentElement.clientWidth + PADDING * 2,
       height: scrollContainer.parentElement.clientHeight,
-      scale: 1,
+      scale: this.state.stageProps.scale,
     });
     stage.x(-PADDING); // make a room for padding
     const axisLayer = new Konva.Layer({
