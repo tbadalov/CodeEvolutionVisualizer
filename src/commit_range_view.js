@@ -1,5 +1,5 @@
 const React = require('react');
-const Konva = require('konva');
+const { Stage } = require('react-konva');
 const BarDataManager = require('./bar_data_manager');
 const Tooltip = require('./tooltip');
 const TooltipCommitRangeItem = require('./tooltip_commit_range_item');
@@ -261,6 +261,7 @@ class CommitRangeView extends React.Component {
     this.scrollContainer = React.createRef();
     this.largeContainer = React.createRef();
     this.selectionRectangleRef = React.createRef();
+    this.stageRef = React.createRef();
     this.clickCommit = this.clickCommit.bind(this);
     this.refreshDiagram = this.refreshDiagram.bind(this);
     this.onScrollContainerMouseMove = this.onScrollContainerMouseMove.bind(this);
@@ -278,6 +279,8 @@ class CommitRangeView extends React.Component {
         isActive: false,
       },
       stageProps: {
+        width: 0,
+        height: 0,
         scale: 1.0,
       },
     };
@@ -390,12 +393,7 @@ class CommitRangeView extends React.Component {
       largeContainer,
     };
 
-    const stage = new Konva.Stage({
-      container: diagramContainer,
-      width: scrollContainer.parentElement.clientWidth + PADDING * 2,
-      height: scrollContainer.parentElement.clientHeight,
-      scale: this.state.stageProps.scale,
-    });
+    const stage = this.stageRef.current;
     stage.x(-PADDING); // make a room for padding
     const axisLayer = new Konva.Layer({
       x: PADDING, // since stage starts counting from -PADDING, we need to start from PADDING, so that visually we start from 0 but have PADDING amount of empty space in the left
@@ -446,33 +444,39 @@ class CommitRangeView extends React.Component {
     });
   }
 
-  componentDidUpdate(prevProps) {
+  componentDidUpdate(prevProps, prevState) {
     console.log("updating...")
-    if (this.props.data === prevProps.data && this.props.disabledClasses === prevProps.disabledClasses) {
+    if (this.props.data === prevProps.data && this.props.disabledClasses === prevProps.disabledClasses && this.state.stageProps.width === prevState.stageProps.width && this.state.stageProps.height === prevState.stageProps.height) {
       return;
     }
     console.log(this.props);
-    const diagramContainer = this.diagramContainerRef.current;
     const scrollContainer = this.scrollContainer.current;
     const largeContainer = this.largeContainer.current;
     this.barDataManager = new BarDataManager(this.props.data, this.props.classToColorMapping, largeContainer);
     Object.keys(this.props.disabledClasses).forEach(className => this.barDataManager.disable(className));
 
-    const stage = this.stageData.stage;
-    const chartLayer = this.stageData.chartLayer;
-    const axisLayer = this.stageData.axisLayer;
-    const stageWidth = this.barDataManager.calculateStageWidth();
-    const canvasWidth = stageWidth + Y_AXIS_WIDTH;
-    largeContainer.style.width = canvasWidth + 'px';
-    //height should be assigned after width because of appearing scrollbar
-    const canvasHeight = scrollContainer.clientHeight;
-    largeContainer.style.height = canvasHeight + 'px';
-    stage.height(this.barDataManager.calculateStageHeight());
+    if (this.state.stageProps.width <= 0) {
+      const stageWidth = this.barDataManager.calculateStageWidth();
+      const canvasWidth = stageWidth + Y_AXIS_WIDTH;
+      largeContainer.style.width = canvasWidth + 'px';
+      this.setState({
+        stageProps: {
+          ...this.state.stageProps,
+          width: canvasWidth,
+        },
+      });
+    } else if(this.state.stageProps.height <= 0) {
+      //height should be assigned after width because of appearing scrollbar
+      const canvasHeight = scrollContainer.clientHeight;
+      largeContainer.style.height = canvasHeight + 'px';
+      this.setState({
+        stageProps: {
+          ...this.state.stageProps,
+          height: this.barDataManager.calculateStageHeight(),
+        },
+      });
+    }
     this.refreshDiagram();
-    this.setState({
-      width: canvasWidth,
-      height: canvasHeight,
-    });
   }
 
   render() {
@@ -499,6 +503,9 @@ class CommitRangeView extends React.Component {
               className="container"
               ref={this.diagramContainerRef}
             >
+            <Stage {...this.state.stageProps} ref={this.stageRef}>
+
+            </Stage>
             </div>
           </div>
           <MouseSelectionArea {...this.state.mouseSelectionAreaProps}/>
