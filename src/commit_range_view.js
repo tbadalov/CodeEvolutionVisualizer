@@ -8,6 +8,7 @@ const MouseSelectionArea = require('./mouse_selection_area');
 
 const BAR_WIDTH = 30;
 const BAR_PADDING = 2;
+const SCALE_BY = 1.02;
 const BAR_LAYER_LEFT_MARGIN = 40;
 const Y_AXIS_WIDTH = 100;
 const Y_AXIS_LINE_WIDTH = 6;
@@ -24,6 +25,7 @@ let scrollInterval;
 let currentX;
 let currentY;
 let tooltipTimeout;
+let stageWheelListenerAdded = false;
 
 
 function mouseMoveListener(event, barDataManager, scrollContainer) {
@@ -191,6 +193,34 @@ function drawAxis(layer, axis) {
   }
 }
 
+function onKeyDownEventListener(chartLayer, e) {
+  let scaleBy = 1.0;
+  switch(e.key) {
+    case '-':
+      scaleBy = 1.0 / SCALE_BY;
+      break;
+    case '+':
+      scaleBy = SCALE_BY;
+      break;
+  }
+  scaleChartLayer.call(this, chartLayer, scaleBy);
+}
+
+function onStageWheelEventListener(chartLayer, e) {
+  if (e.evt.deltaX !== 0 || e.evt.deltaY === 0) {
+    return;
+  }
+  const scaleBy = e.evt.deltaY > 0 ? SCALE_BY : 1.0 / SCALE_BY;
+  scaleChartLayer.call(this, chartLayer, scaleBy);
+}
+
+function scaleChartLayer(chartLayer, scaleBy) {
+  var oldScale = chartLayer.scaleX();
+  var newScale = oldScale * scaleBy;
+  chartLayer.scale({ x: newScale });
+  this.refreshDiagram();
+}
+
 
 function draw(stage, chartLayer, axisLayer, visualData, skipAxis, onLabelClick) {
   if (!skipAxis) {
@@ -211,44 +241,11 @@ function draw(stage, chartLayer, axisLayer, visualData, skipAxis, onLabelClick) 
     drawBar.call(this, chartLayer, bar, onLabelClick, stackMouseEnterEventListener, stackMouseMoveEventListener, stackMouseLeaveEventListener);
   });
   chartLayer.draw();
-  var scaleBy = 1.02;
-  document.addEventListener('keydown', event => {
-    console.log(event);
-    if (event.key === '-') {
-      var oldScale = chartLayer.scaleX();
-      /*var mousePointTo = {
-        x: (pointer.x - chartLayer.x()) / oldScale,
-        y: (pointer.y - chartLayer.y()) / oldScale,
-      };*/
-      var newScale = oldScale / scaleBy;
-
-          chartLayer.scale({ x: newScale });
-      chartLayer.draw();
-    }
-  })
-  stage.on('wheel', (e) => {
-      if (e.evt.deltaX != 0) {
-        return;
-      }
-      e.evt.preventDefault();
-      //var pointer = chartLayer.getPointerPosition();
-      var oldScale = chartLayer.scaleX();
-      /*var mousePointTo = {
-        x: (pointer.x - chartLayer.x()) / oldScale,
-        y: (pointer.y - chartLayer.y()) / oldScale,
-      };*/
-      var newScale =
-          e.evt.deltaY > 0 ? oldScale * scaleBy : (e.evt.deltaY < 0 ? oldScale / scaleBy : oldScale);
-
-          chartLayer.scale({ x: newScale });
-      chartLayer.draw();
-    });
-  /*if (!intervaluwka) {
-    intervaluwka = setInterval(() => {
-      chartLayer.scaleX(chartLayer.scaleX()-0.02);
-      this.refreshDiagram();
-    }, 300);
-  }*/
+  if (!stageWheelListenerAdded) {
+    document.addEventListener('keydown', onKeyDownEventListener.bind(this, chartLayer));
+    stage.on('wheel', onStageWheelEventListener.bind(this, chartLayer));
+    stageWheelListenerAdded = true;
+  }
 }
 
 class CommitRangeView extends React.Component {
@@ -366,7 +363,7 @@ class CommitRangeView extends React.Component {
     const dx = this.scrollContainer.current.scrollLeft;
     const dy = 0;
     this.stageData.chartLayer.destroyChildren();
-    const visualData = this.barDataManager.barsFromRange(dx-PADDING, dx+this.scrollContainer.current.clientWidth+100*PADDING);
+    const visualData = this.barDataManager.barsFromRange(dx-PADDING, (dx+this.scrollContainer.current.clientWidth+PADDING)/this.stageData.stage.scaleX());
     const axis = this.barDataManager.axisData();
     this.stageData.stage.container().style.transform = 'translate(' + dx + 'px, ' + dy + 'px)';
     this.stageData.chartLayer.x(PADDING+Y_AXIS_WIDTH-dx);
@@ -388,6 +385,7 @@ class CommitRangeView extends React.Component {
       container: diagramContainer,
       width: scrollContainer.parentElement.clientWidth + PADDING * 2,
       height: scrollContainer.parentElement.clientHeight,
+      scale: 1,
     });
     stage.x(-PADDING); // make a room for padding
     const axisLayer = new Konva.Layer({
