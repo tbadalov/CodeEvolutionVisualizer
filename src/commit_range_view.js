@@ -169,10 +169,9 @@ function drawBar(layer, bar, onLabelClick, stackMouseEnterEventListener, stackMo
       stack,
       stackMouseEnterEventListener,
       (e) => stackMouseMoveEventListener(e, stack.payload),
-      onMouseLeave,
       stackMouseLeaveEventListener
     );
-    reactKonvaStacks.push(drawStack);
+    reactKonvaStacks.push(drawnStack);
   }
   const reactKonvaText = drawLabel(bar.label, onLabelClick, labelMouseEnter.call(this, bar.label.payload), labelMouseLeave.bind(this));
   return (
@@ -184,24 +183,28 @@ function drawBar(layer, bar, onLabelClick, stackMouseEnterEventListener, stackMo
 }
 
 function drawAxis(layer, axis) {
-  layer.add(new Konva.Rect({
+  const yAxisProps = {
     x: 0,
     y: 0,
     width: Y_AXIS_WIDTH,
     height: layer.height(),
     fill: '#F0F0F0',
-  }));
+  };
 
-  layer.add(new Konva.Rect(axis.line));
-  for (let i = 0; i < axis.segments.length; i++) {
-    const segment = axis.segments[i];
-    layer.add(new Konva.Rect(segment));
-    layer.add(new Konva.Text({
-      text: segment.label,
-      x: segment.x - 20,
-      y: segment.y-6,
-    }));
-  }
+  return (
+    <ReactKonva.Group>
+      <ReactKonva.Rect {...yAxisProps} />
+      <ReactKonva.Rect {...axis.line} />
+      { axis.segments.map((segment, index) => <ReactKonva.Rect {...segment} key={index} />) }
+      {
+        axis.segments.map(segment => ({
+          text: segment.label,
+          x: segment.x-20,
+          y: segment.y-6,
+        })).map((segment, index) => <ReactKonva.Text {...segment} key={'text'+index} />)
+      }
+    </ReactKonva.Group>
+  )
 }
 
 function onKeyDownEventListener(chartLayer, e) {
@@ -240,9 +243,10 @@ function scaleChartLayer(chartLayer, scaleBy) {
 
 
 function draw(stage, chartLayer, axisLayer, visualData, skipAxis, onLabelClick) {
+  const axisLayerElements = [];
+  const chartLayerElements = [];
   if (!skipAxis) {
-    drawAxis(axisLayer, visualData.axis);
-    axisLayer.draw();
+    axisLayerElements.push(drawAxis(axisLayer, visualData.axis));
   }
   window.layer = chartLayer;
   window.stage = stage;
@@ -255,14 +259,17 @@ function draw(stage, chartLayer, axisLayer, visualData, skipAxis, onLabelClick) 
   visualData.bars.forEach((bar, index) => {
     //const barGroup = new Konva.Group();
     //chartLayer.add(barGroup);
-    drawBar.call(this, chartLayer, bar, onLabelClick, stackMouseEnterEventListener, stackMouseMoveEventListener, stackMouseLeaveEventListener);
+    chartLayerElements.push(drawBar.call(this, chartLayer, bar, onLabelClick, stackMouseEnterEventListener, stackMouseMoveEventListener, stackMouseLeaveEventListener));
   });
-  chartLayer.draw();
   if (!stageWheelListenerAdded) {
     document.addEventListener('keydown', onKeyDownEventListener.bind(this, chartLayer));
     stage.on('wheel', onStageWheelEventListener.bind(this, chartLayer));
     stageWheelListenerAdded = true;
   }
+  return {
+    axisLayerElements,
+    chartLayerElements,
+  };
 }
 
 class CommitRangeView extends React.Component {
@@ -388,12 +395,12 @@ class CommitRangeView extends React.Component {
     }
     const dx = this.scrollContainer.current.scrollLeft;
     const dy = 0;
-    this.stageData.chartLayer.destroyChildren();
+    //this.stageData.chartLayer.destroyChildren();
     const visualData = this.barDataManager.barsFromRange(dx-PADDING, (dx+this.scrollContainer.current.clientWidth+PADDING)/this.state.stageProps.scale);
     const axis = this.barDataManager.axisData();
     this.stageData.stage.container().style.transform = 'translate(' + dx + 'px, ' + dy + 'px)';
     this.stageData.chartLayer.x(PADDING+Y_AXIS_WIDTH-dx);
-    draw.call(this, this.stageData.stage, this.stageData.chartLayer, this.stageData.axisLayer, { axis: axis, bars: visualData.bars }, false, this.clickCommit);
+    return draw.call(this, this.stageData.stage, this.stageData.chartLayer, this.stageData.axisLayer, { axis: axis, bars: visualData.bars }, false, this.clickCommit);
   }
 
   componentDidMount() {
@@ -486,7 +493,7 @@ class CommitRangeView extends React.Component {
       });
       isSizeReady = true;
     }
-    this.refreshDiagram();
+    //this.refreshDiagram();
   }
 
   render() {
@@ -515,8 +522,12 @@ class CommitRangeView extends React.Component {
               ref={this.diagramContainerRef}
             >
             <ReactKonva.Stage {...this.state.stageProps} ref={this.stageRef}>
-              <ReactKonva.Layer {...this.state.chartLayerProps} ref={this.chartLayerRef} />
-              <ReactKonva.Layer {...this.state.axisLayerProps} ref={this.axisLayerRef} />
+              <ReactKonva.Layer {...this.state.chartLayerProps} ref={this.chartLayerRef}>
+                { konvaLayers.chartLayerElements }
+              </ReactKonva.Layer>
+              <ReactKonva.Layer {...this.state.axisLayerProps} ref={this.axisLayerRef}>
+                { konvaLayers.axisLayerElements }
+              </ReactKonva.Layer>
             </ReactKonva.Stage>
             </div>
           </div>
