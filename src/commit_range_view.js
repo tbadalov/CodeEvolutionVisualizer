@@ -289,11 +289,7 @@ class CommitRangeView extends React.Component {
 
   ensureTooltipCloses(mousePositionPageX, mousePositionPageY) {
     if (this.state.tooltipVisible && mousePositionPageX - this.state.tooltipLeft < -20 && mousePositionPageY - this.state.tooltipTop < -20) {
-      clearTimeout(tooltipTimeout);
-      this.stageData.stage.container().style.cursor = 'auto';
-      this.setState({
-        tooltipVisible: false,
-      });
+      this.hideTooltip();
     }
   }
 
@@ -355,13 +351,17 @@ class CommitRangeView extends React.Component {
     }
   }
 
+  hideTooltip() {
+    clearTimeout(tooltipTimeout);
+    this.stageData.stage.container().style.cursor = 'auto';
+    this.setState({
+      tooltipVisible: false,
+    });
+  }
+
   refreshDiagram() {
     if (this.state.tooltipVisible) {
-      clearTimeout(tooltipTimeout);
-      this.stageData.stage.container().style.cursor = 'auto';
-      this.setState({
-        tooltipVisible: false,
-      });
+      this.hideTooltip();
     }
     const dx = this.scrollContainer.current.scrollLeft;
     const dy = 0;
