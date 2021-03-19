@@ -1,5 +1,5 @@
 const React = require('react');
-const { Stage } = require('react-konva');
+const { Stage, Layer } = require('react-konva');
 const BarDataManager = require('./bar_data_manager');
 const Tooltip = require('./tooltip');
 const TooltipCommitRangeItem = require('./tooltip_commit_range_item');
@@ -26,6 +26,7 @@ let currentX;
 let currentY;
 let tooltipTimeout;
 let stageWheelListenerAdded = false;
+let isSizeReady = false;
 
 
 function mouseMoveListener(event, barDataManager, scrollContainer) {
@@ -262,6 +263,8 @@ class CommitRangeView extends React.Component {
     this.largeContainer = React.createRef();
     this.selectionRectangleRef = React.createRef();
     this.stageRef = React.createRef();
+    this.chartLayerRef = React.createRef();
+    this.axisLayerRef = React.createRef();
     this.clickCommit = this.clickCommit.bind(this);
     this.refreshDiagram = this.refreshDiagram.bind(this);
     this.onScrollContainerMouseMove = this.onScrollContainerMouseMove.bind(this);
@@ -395,14 +398,10 @@ class CommitRangeView extends React.Component {
     };
 
     const stage = this.stageRef.current;
-    const axisLayer = new Konva.Layer({
-      x: PADDING, // since stage starts counting from -PADDING, we need to start from PADDING, so that visually we start from 0 but have PADDING amount of empty space in the left
-    });
-    const chartLayer = new Konva.Layer({
-      x: PADDING+Y_AXIS_WIDTH,
-    });
-    stage.add(chartLayer);
-    stage.add(axisLayer);
+    const axisLayer = this.axisLayerRef.current;
+    const chartLayer = this.chartLayerRef.current;
+    //stage.add(chartLayer);
+    //stage.add(axisLayer);
     this.stageData = {
       stage,
       axisLayer,
@@ -475,11 +474,13 @@ class CommitRangeView extends React.Component {
           height: this.barDataManager.calculateStageHeight(),
         },
       });
+      isSizeReady = true;
     }
     this.refreshDiagram();
   }
 
   render() {
+    const konvaLayers = isSizeReady ? this.refreshDiagram() : [];
     return(
       <div>
         <Tooltip
@@ -504,7 +505,8 @@ class CommitRangeView extends React.Component {
               ref={this.diagramContainerRef}
             >
             <Stage {...this.state.stageProps} ref={this.stageRef}>
-
+              <Layer {...this.state.chartLayerProps} ref={this.chartLayerRef} />
+              <Layer {...this.state.axisLayerProps} ref={this.axisLayerRef} />
             </Stage>
             </div>
           </div>
