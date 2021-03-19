@@ -1,5 +1,5 @@
 const React = require('react');
-const { Stage, Layer } = require('react-konva');
+const ReactKonva = require('react-konva');
 const BarDataManager = require('./bar_data_manager');
 const Tooltip = require('./tooltip');
 const TooltipCommitRangeItem = require('./tooltip_commit_range_item');
@@ -504,10 +504,10 @@ class CommitRangeView extends React.Component {
               className="container"
               ref={this.diagramContainerRef}
             >
-            <Stage {...this.state.stageProps} ref={this.stageRef}>
-              <Layer {...this.state.chartLayerProps} ref={this.chartLayerRef} />
-              <Layer {...this.state.axisLayerProps} ref={this.axisLayerRef} />
-            </Stage>
+            <ReactKonva.Stage {...this.state.stageProps} ref={this.stageRef}>
+              <ReactKonva.Layer {...this.state.chartLayerProps} ref={this.chartLayerRef} />
+              <ReactKonva.Layer {...this.state.axisLayerProps} ref={this.axisLayerRef} />
+            </ReactKonva.Stage>
             </div>
           </div>
           <MouseSelectionArea {...this.state.mouseSelectionAreaProps}/>
