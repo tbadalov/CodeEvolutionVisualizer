@@ -51,8 +51,8 @@ function mouseMoveListener(event, barDataManager, scrollContainer) {
   }
 }
 
-function drawStack(layer, stack) {
-  const konvaStack = new Konva.Rect({
+function drawStack(stack, onMouseEnter, onMouseMove, onMouseLeave) {
+  const rectProps = {
     fill: stack.color,
     x: stack.x,
     y: stack.y,
@@ -60,25 +60,28 @@ function drawStack(layer, stack) {
     height: stack.height,
     scaleY: stack.scaleY,
     scaleX: stack.scaleX,
-  });
-  layer.add(konvaStack);
-  return konvaStack;
+    onMouseEnter,
+    onMouseMove,
+    onMouseLeave,
+  };
+
+  return <ReactKonva.Rect {...rectProps} />;
 }
 
-function drawLabel(layer, label, onLabelClick, onLabelMouseEnter, onLabelMouseLeave) {
-  const text = new Konva.Text({
+function drawLabel(label, onLabelClick, onLabelMouseEnter, onLabelMouseLeave) {
+  const textProps = {
     text: label.text,
     x: label.x,
     y: label.y,
     rotation: label.rotation,
-  });
-  layer.add(text);
-  text.on('mouseenter', onLabelMouseEnter);
-  text.on('mouseleave', onLabelMouseLeave);
-  text.on('click', function (e) {
-    console.log(e);
-    onLabelClick(e.target.attrs.text);
-  });
+    onMouseEnter: onLabelMouseEnter,
+    onMouseLeave: onLabelMouseLeave,
+    onClick: function (e) {
+      console.log(e);
+      onLabelClick(e.target.attrs.text);
+    },
+  };
+  return <ReactKonva.Text {...textProps} />
 }
 
 function strokeStack(layer, event) {
@@ -159,18 +162,25 @@ function mouseMoveStack(event, payload) {
 }
 
 function drawBar(layer, bar, onLabelClick, stackMouseEnterEventListener, stackMouseMoveEventListener, stackMouseLeaveEventListener) {
-  const barGroup = new Konva.Group();
-  const stackGroup = new Konva.Group();
-  barGroup.add(stackGroup);
-  layer.add(barGroup);
+  const reactKonvaStacks = [];
   for (let i = 0; i < bar.stack.length; i++) {
     const stack = bar.stack[i];
-    const drawnStack = drawStack(stackGroup, stack);
-    drawnStack.on('mouseenter', stackMouseEnterEventListener);
-    drawnStack.on('mousemove', (e) => stackMouseMoveEventListener(e, stack.payload));
-    drawnStack.on('mouseleave', stackMouseLeaveEventListener);
+    const drawnStack = drawStack(
+      stack,
+      stackMouseEnterEventListener,
+      (e) => stackMouseMoveEventListener(e, stack.payload),
+      onMouseLeave,
+      stackMouseLeaveEventListener
+    );
+    reactKonvaStacks.push(drawStack);
   }
-  drawLabel(barGroup, bar.label, onLabelClick, labelMouseEnter.call(this, bar.label.payload), labelMouseLeave.bind(this));
+  const reactKonvaText = drawLabel(bar.label, onLabelClick, labelMouseEnter.call(this, bar.label.payload), labelMouseLeave.bind(this));
+  return (
+    <ReactKonva.Group>
+      { reactKonvaStacks }
+      { reactKonvaText }
+    </ReactKonva.Group>
+  )
 }
 
 function drawAxis(layer, axis) {
