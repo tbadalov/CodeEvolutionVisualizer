@@ -161,7 +161,7 @@ function mouseMoveStack(event, payload) {
   }, 700);
 }
 
-function drawBar(layer, bar, onLabelClick, stackMouseEnterEventListener, stackMouseMoveEventListener, stackMouseLeaveEventListener) {
+function drawBar(bar, onLabelClick, stackMouseEnterEventListener, stackMouseMoveEventListener, stackMouseLeaveEventListener) {
   const reactKonvaStacks = [];
   for (let i = 0; i < bar.stack.length; i++) {
     const stack = bar.stack[i];
@@ -207,7 +207,7 @@ function drawAxis(layer, axis) {
   )
 }
 
-function onKeyDownEventListener(chartLayer, e) {
+function onKeyDownEventListener(e) {
   let scaleBy = 1.0;
   switch(e.key) {
     case '-':
@@ -217,25 +217,24 @@ function onKeyDownEventListener(chartLayer, e) {
       scaleBy = SCALE_BY;
       break;
   }
-  scaleChartLayer.call(this, chartLayer, scaleBy);
+  scaleChartLayer.call(this, scaleBy);
 }
 
-function onStageWheelEventListener(chartLayer, e) {
+function onStageWheelEventListener(e) {
   if (e.evt.deltaX !== 0 || e.evt.deltaY === 0) {
     return;
   }
   const scaleBy = e.evt.deltaY > 0 ? SCALE_BY : 1.0 / SCALE_BY;
-  scaleChartLayer.call(this, chartLayer, scaleBy);
+  scaleChartLayer.call(this, scaleBy);
 }
 
-function scaleChartLayer(chartLayer, scaleBy) {
-  var oldScale = chartLayer.scaleX();
+function scaleChartLayer(scaleBy) {
+  var oldScale = this.state.chartLayerProps.scaleX;
   var newScale = oldScale * scaleBy;
-  chartLayer.scale({ x: newScale });
   this.setState({
-    stageProps: {
-      ...this.state.stageProps,
-      scale: newScale,
+    chartLayerProps: {
+      ...this.state.chartLayerProps,
+      scaleX: newScale,
     },
   });
   this.refreshDiagram();
@@ -248,9 +247,6 @@ function draw(stage, chartLayer, axisLayer, visualData, skipAxis, onLabelClick) 
   if (!skipAxis) {
     axisLayerElements.push(drawAxis(axisLayer, visualData.axis));
   }
-  window.layer = chartLayer;
-  window.stage = stage;
-  window.Konva = Konva;
   // To save memory, we create only one instance of listeners and pass it to each stack instead of creating one per each stack
   // Enabling and disabling stroke needs redrawing of the layer, otherwise some thin surrounding stroke is left, so we pass chart layer too
   const stackMouseEnterEventListener = strokeStack.bind(null, chartLayer);
@@ -259,11 +255,11 @@ function draw(stage, chartLayer, axisLayer, visualData, skipAxis, onLabelClick) 
   visualData.bars.forEach((bar, index) => {
     //const barGroup = new Konva.Group();
     //chartLayer.add(barGroup);
-    chartLayerElements.push(drawBar.call(this, chartLayer, bar, onLabelClick, stackMouseEnterEventListener, stackMouseMoveEventListener, stackMouseLeaveEventListener));
+    chartLayerElements.push(drawBar.call(this, bar, onLabelClick, stackMouseEnterEventListener, stackMouseMoveEventListener, stackMouseLeaveEventListener));
   });
   if (!stageWheelListenerAdded) {
-    document.addEventListener('keydown', onKeyDownEventListener.bind(this, chartLayer));
-    stage.on('wheel', onStageWheelEventListener.bind(this, chartLayer));
+    document.addEventListener('keydown', onKeyDownEventListener.bind(this));
+    stage.on('wheel', onStageWheelEventListener.bind(this));
     stageWheelListenerAdded = true;
   }
   return {
@@ -306,6 +302,8 @@ class CommitRangeView extends React.Component {
       },
       chartLayerProps: {
         x: PADDING+Y_AXIS_WIDTH,
+        scaleX: 1.0,
+        scaleY: 1.0,
       },
       axisLayerProps: {
         x: PADDING,
@@ -402,7 +400,7 @@ class CommitRangeView extends React.Component {
     const dx = this.scrollContainer.current.scrollLeft;
     const dy = 0;
     //this.stageData.chartLayer.destroyChildren();
-    const visualData = this.barDataManager.barsFromRange(dx-PADDING, (dx+this.scrollContainer.current.clientWidth+PADDING)/this.state.stageProps.scale);
+    const visualData = this.barDataManager.barsFromRange(dx-PADDING, (dx+this.scrollContainer.current.clientWidth+PADDING)/this.state.chartLayerProps.scaleX);
     const axis = this.barDataManager.axisData();
     this.stageData.stage.container().style.transform = 'translate(' + dx + 'px, ' + dy + 'px)';
     this.stageData.chartLayer.x(PADDING+Y_AXIS_WIDTH-dx);
