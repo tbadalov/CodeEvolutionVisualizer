@@ -223,7 +223,7 @@ function scaleChartLayer(scaleBy) {
 }
 
 
-function draw(stage, visualData, onLabelClick) {
+function draw(visualData, onLabelClick) {
   const axisLayerElements = [];
   const chartLayerElements = [];
   axisLayerElements.push(drawAxis(visualData.axis, this.axisLayerRef.current.height()));
@@ -253,6 +253,7 @@ class CommitRangeView extends React.Component {
     this.refreshDiagram = this.refreshDiagram.bind(this);
     this.onScrollContainerMouseMove = this.onScrollContainerMouseMove.bind(this);
     this.onStageWheelEventListener = onStageWheelEventListener.bind(this);
+    this.onContainerScroll = this.onContainerScroll.bind(this);
     this.state = {
       width: 0,
       height: 0,
@@ -284,6 +285,10 @@ class CommitRangeView extends React.Component {
         x: PADDING,
       },
     };
+  }
+
+  onContainerScroll() {
+    this.forceUpdate();
   }
 
   clickCommit(commit) {
@@ -379,7 +384,7 @@ class CommitRangeView extends React.Component {
     const axis = this.barDataManager.axisData();
     this.stageData.stage.container().style.transform = 'translate(' + dx + 'px, ' + dy + 'px)';
     this.stageData.chartLayer.x(PADDING+Y_AXIS_WIDTH-dx);
-    return draw.call(this, this.stageData.stage, { axis: axis, bars: visualData.bars }, this.clickCommit);
+    return draw.call(this, { axis: axis, bars: visualData.bars }, this.clickCommit);
   }
 
   componentDidMount() {
@@ -486,7 +491,7 @@ class CommitRangeView extends React.Component {
         />
         <div
           className="scroll-container"
-          onScroll={this.refreshDiagram}
+          onScroll={this.onContainerScroll}
           onMouseMove={this.onScrollContainerMouseMove}
           ref={this.scrollContainer}
         >
