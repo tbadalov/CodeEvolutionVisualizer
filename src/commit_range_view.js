@@ -60,6 +60,7 @@ function drawStack(stack, onMouseEnter, onMouseMove, onMouseLeave) {
     height: stack.height,
     scaleY: stack.scaleY,
     scaleX: stack.scaleX,
+    stroke: stack.stroke,
     onMouseEnter,
     onMouseMove,
     onMouseLeave,
@@ -84,17 +85,19 @@ function drawLabel(label, onLabelClick, onLabelMouseEnter, onLabelMouseLeave) {
   return <ReactKonva.Text {...textProps} />
 }
 
-function strokeStack(event) {
-  const stack = event.currentTarget;
-  stack.strokeEnabled(true);
-  stack.stroke('black');
-  this.chartLayerRef.current.draw();
+function strokeStack(payload) {
+  this.setState({
+    strokedStackCommit: payload.commitHash,
+    strokedStackClassName: payload.changedClassName,
+    strokedStackBorderColor: '#000000',
+  });
 }
 
-function unstrokeStack(event) {
-  const stack = event.currentTarget;
-  stack.strokeEnabled(false);
-  this.chartLayerRef.current.draw();
+function unstrokeStack() {
+  this.setState({
+    strokedStackCommit: undefined,
+    strokedStackClassName: undefined,
+  });
 }
 
 function labelMouseLeave() {
@@ -133,7 +136,7 @@ function labelMouseEnter(labelData) {
 
 function mouseLeaveStack(unstrokeStack, event) {
   if (Math.abs(this.state.tooltipLeft - (event.evt.pageX)) > 4) { // mouse out of tooltip
-    unstrokeStack(event);
+    unstrokeStack();
     clearTimeout(tooltipTimeout);
     this.setState({
       tooltipVisible: false,
@@ -165,9 +168,12 @@ function drawBar(bar, onLabelClick, stackMouseEnterEventListener, stackMouseMove
   const reactKonvaStacks = [];
   for (let i = 0; i < bar.stack.length; i++) {
     const stack = bar.stack[i];
+    if (stack.payload.commitHash === this.state.strokedStackCommit && stack.payload.changedClassName === this.state.strokedStackClassName) {
+      stack.stroke = this.state.strokedStackBorderColor;
+    }
     const drawnStack = drawStack(
       stack,
-      stackMouseEnterEventListener,
+      () => stackMouseEnterEventListener(stack.payload),
       (e) => stackMouseMoveEventListener(e, stack.payload),
       stackMouseLeaveEventListener
     );
@@ -285,6 +291,9 @@ class CommitRangeView extends React.Component {
       tooltipVisible: false,
       tooltipLeft: 0,
       tooltipTop: 0,
+      strokedStackCommit: undefined,
+      strokedStackClassName: undefined,
+      strokedStackBorderColor: '#000000',
       mouseSelectionAreaProps: {
         x: 0,
         y: 0,
