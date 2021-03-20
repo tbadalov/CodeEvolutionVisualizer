@@ -456,7 +456,6 @@ class CommitRangeView extends React.Component {
     if (this.state.stageProps.width <= 0) {
       const stageWidth = this.barDataManager.calculateStageWidth();
       const canvasWidth = stageWidth + Y_AXIS_WIDTH;
-      largeContainer.style.width = canvasWidth + 'px';
       this.setState({
         stageProps: {
           ...this.state.stageProps,
@@ -465,9 +464,9 @@ class CommitRangeView extends React.Component {
       });
     } else if(this.state.stageProps.height <= 0) {
       //height should be assigned after width because of appearing scrollbar
-      const canvasHeight = scrollContainer.clientHeight;
-      largeContainer.style.height = canvasHeight + 'px';
+      const canvasHeight = scrollContainer.clientHeight; // todo: should I use this or calculateStageHeight()?
       this.setState({
+        largeContainerHeight: canvasHeight,
         stageProps: {
           ...this.state.stageProps,
           height: this.barDataManager.calculateStageHeight(),
@@ -497,6 +496,10 @@ class CommitRangeView extends React.Component {
         >
           <div
             className="large-container"
+            style={{
+              width: this.state.stageProps.width + 'px',
+              height: this.state.largeContainerHeight + 'px',
+            }}
             ref={this.largeContainer}
           >
             <div
