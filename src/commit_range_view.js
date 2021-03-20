@@ -25,7 +25,6 @@ let scrollInterval;
 let currentX;
 let currentY;
 let tooltipTimeout;
-let stageWheelListenerAdded = false;
 let isSizeReady = false;
 
 function drawStack(stack, onMouseEnter, onMouseMove, onMouseLeave) {
@@ -234,11 +233,6 @@ function draw(stage, visualData, onLabelClick) {
   visualData.bars.forEach((bar, index) => {
     chartLayerElements.push(drawBar.call(this, bar, onLabelClick, stackMouseEnterEventListener, stackMouseMoveEventListener, stackMouseLeaveEventListener));
   });
-  if (!stageWheelListenerAdded) {
-    document.addEventListener('keydown', onKeyDownEventListener.bind(this));
-    stage.on('wheel', onStageWheelEventListener.bind(this));
-    stageWheelListenerAdded = true;
-  }
   return {
     axisLayerElements,
     chartLayerElements,
@@ -258,6 +252,7 @@ class CommitRangeView extends React.Component {
     this.clickCommit = this.clickCommit.bind(this);
     this.refreshDiagram = this.refreshDiagram.bind(this);
     this.onScrollContainerMouseMove = this.onScrollContainerMouseMove.bind(this);
+    this.onStageWheelEventListener = onStageWheelEventListener.bind(this);
     this.state = {
       width: 0,
       height: 0,
@@ -413,6 +408,7 @@ class CommitRangeView extends React.Component {
       console.log(selectionStartX, selectionStartY);
       console.log(e);
     });
+    document.addEventListener('keydown', onKeyDownEventListener.bind(this));
     document.addEventListener('mouseup', () => {
       this.setState({
         mouseSelectionAreaProps: {
@@ -502,7 +498,11 @@ class CommitRangeView extends React.Component {
               className="container"
               ref={this.diagramContainerRef}
             >
-            <ReactKonva.Stage {...this.state.stageProps} ref={this.stageRef}>
+            <ReactKonva.Stage
+              {...this.state.stageProps}
+              onWheel={this.onStageWheelEventListener}
+              ref={this.stageRef}
+            >
               <ReactKonva.Layer {...this.state.chartLayerProps} ref={this.chartLayerRef}>
                 { konvaLayers.chartLayerElements }
               </ReactKonva.Layer>
