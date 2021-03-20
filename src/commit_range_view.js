@@ -84,17 +84,17 @@ function drawLabel(label, onLabelClick, onLabelMouseEnter, onLabelMouseLeave) {
   return <ReactKonva.Text {...textProps} />
 }
 
-function strokeStack(layer, event) {
+function strokeStack(event) {
   const stack = event.currentTarget;
   stack.strokeEnabled(true);
   stack.stroke('black');
-  layer.draw();
+  this.chartLayerRef.current.draw();
 }
 
-function unstrokeStack(layer, event) {
+function unstrokeStack(event) {
   const stack = event.currentTarget;
   stack.strokeEnabled(false);
-  layer.draw();
+  this.chartLayerRef.current.draw();
 }
 
 function labelMouseLeave() {
@@ -182,18 +182,18 @@ function drawBar(bar, onLabelClick, stackMouseEnterEventListener, stackMouseMove
   )
 }
 
-function drawAxis(layer, axis) {
-  const yAxisProps = {
+function drawAxis(axis, height) {
+  const yAxisBackgroundColoringRectProps = {
     x: 0,
     y: 0,
     width: Y_AXIS_WIDTH,
-    height: layer.height(),
+    height: height,
     fill: '#F0F0F0',
   };
 
   return (
     <ReactKonva.Group>
-      <ReactKonva.Rect {...yAxisProps} />
+      <ReactKonva.Rect {...yAxisBackgroundColoringRectProps} />
       <ReactKonva.Rect {...axis.line} />
       { axis.segments.map((segment, index) => <ReactKonva.Rect {...segment} key={index} />) }
       {
@@ -241,20 +241,18 @@ function scaleChartLayer(scaleBy) {
 }
 
 
-function draw(stage, chartLayer, axisLayer, visualData, skipAxis, onLabelClick) {
+function draw(stage, visualData, skipAxis, onLabelClick) {
   const axisLayerElements = [];
   const chartLayerElements = [];
   if (!skipAxis) {
-    axisLayerElements.push(drawAxis(axisLayer, visualData.axis));
+    axisLayerElements.push(drawAxis(visualData.axis, this.axisLayerRef.current.height()));
   }
   // To save memory, we create only one instance of listeners and pass it to each stack instead of creating one per each stack
   // Enabling and disabling stroke needs redrawing of the layer, otherwise some thin surrounding stroke is left, so we pass chart layer too
-  const stackMouseEnterEventListener = strokeStack.bind(null, chartLayer);
+  const stackMouseEnterEventListener = strokeStack.bind(this);
   const stackMouseMoveEventListener = mouseMoveStack.bind(this);
-  const stackMouseLeaveEventListener = mouseLeaveStack.bind(this, unstrokeStack.bind(this, chartLayer));
+  const stackMouseLeaveEventListener = mouseLeaveStack.bind(this, unstrokeStack.bind(this));
   visualData.bars.forEach((bar, index) => {
-    //const barGroup = new Konva.Group();
-    //chartLayer.add(barGroup);
     chartLayerElements.push(drawBar.call(this, bar, onLabelClick, stackMouseEnterEventListener, stackMouseMoveEventListener, stackMouseLeaveEventListener));
   });
   if (!stageWheelListenerAdded) {
@@ -404,7 +402,7 @@ class CommitRangeView extends React.Component {
     const axis = this.barDataManager.axisData();
     this.stageData.stage.container().style.transform = 'translate(' + dx + 'px, ' + dy + 'px)';
     this.stageData.chartLayer.x(PADDING+Y_AXIS_WIDTH-dx);
-    return draw.call(this, this.stageData.stage, this.stageData.chartLayer, this.stageData.axisLayer, { axis: axis, bars: visualData.bars }, false, this.clickCommit);
+    return draw.call(this, this.stageData.stage, { axis: axis, bars: visualData.bars }, false, this.clickCommit);
   }
 
   componentDidMount() {
