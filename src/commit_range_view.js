@@ -330,7 +330,7 @@ class CommitRangeView extends React.Component {
         ...this.state.mouseSelectionAreaProps,
         x: selectionRectangleLeftX,
         width: selectionWidth,
-        height: this.state.height,
+        height: this.state.largeContainerHeight,
         isActive: true,
       },
     });
