@@ -28,29 +28,6 @@ let tooltipTimeout;
 let stageWheelListenerAdded = false;
 let isSizeReady = false;
 
-
-function mouseMoveListener(event, barDataManager, scrollContainer) {
-  event.preventDefault();
-  if (isMouseDown) {
-    // range selection
-
-  } else {
-    // just hovering
-    const foundBar = barDataManager.barByCoordinate(event.offsetX+scrollContainer.scrollLeft-Y_AXIS_WIDTH, event.offsetY);
-    window.t = event.target;
-    //console.log(event.clientX);
-    console.log(event.offsetX+scrollContainer.scrollLeft);
-    //console.log(scrollContainer.scrollLeft);
-    console.log(foundBar);
-    console.log(event);
-    if (foundBar) {
-      event.target.style.cursor = 'cursor-url';
-    } else {
-      event.target.style.cursor = 'auto';
-    }
-  }
-}
-
 function drawStack(stack, onMouseEnter, onMouseMove, onMouseLeave) {
   const rectProps = {
     fill: stack.color,
@@ -247,14 +224,10 @@ function scaleChartLayer(scaleBy) {
 }
 
 
-function draw(stage, visualData, skipAxis, onLabelClick) {
+function draw(stage, visualData, onLabelClick) {
   const axisLayerElements = [];
   const chartLayerElements = [];
-  if (!skipAxis) {
-    axisLayerElements.push(drawAxis(visualData.axis, this.axisLayerRef.current.height()));
-  }
-  // To save memory, we create only one instance of listeners and pass it to each stack instead of creating one per each stack
-  // Enabling and disabling stroke needs redrawing of the layer, otherwise some thin surrounding stroke is left, so we pass chart layer too
+  axisLayerElements.push(drawAxis(visualData.axis, this.axisLayerRef.current.height()));
   const stackMouseEnterEventListener = strokeStack.bind(this);
   const stackMouseMoveEventListener = mouseMoveStack.bind(this);
   const stackMouseLeaveEventListener = mouseLeaveStack.bind(this, unstrokeStack.bind(this));
@@ -411,7 +384,7 @@ class CommitRangeView extends React.Component {
     const axis = this.barDataManager.axisData();
     this.stageData.stage.container().style.transform = 'translate(' + dx + 'px, ' + dy + 'px)';
     this.stageData.chartLayer.x(PADDING+Y_AXIS_WIDTH-dx);
-    return draw.call(this, this.stageData.stage, { axis: axis, bars: visualData.bars }, false, this.clickCommit);
+    return draw.call(this, this.stageData.stage, { axis: axis, bars: visualData.bars }, this.clickCommit);
   }
 
   componentDidMount() {
@@ -428,8 +401,6 @@ class CommitRangeView extends React.Component {
     const stage = this.stageRef.current;
     const axisLayer = this.axisLayerRef.current;
     const chartLayer = this.chartLayerRef.current;
-    //stage.add(chartLayer);
-    //stage.add(axisLayer);
     this.stageData = {
       stage,
       axisLayer,
@@ -472,7 +443,6 @@ class CommitRangeView extends React.Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    console.log("updating...")
     if (this.props.data === prevProps.data && this.props.disabledClasses === prevProps.disabledClasses && this.state.stageProps.width === prevState.stageProps.width && this.state.stageProps.height === prevState.stageProps.height) {
       return;
     }
