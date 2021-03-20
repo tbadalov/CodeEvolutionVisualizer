@@ -61,6 +61,11 @@ function drawLabel(label, onLabelClick, onLabelMouseEnter, onLabelMouseLeave) {
   return <ReactKonva.Text {...textProps} />
 }
 
+function mouseEnterStack(event, payload) {
+  restartTooltipTimer.call(this, payload, event.evt.pageX, event.evt.pageY);
+  strokeStack.call(this, payload);
+}
+
 function strokeStack(payload) {
   this.setState({
     strokedStackCommit: payload.commitHash,
@@ -120,12 +125,12 @@ function mouseLeaveStack(unstrokeStack, event) {
   }
 }
 
-function mouseMoveStack(event, payload) {
+function restartTooltipTimer(payload, mousePositionPageX, mousePositionPageY) {
   clearTimeout(tooltipTimeout);
   tooltipTimeout = setTimeout(() => {
     this.setState({
-      tooltipLeft: event.evt.pageX + 5,
-      tooltipTop: event.evt.pageY - 16,
+      tooltipLeft: mousePositionPageX + 5,
+      tooltipTop: mousePositionPageY - 16,
       tooltipVisible: true,
       tooltipTitle: payload.commitHash,
       tooltipItems: [
@@ -140,6 +145,10 @@ function mouseMoveStack(event, payload) {
   }, 700);
 }
 
+function mouseMoveStack(event, payload) {
+  restartTooltipTimer.call(this, payload, event.evt.pageX, event.evt.pageY);
+}
+
 function drawBar(bar, onLabelClick, stackMouseEnterEventListener, stackMouseMoveEventListener, stackMouseLeaveEventListener) {
   const reactKonvaStacks = [];
   for (let i = 0; i < bar.stack.length; i++) {
@@ -149,7 +158,7 @@ function drawBar(bar, onLabelClick, stackMouseEnterEventListener, stackMouseMove
     }
     const drawnStack = drawStack(
       stack,
-      () => stackMouseEnterEventListener(stack.payload),
+      (e) => stackMouseEnterEventListener(e, stack.payload),
       (e) => stackMouseMoveEventListener(e, stack.payload),
       stackMouseLeaveEventListener
     );
@@ -227,7 +236,7 @@ function draw(visualData) {
   const axisLayerElements = [];
   const chartLayerElements = [];
   axisLayerElements.push(drawAxis(visualData.axis, this.axisLayerRef.current.height()));
-  const stackMouseEnterEventListener = strokeStack.bind(this);
+  const stackMouseEnterEventListener = mouseEnterStack.bind(this);
   const stackMouseMoveEventListener = mouseMoveStack.bind(this);
   const stackMouseLeaveEventListener = mouseLeaveStack.bind(this, unstrokeStack.bind(this));
   visualData.bars.forEach((bar, index) => {
@@ -273,7 +282,6 @@ class CommitRangeView extends React.Component {
       stageProps: {
         width: 0,
         height: 0,
-        scale: 1.0,
         x: -PADDING,
       },
       chartLayerProps: {
@@ -288,7 +296,12 @@ class CommitRangeView extends React.Component {
   }
 
   onContainerScroll() {
-    this.forceUpdate();
+    // we always want to re-render when scrolling
+    if (this.state.tooltipVisible) {
+      this.hideTooltip();
+    } else {
+      this.forceUpdate();
+    }
   }
 
   clickCommit(commit) {
@@ -374,9 +387,6 @@ class CommitRangeView extends React.Component {
   }
 
   refreshDiagram() {
-    if (this.state.tooltipVisible) {
-      this.hideTooltip();
-    }
     const dx = this.scrollContainer.current.scrollLeft;
     const dy = 0;
     //this.stageData.chartLayer.destroyChildren();
