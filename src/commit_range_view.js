@@ -223,7 +223,7 @@ function scaleChartLayer(scaleBy) {
 }
 
 
-function draw(visualData, onLabelClick) {
+function draw(visualData) {
   const axisLayerElements = [];
   const chartLayerElements = [];
   axisLayerElements.push(drawAxis(visualData.axis, this.axisLayerRef.current.height()));
@@ -231,7 +231,7 @@ function draw(visualData, onLabelClick) {
   const stackMouseMoveEventListener = mouseMoveStack.bind(this);
   const stackMouseLeaveEventListener = mouseLeaveStack.bind(this, unstrokeStack.bind(this));
   visualData.bars.forEach((bar, index) => {
-    chartLayerElements.push(drawBar.call(this, bar, onLabelClick, stackMouseEnterEventListener, stackMouseMoveEventListener, stackMouseLeaveEventListener));
+    chartLayerElements.push(drawBar.call(this, bar, this.clickCommit, stackMouseEnterEventListener, stackMouseMoveEventListener, stackMouseLeaveEventListener));
   });
   return {
     axisLayerElements,
@@ -384,7 +384,7 @@ class CommitRangeView extends React.Component {
     const axis = this.barDataManager.axisData();
     this.stageData.stage.container().style.transform = 'translate(' + dx + 'px, ' + dy + 'px)';
     this.stageData.chartLayer.x(PADDING+Y_AXIS_WIDTH-dx);
-    return draw.call(this, { axis: axis, bars: visualData.bars }, this.clickCommit);
+    return draw.call(this, { axis: axis, bars: visualData.bars });
   }
 
   componentDidMount() {
