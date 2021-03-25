@@ -427,14 +427,14 @@ class CommitRangeView extends React.Component {
       console.log(e);
     });
     document.addEventListener('mouseup', () => {
-      this.setState({
-        mouseSelectionAreaProps: {
-          ...this.state.mouseSelectionAreaProps,
-          isActive: false,
-        },
-      });
       isMouseDown = false;
       if (isSelecting) {
+        this.setState({
+          mouseSelectionAreaProps: {
+            ...this.state.mouseSelectionAreaProps,
+            isActive: false,
+          },
+        });
         clearInterval(scrollInterval);
         scrollInterval = null;
         isSelecting = false;
