@@ -100,7 +100,7 @@ function labelMouseLeave() {
 function labelMouseEnter(labelData) {
   return (function(event) {
     this.stageData.stage.container().style.cursor = 'pointer';
-    clearTimeout(tooltipTimeout);
+    disableTooltipTimer();
     tooltipTimeout = setTimeout(() => {
       console.log(labelData);
       this.setState({
@@ -130,7 +130,7 @@ function labelMouseEnter(labelData) {
 function mouseLeaveStack(unstrokeStack, event) {
   if (Math.abs(this.state.tooltipLeft - (event.evt.pageX)) > 4) { // mouse out of tooltip
     unstrokeStack(event);
-    clearTimeout(tooltipTimeout);
+    disableTooltipTimer();
     this.setState({
       tooltipVisible: false,
     });
@@ -138,7 +138,7 @@ function mouseLeaveStack(unstrokeStack, event) {
 }
 
 function mouseMoveStack(event, payload) {
-  clearTimeout(tooltipTimeout);
+  disableTooltipTimer();
   tooltipTimeout = setTimeout(() => {
     this.setState({
       tooltipLeft: event.evt.pageX + 5,
@@ -254,6 +254,10 @@ function draw(stage, chartLayer, axisLayer, visualData, skipAxis, onLabelClick) 
   }
 }
 
+function disableTooltipTimer() {
+  clearTimeout(tooltipTimeout);
+}
+
 class CommitRangeView extends React.Component {
   constructor(props) {
     super(props);
@@ -283,8 +287,13 @@ class CommitRangeView extends React.Component {
     };
   }
 
+  changeDiagram(...args) {
+    disableTooltipTimer();
+    this.props.onDiagramChange(...args);
+  }
+
   clickCommit(commit) {
-    this.props.onDiagramChange(
+    this.changeDiagram(
       'callVolumeView',
       {
         label: commit,
@@ -358,7 +367,7 @@ class CommitRangeView extends React.Component {
   }
 
   hideTooltip() {
-    clearTimeout(tooltipTimeout);
+    disableTooltipTimer();
     this.stageData.stage.container().style.cursor = 'auto';
     this.setState({
       tooltipVisible: false,
@@ -434,7 +443,7 @@ class CommitRangeView extends React.Component {
         const commitHashes = rawSubData.map(commit => commit.commitHash);
         console.log(commitHashes);
         console.log("first:" + commitHashes[0]);
-        this.props.onDiagramChange(
+        this.changeDiagram(
           'classOverviewView',
           {
             classToColorMapping: this.props.classToColorMapping,
