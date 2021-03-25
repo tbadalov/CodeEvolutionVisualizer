@@ -1,4 +1,5 @@
 const React = require('react');
+const ClassColorContext = require('../contexts/class_color_context');
 const CallVolumeDiagram = require('./call_volume_diagram');
 
 const data = [
@@ -133,10 +134,20 @@ const rawData = {
 class CallVolumeView extends React.Component {
   constructor(props) {
     super(props);
+    this.mapContextValueToView = this.mapContextValueToView.bind(this);
     this.state = {
       rawData: rawData,
       selectedCommit: 'hhffee',
     };
+  }
+
+  mapContextValueToView({ classToColorMapping }) {
+    return (
+      <CallVolumeDiagram
+        rawData={this.state.rawData}
+        selectedCommit={this.state.selectedCommit}
+        classToColorMapping={classToColorMapping} />
+    );
   }
 
   handleItemClick() {
@@ -145,10 +156,9 @@ class CallVolumeView extends React.Component {
 
   render() {
     return(
-      <CallVolumeDiagram
-        rawData={this.state.rawData}
-        selectedCommit={this.state.selectedCommit}
-        classToColorMapping={this.props.classToColorMapping} />
+        <ClassColorContext.Consumer>
+            { this.mapContextValueToView }
+        </ClassColorContext.Consumer>
     );
   }
 }

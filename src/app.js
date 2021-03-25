@@ -6,10 +6,12 @@ const Menu = require('./menu');
 const React = require('react');
 const ReactDOM = require('react-dom');
 const diagramStyle = require('./css/diagram.css');
+const ClassColorContext = require('./contexts/class_color_context');
 
 class App extends React.Component {
-  constructor() {
-    super()
+  constructor(props) {
+    super(props);
+    this.changeClassColor = this.changeClassColor.bind(this);
     this.diagrams = {
       commitRangeView: CommitRangeView,
       classOverviewView: ClassOverviewView,
@@ -24,7 +26,24 @@ class App extends React.Component {
         },
       },
       menuItems: [],
+      classColorContextValue: {
+        classToColorMapping: {},
+        changeClassColor: this.changeClassColor,
+      },
     }
+  }
+
+  changeClassColor(className, color) {
+    const classToColorMapping = {
+      ...this.state.classColorContextValue.classToColorMapping,
+      [className]: color,
+    };
+    this.setState({
+      classColorContextValue: {
+        ...this.state.classColorContextValue,
+        classToColorMapping,
+      },
+    });
   }
 
   changeDiagram(diagramName, props) {
@@ -55,7 +74,9 @@ class App extends React.Component {
           <Menu items={this.state.menuItems} />
         </div>
         <div className="box-2">
-          <Diagram url={uiConfig[this.state.currentDiagram].apiUrl} addMenuItem={this.addMenuItem.bind(this)} changeDiagram={this.state.data.diagramData.changeDiagram} {...this.state.data.diagramData.props} />
+          <ClassColorContext.Provider value={this.state.classColorContextValue}>
+            <Diagram url={uiConfig[this.state.currentDiagram].apiUrl} addMenuItem={this.addMenuItem.bind(this)} changeDiagram={this.state.data.diagramData.changeDiagram} {...this.state.data.diagramData.props} />
+          </ClassColorContext.Provider>
         </div>
       </div>
     );

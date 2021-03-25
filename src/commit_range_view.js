@@ -309,7 +309,6 @@ class CommitRangeView extends React.Component {
       'callVolumeView',
       {
         label: commit,
-        classToColorMapping: this.props.classToColorMapping,
       }
     );
   }
@@ -444,7 +443,6 @@ class CommitRangeView extends React.Component {
         this.props.onDiagramChange(
           'classOverviewView',
           {
-            classToColorMapping: this.props.classToColorMapping,
             startCommit: commitHashes[0],
             endCommit: commitHashes[commitHashes.length-1],
           }

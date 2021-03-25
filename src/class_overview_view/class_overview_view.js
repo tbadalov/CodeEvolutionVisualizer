@@ -3,13 +3,26 @@ const ClassOverviewDiagram = require('./class_overview_diagram');
 const DiagramDataLoader = require('../diagram_data_loader');
 const DataConverter = require('./data_converter');
 const ItemList = require('../item_list');
+const ClassColorContext = require('../contexts/class_color_context');
 
 class ClassOverviewView extends React.Component {
   constructor(props) {
     super(props);
+    this.mapContextValueToView = this.mapContextValueToView.bind(this);
     this.state = {
       items: [],
     };
+  }
+
+  mapContextValueToView({ classToColorMapping }) {
+    return (
+      <ClassOverviewDiagram
+        rawData={this.state.rawData}
+        startCommit={this.props.startCommit}
+        endCommit={this.props.endCommit}
+        classToColorMapping={classToColorMapping}
+        onDiagramChange={this.props.changeDiagram} />
+    );
   }
 
   handleItemChange(index) {
@@ -29,7 +42,7 @@ class ClassOverviewView extends React.Component {
     ).then(classNames => {
       const items = classNames.map((className, index) => ({
         label: className,
-        color: this.props.classToColorMapping[className],
+        color: this.context.classToColorMapping[className],
         checked: index === 0,
       }));
       this.props.addMenuItem(
@@ -73,14 +86,13 @@ class ClassOverviewView extends React.Component {
 
   render() {
     return(
-      <ClassOverviewDiagram
-        rawData={this.state.rawData}
-        startCommit={this.props.startCommit}
-        endCommit={this.props.endCommit}
-        classToColorMapping={this.props.classToColorMapping}
-        onDiagramChange={this.props.changeDiagram} />
+      <ClassColorContext.Consumer>
+        { this.mapContextValueToView }
+      </ClassColorContext.Consumer>
     );
   }
 }
+
+ClassOverviewView.contextType = ClassColorContext;
 
 module.exports = ClassOverviewView;

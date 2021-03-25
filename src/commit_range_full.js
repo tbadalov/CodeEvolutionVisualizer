@@ -1,5 +1,6 @@
 const React = require('react');
 const CommitRangeView = require('./commit_range_view');
+const ClassColorContext = require('./contexts/class_color_context');
 const ItemList = require('./item_list');
 
 function loadData(url) {
@@ -35,14 +36,24 @@ function getRandomColor() {
 class CommitRangeViewFull extends React.Component {
   constructor(props) {
     super(props);
+    this.mapContextValueToView = this.mapContextValueToView.bind(this);
     this.state = {
       items: [],
       disabledClasses: {},
-      classToColorMapping: {},
       data: {
         commits: [],
       },
     };
+  }
+
+  mapContextValueToView({ classToColorMapping }) {
+    return (
+      <CommitRangeView
+        data={this.state.data}
+        disabledClasses={this.state.disabledClasses}
+        classToColorMapping={classToColorMapping}
+        onDiagramChange={this.props.changeDiagram} />
+    );
   }
   
   onDataReady(data) {
@@ -65,11 +76,10 @@ class CommitRangeViewFull extends React.Component {
     const alpahebticallySortedItems = Object.keys(classNameItemMapping)
       .map(className => classNameItemMapping[className])
       .sort((item1, item2) => item1.label.localeCompare(item2.label));
+    const { changeClassColor } = this.context;
+    alpahebticallySortedItems.forEach(item => changeClassColor(item.label, item.color));
 
-    const classToColorMapping = {};
-    alpahebticallySortedItems.forEach(item => classToColorMapping[item.label] = item.color);
-
-    this.setState({ data, classToColorMapping });
+    this.setState({ data });
     this.setState({ items: alpahebticallySortedItems });
     this.props.addMenuItem(
       <ItemList items={this.state.items} onItemChange={this.handleItemClick.bind(this)} />
@@ -114,13 +124,13 @@ class CommitRangeViewFull extends React.Component {
 
   render() {
     return(
-      <CommitRangeView
-        data={this.state.data}
-        disabledClasses={this.state.disabledClasses}
-        classToColorMapping={this.state.classToColorMapping}
-        onDiagramChange={this.props.changeDiagram} />
+      <ClassColorContext.Consumer>
+        { this.mapContextValueToView }
+      </ClassColorContext.Consumer>
     );
   }
 }
+
+CommitRangeViewFull.contextType = ClassColorContext;
 
 module.exports = CommitRangeViewFull;
