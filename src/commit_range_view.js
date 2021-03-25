@@ -308,9 +308,13 @@ class CommitRangeView extends React.Component {
     }
   }
 
-  clickCommit(commit) {
+  changeDiagram(...args) {
     disableTooltipTimer();
-    this.props.onDiagramChange(
+    this.props.onDiagramChange(...args);
+  }
+
+  clickCommit(commit) {
+    this.changeDiagram(
       'callVolumeView',
       {
         label: commit,
@@ -446,7 +450,7 @@ class CommitRangeView extends React.Component {
         const commitHashes = rawSubData.map(commit => commit.commitHash);
         console.log(commitHashes);
         console.log("first:" + commitHashes[0]);
-        this.props.onDiagramChange(
+        this.changeDiagram(
           'classOverviewView',
           {
             startCommit: commitHashes[0],
