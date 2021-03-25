@@ -88,7 +88,7 @@ function labelMouseLeave() {
 function labelMouseEnter(labelData) {
   return (function(event) {
     this.stageData.stage.container().style.cursor = 'pointer';
-    clearTimeout(tooltipTimeout);
+    disableTooltipTimer();
     tooltipTimeout = setTimeout(() => {
       console.log(labelData);
       this.setState({
@@ -118,15 +118,19 @@ function labelMouseEnter(labelData) {
 function mouseLeaveStack(unstrokeStack, event) {
   if (Math.abs(this.state.tooltipLeft - (event.evt.pageX)) > 4) { // mouse out of tooltip
     unstrokeStack();
-    clearTimeout(tooltipTimeout);
+    disableTooltipTimer();
     this.setState({
       tooltipVisible: false,
     });
   }
 }
 
-function restartTooltipTimer(payload, mousePositionPageX, mousePositionPageY) {
+function disableTooltipTimer() {
   clearTimeout(tooltipTimeout);
+}
+
+function restartTooltipTimer(payload, mousePositionPageX, mousePositionPageY) {
+  disableTooltipTimer();
   tooltipTimeout = setTimeout(() => {
     this.setState({
       tooltipLeft: mousePositionPageX + 5,
@@ -305,6 +309,7 @@ class CommitRangeView extends React.Component {
   }
 
   clickCommit(commit) {
+    disableTooltipTimer();
     this.props.onDiagramChange(
       'callVolumeView',
       {
@@ -378,7 +383,7 @@ class CommitRangeView extends React.Component {
   }
 
   hideTooltip() {
-    clearTimeout(tooltipTimeout);
+    disableTooltipTimer();
     this.stageData.stage.container().style.cursor = 'auto';
     this.setState({
       tooltipVisible: false,
@@ -424,14 +429,15 @@ class CommitRangeView extends React.Component {
     });
     document.addEventListener('keydown', onKeyDownEventListener.bind(this));
     document.addEventListener('mouseup', () => {
-      this.setState({
-        mouseSelectionAreaProps: {
-          ...this.state.mouseSelectionAreaProps,
-          isActive: false,
-        },
-      });
       isMouseDown = false;
       if (isSelecting) {
+        console.log("nixuya girdi ki selectinge");
+        this.setState({
+          mouseSelectionAreaProps: {
+            ...this.state.mouseSelectionAreaProps,
+            isActive: false,
+          },
+        });
         clearInterval(scrollInterval);
         scrollInterval = null;
         isSelecting = false;
