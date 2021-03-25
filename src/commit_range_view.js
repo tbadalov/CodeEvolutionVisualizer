@@ -211,6 +211,8 @@ function onKeyDownEventListener(e) {
     case '+':
       scaleBy = SCALE_BY;
       break;
+    default:
+      return;
   }
   scaleChartLayer.call(this, scaleBy);
 }
