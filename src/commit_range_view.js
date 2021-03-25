@@ -306,7 +306,12 @@ class CommitRangeView extends React.Component {
     if (this.state.tooltipVisible) {
       this.hideTooltip();
     } else {
-      this.forceUpdate();
+      this.setState({
+        chartLayerProps: {
+          ...this.state.chartLayerProps,
+          x: PADDING + Y_AXIS_WIDTH - (this.scrollContainer.current ? this.scrollContainer.current.scrollLeft : 0),
+        },
+      });
     }
   }
 
@@ -402,8 +407,6 @@ class CommitRangeView extends React.Component {
     //this.stageData.chartLayer.destroyChildren();
     const visualData = this.barDataManager.barsFromRange(dx-PADDING, (dx+this.scrollContainer.current.clientWidth+PADDING)/this.state.chartLayerProps.scaleX);
     const axis = this.barDataManager.axisData();
-    this.stageData.stage.container().style.transform = 'translate(' + dx + 'px, ' + dy + 'px)';
-    this.stageData.chartLayer.x(PADDING+Y_AXIS_WIDTH-dx);
     return draw.call(this, { axis: axis, bars: visualData.bars });
   }
 
@@ -524,6 +527,7 @@ class CommitRangeView extends React.Component {
           >
             <div
               className="container"
+              style={{transform: `translate(${this.scrollContainer.current ? this.scrollContainer.current.scrollLeft : 0}px, 0px)`}}
               ref={this.diagramContainerRef}
             >
             <ReactKonva.Stage
