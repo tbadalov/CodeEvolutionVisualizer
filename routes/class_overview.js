@@ -9,7 +9,7 @@ router.get('/', function(req, res, next) {
   const dataFromDb = [];
   session.run(`
   MATCH p=(origin:App)-[:CHANGED_TO*]->(destination:App)
-  WHERE origin.commit='` + req.query.startCommit + `' AND destination.commit='` +req.query.endCommit + `' AND all(x IN nodes(p) WHERE x.branch="master\\\n")
+  WHERE origin.commit='` + req.query.startCommit + `' AND destination.commit='` +req.query.endCommit + `' AND all(x IN nodes(p) WHERE x.branch="master" OR x.branch="master\\\n")
   WITH p LIMIT 1
   WITH nodes(p) as path_nodes
   UNWIND(path_nodes) as app

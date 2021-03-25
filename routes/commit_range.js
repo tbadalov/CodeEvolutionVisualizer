@@ -28,7 +28,7 @@ router.get('/', function(req, res, next) {
       const result = [];
       mainQuerySession.run(`
         MATCH (app:App)
-        WHERE app.branch="master\\\n"
+        WHERE app.branch="master\\\n" OR app.branch="master"
         CALL {
           WITH app
           MATCH (app)-[:APP_OWNS_CLASS]->(c:Class)
