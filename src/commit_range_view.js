@@ -117,7 +117,11 @@ function labelMouseEnter(labelData) {
 
 function mouseLeaveStack(unstrokeStack, event) {
   if (Math.abs(this.state.tooltipLeft - (event.evt.pageX)) > 4) { // mouse out of tooltip
+<<<<<<< HEAD
     unstrokeStack();
+=======
+    unstrokeStack(event);
+>>>>>>> main
     disableTooltipTimer();
     this.setState({
       tooltipVisible: false,
@@ -125,11 +129,15 @@ function mouseLeaveStack(unstrokeStack, event) {
   }
 }
 
+<<<<<<< HEAD
 function disableTooltipTimer() {
   clearTimeout(tooltipTimeout);
 }
 
 function restartTooltipTimer(payload, mousePositionPageX, mousePositionPageY) {
+=======
+function mouseMoveStack(event, payload) {
+>>>>>>> main
   disableTooltipTimer();
   tooltipTimeout = setTimeout(() => {
     this.setState({
@@ -254,6 +262,10 @@ function draw(visualData) {
   };
 }
 
+function disableTooltipTimer() {
+  clearTimeout(tooltipTimeout);
+}
+
 class CommitRangeView extends React.Component {
   constructor(props) {
     super(props);
@@ -301,6 +313,7 @@ class CommitRangeView extends React.Component {
     };
   }
 
+<<<<<<< HEAD
   onContainerScroll() {
     // we always want to re-render when scrolling
     if (this.state.tooltipVisible) {
@@ -315,12 +328,18 @@ class CommitRangeView extends React.Component {
     }
   }
 
+=======
+>>>>>>> main
   changeDiagram(...args) {
     disableTooltipTimer();
     this.props.onDiagramChange(...args);
   }
 
+<<<<<<< HEAD
   clickCommit(commit, changedClassNames) {
+=======
+  clickCommit(commit) {
+>>>>>>> main
     this.changeDiagram(
       'callVolumeView',
       {
@@ -441,7 +460,10 @@ class CommitRangeView extends React.Component {
     document.addEventListener('mouseup', () => {
       isMouseDown = false;
       if (isSelecting) {
+<<<<<<< HEAD
         console.log("nixuya girdi ki selectinge");
+=======
+>>>>>>> main
         this.setState({
           mouseSelectionAreaProps: {
             ...this.state.mouseSelectionAreaProps,
