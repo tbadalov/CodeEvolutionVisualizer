@@ -254,6 +254,10 @@ function draw(visualData) {
   };
 }
 
+function disableTooltipTimer() {
+  clearTimeout(tooltipTimeout);
+}
+
 class CommitRangeView extends React.Component {
   constructor(props) {
     super(props);
@@ -441,7 +445,6 @@ class CommitRangeView extends React.Component {
     document.addEventListener('mouseup', () => {
       isMouseDown = false;
       if (isSelecting) {
-        console.log("nixuya girdi ki selectinge");
         this.setState({
           mouseSelectionAreaProps: {
             ...this.state.mouseSelectionAreaProps,
