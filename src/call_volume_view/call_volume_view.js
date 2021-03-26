@@ -1,5 +1,7 @@
 const React = require('react');
 const ClassColorContext = require('../contexts/class_color_context');
+const DiagramDataLoader = require('../diagram_data_loader');
+const ItemList = require('../item_list');
 const CallVolumeDiagram = require('./call_volume_diagram');
 
 const data = [
@@ -135,10 +137,17 @@ class CallVolumeView extends React.Component {
   constructor(props) {
     super(props);
     this.mapContextValueToView = this.mapContextValueToView.bind(this);
+    this.handleItemChange = this.handleItemChange.bind(this);
+    rawData.commits[this.props.selectedCommit] = rawData.commits.hhffee;
     this.state = {
       rawData: rawData,
-      selectedCommit: 'hhffee',
+      selectedCommit: this.props.selectedCommit || 'hhffee',
     };
+    console.log(props);
+  }
+
+  handleItemChange() {
+
   }
 
   mapContextValueToView({ classToColorMapping }) {
@@ -146,12 +155,32 @@ class CallVolumeView extends React.Component {
       <CallVolumeDiagram
         rawData={this.state.rawData}
         selectedCommit={this.state.selectedCommit}
+        selectedClassNames={this.props.selectedClassNames}
         classToColorMapping={classToColorMapping} />
     );
   }
 
-  handleItemClick() {
-
+  componentDidMount() {
+    const diagramDataLoader = new DiagramDataLoader();
+    diagramDataLoader.load(
+      `${this.props.url}/class_names`,
+      {
+          commit: this.props.selectedCommit,
+      }
+    ).then(classNames => {
+      const items = classNames.map((className, index) => ({
+        label: className,
+        color: this.context.classToColorMapping[className],
+        checked: this.props.selectedClassNames.includes(className),
+      }));
+      this.props.addMenuItem(
+        <ItemList items={items} onItemChange={this.handleItemChange}/>
+      );
+      //this.setState({items: items});
+      //this.setState({selectedClassName: classNames[0]});
+      return classNames[0];
+    })
+    .catch(error => console.log(error));
   }
 
   render() {
@@ -162,5 +191,7 @@ class CallVolumeView extends React.Component {
     );
   }
 }
+
+CallVolumeView.contextType = ClassColorContext;
 
 module.exports = CallVolumeView;

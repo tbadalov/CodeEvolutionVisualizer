@@ -55,7 +55,7 @@ function drawLabel(label, onLabelClick, onLabelMouseEnter, onLabelMouseLeave) {
     onMouseLeave: onLabelMouseLeave,
     onClick: function (e) {
       console.log(e);
-      onLabelClick(e.target.attrs.text);
+      onLabelClick(label.payload.commitHash, label.payload.stacks.map(stackPayload => stackPayload.changedClassName));
     },
   };
   return <ReactKonva.Text {...textProps} />
@@ -320,11 +320,12 @@ class CommitRangeView extends React.Component {
     this.props.onDiagramChange(...args);
   }
 
-  clickCommit(commit) {
+  clickCommit(commit, changedClassNames) {
     this.changeDiagram(
       'callVolumeView',
       {
-        label: commit,
+        selectedCommit: commit,
+        selectedClassNames: changedClassNames,
       }
     );
   }
