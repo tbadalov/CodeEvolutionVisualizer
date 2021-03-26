@@ -28,4 +28,24 @@ router.get('/', function(req, res, next) {
   });
 });
 
+router.get('/class_names', (req, res, next) => {
+  const driver = neo4j.driver(neo4jconfig.uri, neo4j.auth.basic(neo4jconfig.user, neo4jconfig.password));
+  const session = driver.session();
+  const dataFromDb = [];
+  session.run(`
+    MATCH (app:App)-[:APP_OWNS_CLASS]->(c:Class)
+    WHERE app.commit='` + req.query.commit + `'
+    RETURN distinct c.name as className
+    ORDER BY className
+  `).subscribe({
+    onNext: record => {
+      dataFromDb.push(record.get('className'));
+    },
+    onCompleted: () => {
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify(dataFromDb));
+    },
+  });
+});
+
 module.exports = router;
