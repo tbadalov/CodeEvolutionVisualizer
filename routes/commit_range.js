@@ -27,22 +27,26 @@ router.get('/', function(req, res, next) {
       const mainQuerySession = driver.session();
       const result = [];
       mainQuerySession.run(`
-        MATCH (app:App)
-        WHERE app.branch="master\\\n" OR app.branch="master"
-        CALL {
-          WITH app
-          MATCH (app)-[:APP_OWNS_CLASS]->(c:Class)
-          OPTIONAL MATCH (app)<-[:CHANGED_TO]-(prev_app:App)-[:APP_OWNS_CLASS]->(c)
-          WITH app, prev_app, c
-          WHERE prev_app IS NULL
-            WITH c.name as className, (toInteger(RAND() * 10)+1) as changedLinesCount
-            WHERE changedLinesCount > 0
-          WITH className, changedLinesCount
-          ORDER BY className
-          RETURN collect( { className: className, changedLinesCount: changedLinesCount } ) as changedClasses, sum(changedLinesCount) as totalChangedLinesCount
-        }
-        RETURN app.commit as commitHash, app.time as time, app.author as author, app.message as message, app.version_number as versionNumber, app.branch as branchName, changedClasses, totalChangedLinesCount
-        ORDER BY app.version
+      MATCH (last_commit:App)
+      WHERE last_commit.branch='master' OR last_commit.branch="master\\\n"
+      WITH last_commit
+      ORDER BY last_commit.timestamp DESC
+      LIMIT 1
+      MATCH (app:App)-[:CHANGED_TO*0..]->(last_commit)
+      WITH distinct app
+      CALL {
+        WITH app
+        MATCH (app)-[:APP_OWNS_CLASS]->(c:Class)
+        WHERE NOT (app)<-[:CHANGED_TO]-(:App)-[:APP_OWNS_CLASS]->(c)
+        OPTIONAL MATCH (:Class)-[class_changed_rel:CLASS_CHANGED_TO]->(c)
+        WITH app, c.name as className, sum(class_changed_rel.added_lines+class_changed_rel.changed_lines+class_changed_rel.deleted_lines) as changedLinesCount
+        WITH className, changedLinesCount
+        ORDER BY className
+        RETURN collect( { className: className, changedLinesCount: changedLinesCount } ) as changedClasses, sum(changedLinesCount) as totalChangedLinesCount
+      }
+      RETURN app.commit as commitHash, app.time as time, app.author as author, app.message as message, app.version_number as versionNumber, app.branch as branchName, changedClasses, totalChangedLinesCount
+      ORDER BY app.timestamp ASC
+      LIMIT 50
       `).subscribe({
         onNext: record => {
           result.push({
