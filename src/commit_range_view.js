@@ -264,6 +264,7 @@ class CommitRangeView extends React.Component {
     this.stageRef = React.createRef();
     this.chartLayerRef = React.createRef();
     this.axisLayerRef = React.createRef();
+    this.barDataManager = new BarDataManager(this.props.data, this.props.classToColorMapping, this.largeContainer);
     this.clickCommit = this.clickCommit.bind(this);
     this.refreshDiagram = this.refreshDiagram.bind(this);
     this.onScrollContainerMouseMove = this.onScrollContainerMouseMove.bind(this);
@@ -472,10 +473,6 @@ class CommitRangeView extends React.Component {
     }
     console.log(this.props);
     const scrollContainer = this.scrollContainer.current;
-    const largeContainer = this.largeContainer.current;
-    this.barDataManager = new BarDataManager(this.props.data, this.props.classToColorMapping, largeContainer);
-    Object.keys(this.props.disabledClasses).forEach(className => this.barDataManager.disable(className));
-
     if (this.state.stageProps.width <= 0) {
       const stageWidth = this.barDataManager.calculateStageWidth();
       const canvasWidth = stageWidth + Y_AXIS_WIDTH;
@@ -497,10 +494,12 @@ class CommitRangeView extends React.Component {
       });
       isSizeReady = true;
     }
-    //this.refreshDiagram();
   }
 
   render() {
+    this.barDataManager.updateUnderlyingData(this.props.data, this.props.classToColorMapping);
+    this.barDataManager.enableAll();
+    Object.keys(this.props.disabledClasses).forEach(className => this.barDataManager.disable(className));
     const konvaLayers = isSizeReady ? this.refreshDiagram() : [];
     return(
       <div>

@@ -31,19 +31,11 @@ class CommitDataManager {
   }
 
   getRawCommits() {
-    /*const commits = this.rawData.commits
-      .map(commit => {
-        const changedClasses = commit.changedClasses.filter(changedClass => !this.isClassDisabled(changedClass.className));
-        const totalChangedLines = changedClasses.reduce((sum, changedClass) => sum+changedClass.changedLinesCount, 0);
-        commit.changedClasses = changedClasses;
-        commit.totalChangedLinesCount = totalChangedLines;
-        return commit;
-      });
-
-    return {
-      commits,
-    };*/
     return this.rawData.commits;
+  }
+
+  updateData(data) {
+    this.rawData = data;
   }
 }
 

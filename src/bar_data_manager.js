@@ -12,10 +12,10 @@ const EMPTY_SPACE_TOP_PERCENTAGE = 10;
 const AXIS_SEGMENT_COUNT = 5;
 
 class BarDataManager {
-  constructor(rawData, classToColorMapping, containerDomElement) {
+  constructor(rawData, classToColorMapping, containerReference) {
     this.commitDataManager = new CommitDataManager(rawData);
     this.classToColorMapping = classToColorMapping;
-    this.containerDomElement = containerDomElement;
+    this.containerReference = containerReference;
     this.largestCommitSize = this.commitDataManager.getRawCommits().reduce((max, commit) => Math.max(max, commit.totalChangedLinesCount), 0);
     this.zoomValueY = 1.0;
     this.zoomValueX = 1.0;
@@ -39,7 +39,7 @@ class BarDataManager {
 
   /* the height has to be used after the width of a stage is assigned because of an appearing scrollbar */
   calculateStageHeight() {
-    return this.containerDomElement.clientHeight;
+    return this.containerReference.current.clientHeight;
   }
 
   calculateStageWidth() {
@@ -159,12 +159,10 @@ class BarDataManager {
     return commits.slice(startBarIndex, endBarIndex+1);
   }
 
-  commitByPosition(x, y) {
-
-  }
-
-  scaleBy(zoomValue) {
-
+  updateUnderlyingData(data, classToColorMapping) {
+    this.commitDataManager.updateData(data);
+    this.classToColorMapping = classToColorMapping;
+    this.largestCommitSize = this.commitDataManager.getRawCommits().reduce((max, commit) => Math.max(max, commit.totalChangedLinesCount), 0);
   }
 }
 
