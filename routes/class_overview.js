@@ -54,12 +54,12 @@ router.get('/class_names', (req, res, next) => {
   const session = driver.session();
   const dataFromDb = [];
   session.run(`
-    MATCH p=(origin_commit:App)-[:CHANGED_TO*0..]->(destination_commit:App)
+    MATCH (origin_commit:App), (destination_commit:App)
     WHERE origin_commit.commit='` + req.query.startCommit + `'
       AND destination_commit.commit='` + req.query.endCommit + `'
-    UNWIND NODES(p) as node
-    WITH distinct node
-    MATCH (node)-[:APP_OWNS_CLASS]->(c:Class)
+    MATCH (app:App)-[:CHANGED_TO*0..]->(destination_commit)
+    WHERE app.timestamp >= origin_commit.timestamp
+    OPTIONAL MATCH (app)-[:APP_OWNS_CLASS]->(c:Class)
     RETURN distinct c.name as className
     ORDER BY className
   `).subscribe({
