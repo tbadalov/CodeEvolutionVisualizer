@@ -109,7 +109,7 @@ class BarDataManager {
           y: stackY,
           height: stackHeight,
           width: stackWidth,
-          color: stackColor,
+          fill: stackColor,
           scaleY: -1,
           payload: payload,
         });

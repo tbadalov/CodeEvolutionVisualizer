@@ -29,14 +29,7 @@ let isSizeReady = false;
 
 function drawStack(stack, onMouseEnter, onMouseMove, onMouseLeave) {
   const rectProps = {
-    fill: stack.color,
-    x: stack.x,
-    y: stack.y,
-    width: stack.width,
-    height: stack.height,
-    scaleY: stack.scaleY,
-    scaleX: stack.scaleX,
-    stroke: stack.stroke,
+    ...stack,
     onMouseEnter,
     onMouseMove,
     onMouseLeave,
