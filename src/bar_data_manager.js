@@ -93,13 +93,9 @@ class BarDataManager {
       for (let j = 0; j < commit.changedClasses.length; j++) {
         const changedClass = commit.changedClasses[j];
 
-        if (this.commitDataManager.isClassDisabled(changedClass.className)) {
-          continue;
-        }
-
         const stackX = barX;
         const stackY = barY - currentStackHeight;
-        const stackHeight = changedClass.changedLinesCount * heightPerLine;
+        const stackHeight = this.commitDataManager.isClassDisabled(changedClass.className) ? 0 : changedClass.changedLinesCount * heightPerLine;
         const stackWidth = barWidth;
         const stackColor = this.classToColorMapping[changedClass.className];
         const payload = {
