@@ -83,7 +83,7 @@ class CommitRangeViewFull extends React.Component {
     this.setState({ data });
     this.setState({ items: alpahebticallySortedItems });
     this.props.addMenuItem(
-      <ItemList items={this.state.items} onItemChange={this.handleItemClick} />
+      <ItemList items={this.state.items} title='Class filter' onItemChange={this.handleItemClick} />
     );
   }
 

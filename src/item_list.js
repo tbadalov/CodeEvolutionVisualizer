@@ -36,6 +36,7 @@ class ItemList extends React.Component {
   </ul>;
     return(
       <div className="item-list">
+        { this.props.title ? <p className='item-list-title'>{this.props.title}</p> : null }
         {response}
       </div>
     );
