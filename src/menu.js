@@ -1,4 +1,5 @@
 const React = require('react');
+const menuStyle = require('./css/menu.css');
 
 const Menu = (props) => {
   return(

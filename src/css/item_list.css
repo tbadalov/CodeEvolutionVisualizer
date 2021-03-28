@@ -8,14 +8,6 @@ body, html {
   width: 100%;
 }
 
-.minu-menu {
-  height: calc(100% - 20px);
-  width: calc(100% - 20px);
-  padding: 10px;
-  background-color: #ccc;
-  position: relative;
-}
-
 .item-list {
   width: 100%;
   height: 100%;
