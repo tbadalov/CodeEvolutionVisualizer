@@ -1,5 +1,5 @@
 const React = require('react');
-const ClassColorContext = require('../contexts/class_color_context');
+const ColorContext = require('../contexts/color_context');
 const DiagramDataLoader = require('../diagram_data_loader');
 const ItemList = require('../item_list');
 const CallVolumeDiagram = require('./call_volume_diagram');
@@ -185,13 +185,13 @@ class CallVolumeView extends React.Component {
 
   render() {
     return(
-        <ClassColorContext.Consumer>
+        <ColorContext.Consumer>
             { this.mapContextValueToView }
-        </ClassColorContext.Consumer>
+        </ColorContext.Consumer>
     );
   }
 }
 
-CallVolumeView.contextType = ClassColorContext;
+CallVolumeView.contextType = ColorContext;
 
 module.exports = CallVolumeView;

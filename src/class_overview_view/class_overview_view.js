@@ -3,7 +3,7 @@ const ClassOverviewDiagram = require('./class_overview_diagram');
 const DiagramDataLoader = require('../diagram_data_loader');
 const DataConverter = require('./data_converter');
 const ItemList = require('../item_list');
-const ClassColorContext = require('../contexts/class_color_context');
+const ColorContext = require('../contexts/color_context');
 
 class ClassOverviewView extends React.Component {
   constructor(props) {
@@ -86,13 +86,13 @@ class ClassOverviewView extends React.Component {
 
   render() {
     return(
-      <ClassColorContext.Consumer>
+      <ColorContext.Consumer>
         { this.mapContextValueToView }
-      </ClassColorContext.Consumer>
+      </ColorContext.Consumer>
     );
   }
 }
 
-ClassOverviewView.contextType = ClassColorContext;
+ClassOverviewView.contextType = ColorContext;
 
 module.exports = ClassOverviewView;

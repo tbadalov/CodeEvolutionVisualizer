@@ -6,12 +6,13 @@ const Menu = require('./menu');
 const React = require('react');
 const ReactDOM = require('react-dom');
 const diagramStyle = require('./css/diagram.css');
-const ClassColorContext = require('./contexts/class_color_context');
+const ColorContext = require('./contexts/color_context');
 
 class App extends React.Component {
   constructor(props) {
     super(props);
     this.changeClassColor = this.changeClassColor.bind(this);
+    this.setBranchColor = this.setBranchColor.bind(this);
     this.diagrams = {
       commitRangeView: CommitRangeView,
       classOverviewView: ClassOverviewView,
@@ -26,21 +27,36 @@ class App extends React.Component {
         },
       },
       menuItems: [],
-      classColorContextValue: {
+      colorContextValue: {
         classToColorMapping: {},
         changeClassColor: this.changeClassColor,
+        branchToColorMapping: {},
+        setBranchColor: this.changeBranchColor,
       },
     }
   }
 
+  setBranchColor(branchName, color) {
+    const branchToColorMapping = {
+      ...this.state.colorContextValue.branchToColorMapping,
+      [branchName]: color,
+    };
+    this.setState({
+      colorContextValue: {
+        ...this.state.colorContextValue,
+        branchToColorMapping,
+      },
+    });
+  }
+
   changeClassColor(className, color) {
     const classToColorMapping = {
-      ...this.state.classColorContextValue.classToColorMapping,
+      ...this.state.colorContextValue.classToColorMapping,
       [className]: color,
     };
     this.setState({
-      classColorContextValue: {
-        ...this.state.classColorContextValue,
+      colorContextValue: {
+        ...this.state.colorContextValue,
         classToColorMapping,
       },
     });
@@ -74,9 +90,9 @@ class App extends React.Component {
           <Menu items={this.state.menuItems} />
         </div>
         <div className="box-2">
-          <ClassColorContext.Provider value={this.state.classColorContextValue}>
+          <ColorContext.Provider value={this.state.colorContextValue}>
             <Diagram url={uiConfig[this.state.currentDiagram].apiUrl} addMenuItem={this.addMenuItem.bind(this)} changeDiagram={this.state.data.diagramData.changeDiagram} {...this.state.data.diagramData.props} />
-          </ClassColorContext.Provider>
+          </ColorContext.Provider>
         </div>
       </div>
     );

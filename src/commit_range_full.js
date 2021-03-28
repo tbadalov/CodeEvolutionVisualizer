@@ -1,6 +1,6 @@
 const React = require('react');
 const CommitRangeView = require('./commit_range_view');
-const ClassColorContext = require('./contexts/class_color_context');
+const ColorContext = require('./contexts/color_context');
 const Item = require('./item');
 const ItemList = require('./item_list');
 
@@ -196,13 +196,13 @@ class CommitRangeViewFull extends React.Component {
 
   render() {
     return(
-      <ClassColorContext.Consumer>
+      <ColorContext.Consumer>
         { this.mapContextValueToView }
-      </ClassColorContext.Consumer>
+      </ColorContext.Consumer>
     );
   }
 }
 
-CommitRangeViewFull.contextType = ClassColorContext;
+CommitRangeViewFull.contextType = ColorContext;
 
 module.exports = CommitRangeViewFull;
