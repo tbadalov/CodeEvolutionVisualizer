@@ -40,6 +40,33 @@ function buildClassFilterItems(data) {
   return classNameItemMapping;
 }
 
+function mapBranchNameToFilterItem(commit, branchName) {
+  return {
+    label: branchName,
+    color: getRandomColor(),
+    checked: true,
+    payload: {
+      branchName: branchName,
+    },
+  };
+}
+
+function mapCommitToBranchFilterItem(result, commit) {
+  const { branchName } = commit;
+  if (!result[branchName]) {
+    result[branchName] = mapBranchNameToFilterItem(commit, branchName);
+  }
+}
+
+function buildBranchFilterItems(data) {
+  const commitHashToItemMapping = {};
+  for (let i = 0; i < data.commits.length; i++) {
+    const commit = data.commits[i];
+    mapCommitToBranchFilterItem(commitHashToItemMapping, commit);
+  }
+  return commitHashToItemMapping;
+}
+
 function getRandomColor() {
   var letters = '0123456789ABCDEF';
   var color = '#';
@@ -55,8 +82,10 @@ class CommitRangeViewFull extends React.Component {
     this.mapContextValueToView = this.mapContextValueToView.bind(this);
     this.handleContentFilterClick = this.handleContentFilterClick.bind(this);
     this.handleClassFilterClick = this.handleClassFilterClick.bind(this);
+    this.handleBranchFilterClick = this.handleBranchFilterClick.bind(this);
     this.state = {
       items: [],
+      branchFilterItems: [],
       showSourceCodeChanges: true,
       showAssetChanges: true,
       disabledClasses: {},
@@ -81,17 +110,27 @@ class CommitRangeViewFull extends React.Component {
   onDataReady(data) {
     const items = [];
     const classNameToClassFilterMapping = buildClassFilterItems(data);
+    const commitHashToBranchFilterMapping = buildBranchFilterItems(data);
 
-    const alpahebticallySortedItems = Object.keys(classNameToClassFilterMapping)
-      .map(className => classNameToClassFilterMapping[className])
+    const alpahebticallySortedItems = Object.values(classNameToClassFilterMapping)
       .sort((item1, item2) => item1.label.localeCompare(item2.label));
     const { changeClassColor } = this.context;
     alpahebticallySortedItems.forEach(item => changeClassColor(item.label, item.color));
 
+    const alpahebticallySortedBranchFilterItems = Object.values(commitHashToBranchFilterMapping)
+    .sort((item1, item2) => item1.label.localeCompare(item2.label));
+
     this.setState({ data });
-    this.setState({ items: alpahebticallySortedItems });
+    this.setState({
+      items: alpahebticallySortedItems,
+      branchFilterItems: alpahebticallySortedBranchFilterItems,
+    });
+
     this.props.addMenuItem(
       <ItemList items={this.state.items} title='Class filter' onItemChange={this.handleClassFilterClick} />
+    );
+    this.props.addMenuItem(
+      <ItemList items={this.state.branchFilterItems} title='Branch filter' onItemChange={this.handleBranchFilterClick} />
     );
   }
 
@@ -125,6 +164,10 @@ class CommitRangeViewFull extends React.Component {
     }
     this.setState({ items });
     this.setState({ disabledClasses });
+  }
+
+  handleBranchFilterClick(clickedBranchItem) {
+    console.log(clickedBranchItem);
   }
 
   componentDidMount() {
