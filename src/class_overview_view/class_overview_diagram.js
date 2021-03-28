@@ -161,7 +161,8 @@ class ClassOverviewDiagram extends React.Component {
           this.props.rawData,
           (commit) => {
             this.props.onDiagramChange('callVolumeView', {label: commit, classToColorMapping: this.props.classToColorMapping});
-          }
+          },
+          this.props.branchToColorMapping
       );
       this.stage.size(stageSize);
       this.largeContainerRef.current.style.width = stageSize.width + 'px';

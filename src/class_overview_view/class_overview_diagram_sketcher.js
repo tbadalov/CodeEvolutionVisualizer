@@ -35,13 +35,15 @@ function drawMethodLegend(layer, methodNames) {
   });
 }
 
-function buildColumnTitle(columnIndex, title, diagramPositioner) {
+function buildColumnTitle(columnIndex, columnData, diagramPositioner, branchToColorMapping) {
+  const title = columnData.commitHash;
   const columnTitleText = title.substr(0, 8);
   const columnTitlePosition = diagramPositioner.columnTitlePosition(columnIndex, columnTitleText);
   columnTitlePosition.frame = {
     type: 'rect',
     fill: '#ffffff',
-    stroke: '#000000',
+    stroke: branchToColorMapping[columnData.branchName] || '#000000',
+    strokeWidth: 3,
     ...columnTitlePosition.frame,
   };
   columnTitlePosition.text = {
@@ -120,14 +122,14 @@ class ClassOverviewDiagramSketcher {
     this.diagramPositioner = new ClassOverviewDiagramPositioner();
   }
 
-  convertToVisualizationData(groupedData, stageSize) {
+  convertToVisualizationData(groupedData, branchToColorMapping) {
     const data = {
       columns: [],
     };
     data.methodLegend = buildMethodLegend(Object.keys(groupedData.methodNameToRowNumberMapping), this.diagramPositioner);
     for (let i = 0; i < groupedData.columns.length; i++) {
       const columnLine = buildColumnLine(i, data.methodLegend.length, this.diagramPositioner);
-      const columnTitle = buildColumnTitle(i, groupedData.columns[i].commitHash, this.diagramPositioner);
+      const columnTitle = buildColumnTitle(i, groupedData.columns[i], this.diagramPositioner, branchToColorMapping);
       const methods = buildColumnMethods(i, groupedData.columns[i].row, this.diagramPositioner);
       console.log(methods);
       const arrows = [];
@@ -141,10 +143,10 @@ class ClassOverviewDiagramSketcher {
     return data;
   }
 
-  draw(stage, groupedData, onCommitClick) {
-    console.log(groupedData);
+  draw(stage, groupedData, onCommitClick, branchToColorMapping) {
     const visualizationData = this.convertToVisualizationData(
-      groupedData
+      groupedData,
+      branchToColorMapping
     );
     const stageSize = {
       width: calculateStageWidth(visualizationData.columns.length),

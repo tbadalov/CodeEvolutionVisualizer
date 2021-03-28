@@ -17,13 +17,14 @@ class ClassOverviewView extends React.Component {
     };
   }
 
-  mapContextValueToView({ classToColorMapping }) {
+  mapContextValueToView({ branchToColorMapping, classToColorMapping }) {
     return (
       <ClassOverviewDiagram
         rawData={this.state.rawData}
         startCommit={this.props.startCommit}
         endCommit={this.props.endCommit}
         classToColorMapping={classToColorMapping}
+        branchToColorMapping={branchToColorMapping}
         onDiagramChange={this.props.changeDiagram} />
     );
   }
@@ -49,9 +50,10 @@ class ClassOverviewView extends React.Component {
     ).then(initialData => {
       const classFilterItems = initialData.classNames.map((className, index) => ({
         label: className,
-        color: this.context.classToColorMapping[className],
         checked: index === 0,
-        payload: {},
+        payload: {
+          className: className,
+        },
       })).sort((item1, item2) => item1.label.localeCompare(item2.label));
 
       const branchNames = extractUniqueValues(initialData.commits.map(commit => commit.branchName));
@@ -59,7 +61,9 @@ class ClassOverviewView extends React.Component {
         label: branchName,
         color: this.context.branchToColorMapping[branchName],
         checked: true,
-        payload: {},
+        payload: {
+          branchName: branchName,
+        },
       })).sort((item1, item2) => item1.label.localeCompare(item2.label));
 
       this.props.addMenuItem(

@@ -6,6 +6,7 @@ function buildColumn(convertationState, commitHash, commitData) {
   const { methodNameToRowNumberMapping } = convertationState;
   const columnData = {
     commitHash: commitHash,
+    branchName: commitData.branchName,
     row: {},
   };
   const rows = commitData.methods.reduce(
