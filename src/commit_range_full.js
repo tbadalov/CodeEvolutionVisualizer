@@ -1,6 +1,7 @@
 const React = require('react');
 const CommitRangeView = require('./commit_range_view');
 const ClassColorContext = require('./contexts/class_color_context');
+const Item = require('./item');
 const ItemList = require('./item_list');
 
 function loadData(url) {
@@ -37,9 +38,12 @@ class CommitRangeViewFull extends React.Component {
   constructor(props) {
     super(props);
     this.mapContextValueToView = this.mapContextValueToView.bind(this);
+    this.handleContentFilterClick = this.handleContentFilterClick.bind(this);
     this.handleClassFilterClick = this.handleClassFilterClick.bind(this);
     this.state = {
       items: [],
+      showSourceCodeChanges: true,
+      showAssetChanges: true,
       disabledClasses: {},
       data: {
         commits: [],
@@ -53,6 +57,8 @@ class CommitRangeViewFull extends React.Component {
         data={this.state.data}
         disabledClasses={this.state.disabledClasses}
         classToColorMapping={classToColorMapping}
+        showSourceCodeChanges={this.state.showSourceCodeChanges}
+        showAssetChanges={this.state.showAssetChanges}
         onDiagramChange={this.props.changeDiagram} />
     );
   }
@@ -91,7 +97,21 @@ class CommitRangeViewFull extends React.Component {
     );
   }
 
+  handleContentFilterClick(clickedItem) {
+    const { filterType } = clickedItem.payload;
+    if (filterType === 'src') {
+      this.setState({
+        showSourceCodeChanges: !this.state.showSourceCodeChanges,
+      });
+    } else if (filterType === 'asset') {
+      this.setState({
+        showAssetChanges: !this.state.showAssetChanges,
+      });
+    }
+  }
+
   handleClassFilterClick(clickedItem) {
+    const changedItemIndex = clickedItem.index;
     console.log("Item " + clickedItem.payload.className + " with index " + clickedItem.index + " was clicked");
     const items = this.state.items.map((item, index) => {
       if (index == clickedItem.index) {
@@ -110,6 +130,12 @@ class CommitRangeViewFull extends React.Component {
   }
 
   componentDidMount() {
+    this.props.addMenuItem(
+      <ItemList title='Content filter'>
+        <Item label='Show source code changes' checked={this.state.showSourceCodeChanges} onItemChange={this.handleContentFilterClick} payload={{filterType: 'src'}} />
+        <Item label='Show asset changes' checked={this.state.showAssetChanges} onItemChange={this.handleContentFilterClick} payload={{filterType: 'asset'}} />
+      </ItemList>
+    );
     loadData(this.props.url)
       .then(data => {
         //data.commits = data.commits.concat(data.commits).concat(data.commits).concat(data.commits);

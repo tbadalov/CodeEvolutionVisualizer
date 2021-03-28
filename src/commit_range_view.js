@@ -491,6 +491,8 @@ class CommitRangeView extends React.Component {
 
   render() {
     this.barDataManager.updateUnderlyingData(this.props.data, this.props.classToColorMapping);
+    this.barDataManager.showSourceCodeChanges(this.props.showSourceCodeChanges);
+    this.barDataManager.showAssetChanges(this.props.showAssetChanges);
     this.barDataManager.enableAll();
     Object.keys(this.props.disabledClasses).forEach(className => this.barDataManager.disable(className));
     const konvaLayers = isSizeReady ? this.refreshDiagram() : [];

@@ -19,6 +19,8 @@ class BarDataManager {
     this.largestCommitSize = this.commitDataManager.getRawCommits().reduce((max, commit) => Math.max(max, commit.totalChangedLinesCount), 0);
     this.zoomValueY = 1.0;
     this.zoomValueX = 1.0;
+    this.showSrc = true;
+    this.showAssets = true;
   }
 
   disable(className) {
@@ -152,13 +154,22 @@ class BarDataManager {
     const startBarIndex = Math.floor(Math.max(0, (xStart - BAR_LAYER_LEFT_MARGIN)) / (BAR_PADDING + BAR_WIDTH));
     const endBarIndex = Math.ceil(Math.max(0, (xEnd - BAR_LAYER_LEFT_MARGIN)) / (BAR_PADDING + BAR_WIDTH));
     const commits = this.commitDataManager.getRawCommits();
-    return commits.slice(startBarIndex, endBarIndex+1);
+    return commits.slice(startBarIndex, endBarIndex+1)
+      .filter(commit => (this.showSrc && commit.totalChangedLinesCount > 0) || (this.showAssets && commit.totalChangedLinesCount === 0));
   }
 
   updateUnderlyingData(data, classToColorMapping) {
     this.commitDataManager.updateData(data);
     this.classToColorMapping = classToColorMapping;
     this.largestCommitSize = this.commitDataManager.getRawCommits().reduce((max, commit) => Math.max(max, commit.totalChangedLinesCount), 0);
+  }
+
+  showSourceCodeChanges(value) {
+    this.showSrc = value;
+  }
+
+  showAssetChanges(value) {
+    this.showAssets = value;
   }
 }
 

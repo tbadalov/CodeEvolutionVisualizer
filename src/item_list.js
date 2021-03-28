@@ -4,20 +4,20 @@ const { RadioGroup, RadioButton } = require('react-radio-buttons');
 const itemListStyle = require('./css/item_list.css');
 const Item = require('./item');
 
-function buildRadioButtons(items) {
-  return items.map((item, index) => <Item {...item} index={index} isRadio />);
-}
-
-function buildCheckboxButtons(items) {
-  return items.map((item, index) => <Item key={index} index={index} {...item} />);
-}
-
-
-
 class ItemList extends React.Component {
   constructor(props) {
     super(props);
     this.mapRadioButtonValueToItemData = this.mapRadioButtonValueToItemData.bind(this);
+    this.buildRadioButtons = this.buildRadioButtons.bind(this);
+    this.buildCheckboxButtons = this.buildCheckboxButtons.bind(this);
+  }
+
+  buildRadioButtons(items) {
+    return items.map((item, index) => <Item {...item} index={index} isRadio />);
+  }
+
+  buildCheckboxButtons(items) {
+    return items.map((item, index) => <Item key={index} index={index} {...item} onItemChange={this.props.onItemChange} />);
   }
 
   mapRadioButtonValueToItemData(value) {
@@ -29,8 +29,8 @@ class ItemList extends React.Component {
 
   render() {
     const items = this.props.children || (this.props.isRadio
-        ? buildRadioForm(this.props.items || [])
-        : buildCheckboxButtons(this.props.items || []));
+        ? this.buildRadioForm(this.props.items || [])
+        : this.buildCheckboxButtons(this.props.items || []));
 
     let response;
     if (this.props.isRadio) {
