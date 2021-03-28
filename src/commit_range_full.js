@@ -9,20 +9,35 @@ function loadData(url) {
           .then((result) => result.json());
 }
 
-function getItems(data) {
-  const items = [];
-  const classNameSet = new Set();
+function mapClassToClassFilterItem(commit, changedClass) {
+  const changedClassName = changedClass.className;
+  return {
+    label: changedClassName,
+    color: getRandomColor(),
+    checked: true,
+    payload: {
+      className: changedClassName,
+    },
+  };
+}
+
+function mapCommitToClassFilterItems(result, commit) {
+  for (let i = 0; i < commit.changedClasses.length; i++) {
+    const changedClass = commit.changedClasses[i];
+    const changedClassName = changedClass.className;
+    if (!result[changedClassName]) {
+      result[changedClassName] = mapClassToClassFilterItem(commit, changedClass);
+    }
+  }
+}
+
+function buildClassFilterItems(data) {
+  const classNameItemMapping = {};
   for (let i = 0; i < data.commits.length; i++) {
     const commit = data.commits[i];
-    for (let j = 0; j < commit.changedClasses.length; j++) {
-      classNameSet.add(commit.changedClasses[j].className);
-    }
-    items.push({
-      label: className,
-      color: classNameColorMapping[className].color,
-      checked: true,
-    });
+    mapCommitToClassFilterItems(classNameItemMapping, commit);
   }
+  return classNameItemMapping;
 }
 
 function getRandomColor() {
@@ -65,27 +80,10 @@ class CommitRangeViewFull extends React.Component {
   
   onDataReady(data) {
     const items = [];
-    const classNameItemMapping = {};
-    for (let i = 0; i < data.commits.length; i++) {
-      const commit = data.commits[i];
-      for (let j = 0; j < commit.changedClasses.length; j++) {
-        const changedClass = commit.changedClasses[j];
-        const className = changedClass.className;
-        if (!classNameItemMapping[className]) {
-          classNameItemMapping[className] = {
-            label: className,
-            color: getRandomColor(),
-            checked: true,
-            payload: {
-              className: className,
-            },
-          };
-        }
-      }
-    }
+    const classNameToClassFilterMapping = buildClassFilterItems(data);
 
-    const alpahebticallySortedItems = Object.keys(classNameItemMapping)
-      .map(className => classNameItemMapping[className])
+    const alpahebticallySortedItems = Object.keys(classNameToClassFilterMapping)
+      .map(className => classNameToClassFilterMapping[className])
       .sort((item1, item2) => item1.label.localeCompare(item2.label));
     const { changeClassColor } = this.context;
     alpahebticallySortedItems.forEach(item => changeClassColor(item.label, item.color));
