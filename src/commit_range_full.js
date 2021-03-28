@@ -95,12 +95,13 @@ class CommitRangeViewFull extends React.Component {
     };
   }
 
-  mapContextValueToView({ classToColorMapping }) {
+  mapContextValueToView({ branchToColorMapping, classToColorMapping }) {
     return (
       <CommitRangeView
         data={this.state.data}
         disabledClasses={this.state.disabledClasses}
         classToColorMapping={classToColorMapping}
+        branchToColorMapping={branchToColorMapping}
         showSourceCodeChanges={this.state.showSourceCodeChanges}
         showAssetChanges={this.state.showAssetChanges}
         onDiagramChange={this.props.changeDiagram} />
@@ -114,11 +115,12 @@ class CommitRangeViewFull extends React.Component {
 
     const alpahebticallySortedItems = Object.values(classNameToClassFilterMapping)
       .sort((item1, item2) => item1.label.localeCompare(item2.label));
-    const { changeClassColor } = this.context;
+    const { setBranchColor, changeClassColor } = this.context;
     alpahebticallySortedItems.forEach(item => changeClassColor(item.label, item.color));
 
     const alpahebticallySortedBranchFilterItems = Object.values(commitHashToBranchFilterMapping)
     .sort((item1, item2) => item1.label.localeCompare(item2.label));
+    alpahebticallySortedBranchFilterItems.forEach(item => setBranchColor(item.label, item.color));
 
     this.setState({ data });
     this.setState({

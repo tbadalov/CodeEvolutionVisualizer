@@ -23,3 +23,11 @@ export function groupBy(array, key) {
     {}
   );
 };
+
+export function extractUniqueValues(array) {
+  const cache = {};
+  for (let element of array) {
+    cache[element] = true;
+  }
+  return Object.keys(cache);
+}

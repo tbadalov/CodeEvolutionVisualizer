@@ -31,7 +31,7 @@ class App extends React.Component {
         classToColorMapping: {},
         changeClassColor: this.changeClassColor,
         branchToColorMapping: {},
-        setBranchColor: this.changeBranchColor,
+        setBranchColor: this.setBranchColor,
       },
     }
   }
@@ -69,9 +69,12 @@ class App extends React.Component {
     this.setState({currentDiagram: diagramName, data: data, menuItems: []});
   }
 
-  addMenuItem(menuItem) {
+  addMenuItem(menuItem, priority) {
+    const menuItems = [...this.state.menuItems];
+    priority = Math.min(priority || menuItems.length, menuItems.length);
+    menuItems.splice(priority, 0, menuItem);
     this.setState({
-      menuItems: [...this.state.menuItems, menuItem],
+      menuItems: menuItems,
     });
   }
 

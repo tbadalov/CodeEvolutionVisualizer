@@ -60,22 +60,27 @@ router.get('/', function(req, res, next) {
   })
 });
 
-router.get('/class_names', (req, res, next) => {
+router.get('/initial_data', (req, res, next) => {
   const driver = neo4j.driver(neo4jconfig.uri, neo4j.auth.basic(neo4jconfig.user, neo4jconfig.password));
   const session = driver.session();
-  const dataFromDb = [];
-  session.run(`
+  let dataFromDb = {
+    classNames: [],
+    commits: [],
+  };
+  const query = `
     MATCH (origin_commit:App), (destination_commit:App)
     WHERE origin_commit.commit='` + req.query.startCommit + `'
       AND destination_commit.commit='` + req.query.endCommit + `'
     MATCH (app:App)-[:CHANGED_TO*0..]->(destination_commit)
     WHERE app.timestamp >= origin_commit.timestamp
     OPTIONAL MATCH (app)-[:APP_OWNS_CLASS]->(c:Class)
-    RETURN distinct c.name as className
-    ORDER BY className
-  `).subscribe({
+    RETURN collect(distinct c.name) as classNames, collect(distinct {branchName: app.branch, commitHash: app.commit}) as commits`;
+  session.run(query).subscribe({
     onNext: record => {
-      dataFromDb.push(record.get('className'));
+      dataFromDb = {
+        classNames: record.get('classNames'),
+        commits: record.get('commits'),
+      };
     },
     onCompleted: () => {
       res.setHeader('Content-Type', 'application/json');

@@ -4,13 +4,16 @@ const DiagramDataLoader = require('../diagram_data_loader');
 const DataConverter = require('./data_converter');
 const ItemList = require('../item_list');
 const ColorContext = require('../contexts/color_context');
+const { extractUniqueValues } = require('../utils');
 
 class ClassOverviewView extends React.Component {
   constructor(props) {
     super(props);
     this.mapContextValueToView = this.mapContextValueToView.bind(this);
+    this.handleBranchFilterItemClick = this.handleBranchFilterItemClick.bind(this);
     this.state = {
-      items: [],
+      classFilterItems: [],
+      branchFilterItems: [],
     };
   }
 
@@ -27,30 +30,50 @@ class ClassOverviewView extends React.Component {
 
   handleItemChange(index) {
     console.log("selecting " + index);
-    this.setState({selectedClassName: this.state.items[index].label});
+    this.setState({selectedClassName: this.state.classFilterItems[index].label});
+  }
+
+  handleBranchFilterItemClick(branchFilterItemPayload) {
+    console.log(branchFilterItemPayload);
   }
 
   componentDidMount() {
     const { startCommit, endCommit } = this.props;
     const diagramDataLoader = new DiagramDataLoader();
     diagramDataLoader.load(
-      `${this.props.url}/class_names`,
+      `${this.props.url}/initial_data`,
       {
         startCommit,
         endCommit,
       }
-    ).then(classNames => {
-      const items = classNames.map((className, index) => ({
+    ).then(initialData => {
+      const classFilterItems = initialData.classNames.map((className, index) => ({
         label: className,
         color: this.context.classToColorMapping[className],
         checked: index === 0,
-      }));
+        payload: {},
+      })).sort((item1, item2) => item1.label.localeCompare(item2.label));
+
+      const branchNames = extractUniqueValues(initialData.commits.map(commit => commit.branchName));
+      const branchFilterItems = branchNames.map((branchName, index) => ({
+        label: branchName,
+        color: this.context.branchToColorMapping[branchName],
+        checked: true,
+        payload: {},
+      })).sort((item1, item2) => item1.label.localeCompare(item2.label));
+
       this.props.addMenuItem(
-        <ItemList items={items} isRadio onItemChange={this.handleItemChange.bind(this)}/>
+        <ItemList items={branchFilterItems} title='Branch filter' onItemChange={this.handleBranchFilterItemClick} />
+      )
+      this.props.addMenuItem(
+        <ItemList items={classFilterItems} isRadio title='Class filter' onItemChange={this.handleItemChange.bind(this)}/>
       );
-      this.setState({items: items});
-      this.setState({selectedClassName: classNames[0]});
-      return classNames[0];
+      this.setState({
+        classFilterItems: classFilterItems,
+        branchFilterItems: branchFilterItems,
+      });
+      this.setState({selectedClassName: classFilterItems[0].label});
+      return classFilterItems[0].label;
     })
     .catch(error => console.log(error));
   }
