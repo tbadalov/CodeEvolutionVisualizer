@@ -13,7 +13,13 @@ class ItemList extends React.Component {
   }
 
   buildRadioButtons(items) {
-    return items.map((item, index) => <Item {...item} index={index} isRadio />);
+    return items.map((item, index) => {
+      return (
+        <RadioButton value={Number(index).toString()} rootColor={item.rootColor || 'black'} pointColor={item.color || "black"}>
+          { item.label }
+        </RadioButton>
+      );
+    });
   }
 
   buildCheckboxButtons(items) {
@@ -21,21 +27,22 @@ class ItemList extends React.Component {
   }
 
   mapRadioButtonValueToItemData(value) {
-    return {
+    /*const callbackData = {
       index: value,
       payload: this.props.items[value].payload,
-    };
+    };*/
+    this.props.onItemChange(value);
   }
 
   render() {
     const items = this.props.children || (this.props.isRadio
-        ? this.buildRadioForm(this.props.items || [])
+        ? this.buildRadioButtons(this.props.items || [])
         : this.buildCheckboxButtons(this.props.items || []));
 
     let response;
     if (this.props.isRadio) {
       response = (
-        <RadioGroup onChange={this.mapRadioButtonValueToItemData} value="0" vertical>
+        <RadioGroup onChange={this.mapRadioButtonValueToItemData} value="0">
           { items }
         </RadioGroup>
       );

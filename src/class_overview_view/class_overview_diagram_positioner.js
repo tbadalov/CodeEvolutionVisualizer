@@ -86,7 +86,7 @@ class ClassOverviewDiagramPositioner {
   rowPosition(columnIndex, rowIndex) {
     const rowStartY = constants.COLUMN_TOP_Y + rowIndex * constants.ROW_HEIGHT;
     const rowCenterY = rowStartY + constants.VERTICAL_MARGIN_FROM_TOP + constants.ROW_HEIGHT / 2;
-    console.log("row position #" + rowIndex + ": " + rowCenterY);
+    //console.log("row position #" + rowIndex + ": " + rowCenterY);
     return {
       rowCenterY,
       rowStartY,
