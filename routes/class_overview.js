@@ -48,7 +48,7 @@ router.get('/', function(req, res, next) {
         commitHash: record.get('commitHash'),
         version: record.get('version').low,
         timestamp: record.get('timestamp'),
-        methods: JSON.parse(record.get('methods')),
+        methods: record.get('methods'),
       });
     },
     onCompleted: () => {

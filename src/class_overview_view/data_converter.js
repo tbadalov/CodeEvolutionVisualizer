@@ -2,18 +2,18 @@ const { groupBy } = require('../utils');
 
 //function buildMethodRecord()
 
-function buildColumn(convertationState, commit, commitData) {
-  const { methodNameToRowMapping } = convertationState;
+function buildColumn(convertationState, commitHash, commitData) {
+  const { methodNameToRowNumberMapping } = convertationState;
   const columnData = {
-    commit: commit,
+    commitHash: commitHash,
     row: {},
   };
-  const rows = commitData.reduce(
+  const rows = commitData.methods.reduce(
     (rows, record) => {
-      const methodName = record.method;
-      const methodRow = methodNameToRowMapping[methodName];
+      const methodName = record.name;
+      const methodRow = methodNameToRowNumberMapping[methodName];
       const status = record.status;
-      const calls = record.calls.map(called_method_name => methodNameToRowMapping[called_method_name]);
+      const calls = record.calls.map(called_method_name => methodNameToRowNumberMapping[called_method_name]);
       rows[methodRow] = {
         methodName,
         status,
@@ -29,37 +29,34 @@ function buildColumn(convertationState, commit, commitData) {
 
 function getAllMethodNames(rawRecords) {
   const foundMethods = {};
-  for (let i = 0; i < rawRecords.length; i++) {
-    const methodName = rawRecords[i].method;
-    if (!foundMethods[methodName]) {
-      foundMethods[methodName] = true;
-    }
-  }
+  rawRecords
+    .flatMap(commit => commit.methods)
+    .forEach(method => foundMethods[method.name] = true);
+
   return Object.keys(foundMethods).sort();
 }
 
-function mapMethodNamesToRows(methodNames) {
+function mapMethodNamesToRowNumber(methodNames) {
   const methodNameToRowMapping = {};
-  methodNames.sort().forEach((methodName, index) => methodNameToRowMapping[methodName] = index);
+  methodNames.forEach((methodName, index) => methodNameToRowMapping[methodName] = index);
   return methodNameToRowMapping;
 }
 
 
 class ClassOverviewDataConverter {
   groupDataIntoCommitColumnsAndMethodRows(rawData) {
-    const methodNameToRowMapping = mapMethodNamesToRows(getAllMethodNames(rawData));
+    const methodNameToRowNumberMapping = mapMethodNamesToRowNumber(getAllMethodNames(rawData));
     const data = {
       columns: [],
-      methodNameToRowMapping,
+      methodNameToRowNumberMapping,
     };
-    let recordsGroupedByCommitHash = groupBy(rawData, 'commit');
-    for (let commit in recordsGroupedByCommitHash) {
+    for (let commitRecord of rawData) {
       const columnData = buildColumn(
         {
-          methodNameToRowMapping,
+          methodNameToRowNumberMapping,
         },
-        commit,
-        recordsGroupedByCommitHash[commit]
+        commitRecord.commitHash,
+        commitRecord
       );
       data.columns.push(columnData);
     }

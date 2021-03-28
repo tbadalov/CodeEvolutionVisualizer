@@ -124,10 +124,10 @@ class ClassOverviewDiagramSketcher {
     const data = {
       columns: [],
     };
-    data.methodLegend = buildMethodLegend(Object.keys(groupedData.methodNameToRowMapping), this.diagramPositioner);
+    data.methodLegend = buildMethodLegend(Object.keys(groupedData.methodNameToRowNumberMapping), this.diagramPositioner);
     for (let i = 0; i < groupedData.columns.length; i++) {
       const columnLine = buildColumnLine(i, data.methodLegend.length, this.diagramPositioner);
-      const columnTitle = buildColumnTitle(i, groupedData.columns[i].commit, this.diagramPositioner);
+      const columnTitle = buildColumnTitle(i, groupedData.columns[i].commitHash, this.diagramPositioner);
       const methods = buildColumnMethods(i, groupedData.columns[i].row, this.diagramPositioner);
       console.log(methods);
       const arrows = [];
@@ -163,7 +163,7 @@ class ClassOverviewDiagramSketcher {
       columnTitle.on('mouseleave', function () {
         stage.container().style.cursor = 'auto';
       });
-      columnTitle.on('click', () => onCommitClick(groupedData.columns[i].commit));
+      columnTitle.on('click', () => onCommitClick(groupedData.columns[i].commitHash));
       drawColumnMethods(layer, visualizationData.columns[i].methods);
       drawColumnMethodArrows(layer, visualizationData.columns[i].arrows);
     }
