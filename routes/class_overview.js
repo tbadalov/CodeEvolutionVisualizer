@@ -34,6 +34,7 @@ router.get('/', function(req, res, next) {
     old_method,
     collect(called_method.name) as calls
   RETURN app.commit as commitHash,
+    app.branch as branchName,
     app.timestamp as timestamp,
     app.version_number as version,
     CASE
@@ -46,6 +47,7 @@ router.get('/', function(req, res, next) {
     onNext: record => {
       dataFromDb.push({
         commitHash: record.get('commitHash'),
+        branchName: record.get('branchName'),
         version: record.get('version').low,
         timestamp: record.get('timestamp'),
         methods: record.get('methods'),
