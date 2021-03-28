@@ -12,34 +12,39 @@ router.get('/', function(req, res, next) {
     WHERE origin.commit = '` + req.query.startCommit + `'
   MATCH (intermediate_commit:App)-[:CHANGED_TO*0..]->(destination:App)
     WHERE intermediate_commit.timestamp >= origin.timestamp
-      AND intermediate_commit.timestamp <= destination.timestamp
       AND destination.commit='` + req.query.endCommit + `'
-  WITH intermediate_commit as app
+  WITH distinct intermediate_commit as app
   OPTIONAL MATCH (app)-[APP_OWNS_CLASS]->(c:Class)-[:CLASS_OWNS_METHOD]->(m:Method)
     WHERE c.name = '` + req.query.className +`'
   OPTIONAL MATCH (app)<-[:CHANGED_TO]-(previousApp:App)-[:APP_OWNS_CLASS]->(:Class)-[:CLASS_OWNS_METHOD]->(m)
   OPTIONAL MATCH (m)-[changed_to:CHANGED_TO]->(new_method:Method)
   OPTIONAL MATCH (m)<-[changed_from:CHANGED_TO]-(old_method:Method)
-  OPTIONAL MATCH (m)-[calles:CALLS]-(called_method:Method)
+  OPTIONAL MATCH (m)-[:CALLS]->(called_method:Method)<-[:CLASS_OWNS_METHOD]-(c)
   WITH app,
+    m,
+    previousApp,
+    new_method,
+    old_method,
+    collect(called_method.name) as calls
+  WITH app.commit as commitHash,
+    app.branch as branchName,
+    app.timestamp as timestamp,
+    app.version_number as version,
+    m.name as methodName,
+    calls,
     CASE
       WHEN m IS NULL THEN NULL
       WHEN previousApp IS NOT NULL THEN 'same'
       WHEN old_method IS NULL THEN 'new'
       ELSE 'changed'
-    END as status,
-      m,
-    previousApp,
-    new_method,
-    old_method,
-    collect(called_method.name) as calls
-  RETURN app.commit as commitHash,
-    app.branch as branchName,
-    app.timestamp as timestamp,
-    app.version_number as version,
+    END as status
+  RETURN commitHash,
+    branchName,
+    timestamp,
+    version,
     CASE
-      WHEN m IS NULL THEN []
-      ELSE collect({status: status, name: m.name, calls: calls})
+      WHEN methodName IS NULL THEN []
+      ELSE collect({status: status, name: methodName, calls: calls})
     END as methods
   ORDER BY timestamp ASC`;
   console.log(query);

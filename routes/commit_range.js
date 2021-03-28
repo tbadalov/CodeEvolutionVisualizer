@@ -46,7 +46,6 @@ router.get('/', function(req, res, next) {
       }
       RETURN app.commit as commitHash, app.time as time, app.author as author, app.message as message, app.version_number as versionNumber, app.branch as branchName, changedClasses, totalChangedLinesCount
       ORDER BY app.timestamp ASC
-      LIMIT 50
       `).subscribe({
         onNext: record => {
           result.push({
