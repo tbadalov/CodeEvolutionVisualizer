@@ -8,39 +8,48 @@ router.get('/', function(req, res, next) {
   const session = driver.session();
   const dataFromDb = [];
   const query = `
-  MATCH p=(origin:App)-[:CHANGED_TO*]->(destination:App)
-  WHERE origin.commit='` + req.query.startCommit + `' AND destination.commit='` +req.query.endCommit + `' AND all(x IN nodes(p) WHERE x.branch="master" OR x.branch="master\\\n")
-  WITH p LIMIT 1
-  WITH nodes(p) as path_nodes
-  UNWIND(path_nodes) as app
-  MATCH (app)-[APP_OWNS_CLASS]->(c:Class)-[:CLASS_OWNS_METHOD]->(m:Method)
-      WHERE c.name = '` + req.query.className + `'
-      OPTIONAL MATCH (app)<-[:CHANGED_TO]-(previousApp:App {branch:"master\\\n"})-[:APP_OWNS_CLASS]->(:Class)-[:CLASS_OWNS_METHOD]->(m)
-      OPTIONAL MATCH (m)-[changed_to:CHANGED_TO]->(new_method:Method)
-      OPTIONAL MATCH (m)<-[changed_from:CHANGED_TO]-(old_method:Method)
-      OPTIONAL MATCH (m)-[calles:CALLES]-(called_method:Method)
-      RETURN app.commit as commit,
-        app.version_number as version,
-          CASE
-            WHEN previousApp IS NOT NULL THEN 'same'
-            WHEN old_method IS NULL THEN 'new'
-            ELSE 'changed'
-          END as status,
-          m,
-          new_method,
-          collect(called_method.name) as calls
-          ORDER BY version
-  `;
+  MATCH (origin:App)
+    WHERE origin.commit = '` + req.query.startCommit + `'
+  MATCH (intermediate_commit:App)-[:CHANGED_TO*0..]->(destination:App)
+    WHERE intermediate_commit.timestamp >= origin.timestamp
+      AND intermediate_commit.timestamp <= destination.timestamp
+      AND destination.commit='` + req.query.endCommit + `'
+  WITH intermediate_commit as app
+  OPTIONAL MATCH (app)-[APP_OWNS_CLASS]->(c:Class)-[:CLASS_OWNS_METHOD]->(m:Method)
+    WHERE c.name = '` + req.query.className +`'
+  OPTIONAL MATCH (app)<-[:CHANGED_TO]-(previousApp:App)-[:APP_OWNS_CLASS]->(:Class)-[:CLASS_OWNS_METHOD]->(m)
+  OPTIONAL MATCH (m)-[changed_to:CHANGED_TO]->(new_method:Method)
+  OPTIONAL MATCH (m)<-[changed_from:CHANGED_TO]-(old_method:Method)
+  OPTIONAL MATCH (m)-[calles:CALLS]-(called_method:Method)
+  WITH app,
+    CASE
+      WHEN m IS NULL THEN NULL
+      WHEN previousApp IS NOT NULL THEN 'same'
+      WHEN old_method IS NULL THEN 'new'
+      ELSE 'changed'
+    END as status,
+      m,
+    previousApp,
+    new_method,
+    old_method,
+    collect(called_method.name) as calls
+  RETURN app.commit as commitHash,
+    app.timestamp as timestamp,
+    app.version_number as version,
+    CASE
+      WHEN m IS NULL THEN []
+      ELSE collect({status: status, name: m.name, calls: calls})
+    END as methods
+  ORDER BY timestamp ASC`;
   console.log(query);
   session.run(query).subscribe({
     onNext: record => {
       dataFromDb.push({
-        commit: record.get('commit'),
+        commitHash: record.get('commitHash'),
         version: record.get('version').low,
-        status: record.get('status'),
-        method: record.get('m').properties.name,
-        calls: record.get('calls'),
-      })
+        timestamp: record.get('timestamp'),
+        methods: JSON.parse(record.get('methods')),
+      });
     },
     onCompleted: () => {
       res.setHeader('Content-Type', 'application/json');
