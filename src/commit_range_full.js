@@ -37,7 +37,7 @@ class CommitRangeViewFull extends React.Component {
   constructor(props) {
     super(props);
     this.mapContextValueToView = this.mapContextValueToView.bind(this);
-    this.handleItemClick = this.handleItemClick.bind(this);
+    this.handleClassFilterClick = this.handleClassFilterClick.bind(this);
     this.state = {
       items: [],
       disabledClasses: {},
@@ -70,10 +70,14 @@ class CommitRangeViewFull extends React.Component {
             label: className,
             color: getRandomColor(),
             checked: true,
+            payload: {
+              className: className,
+            },
           };
         }
       }
     }
+
     const alpahebticallySortedItems = Object.keys(classNameItemMapping)
       .map(className => classNameItemMapping[className])
       .sort((item1, item2) => item1.label.localeCompare(item2.label));
@@ -83,14 +87,14 @@ class CommitRangeViewFull extends React.Component {
     this.setState({ data });
     this.setState({ items: alpahebticallySortedItems });
     this.props.addMenuItem(
-      <ItemList items={this.state.items} title='Class filter' onItemChange={this.handleItemClick} />
+      <ItemList items={this.state.items} title='Class filter' onItemChange={this.handleClassFilterClick} />
     );
   }
 
-  handleItemClick(changedItemIndex) {
-    console.log("Item " + changedItemIndex + " was clicked");
+  handleClassFilterClick(clickedItem) {
+    console.log("Item " + clickedItem.payload.className + " with index " + clickedItem.index + " was clicked");
     const items = this.state.items.map((item, index) => {
-      if (index == changedItemIndex) {
+      if (index == clickedItem.index) {
         item.checked = !item.checked;
       }
       return item;
