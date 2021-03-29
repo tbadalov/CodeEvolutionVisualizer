@@ -1,9 +1,8 @@
 const { groupBy } = require('../utils');
 
-//function buildMethodRecord()
-
-function buildColumn(convertationState, commitHash, commitData) {
-  const { methodNameToRowNumberMapping } = convertationState;
+function buildColumn(commitData, props) {
+  const { methodNameToRowNumberMapping } = props;
+  const commitHash = commitData.commitHash;
   const columnData = {
     commitHash: commitHash,
     branchName: commitData.branchName,
@@ -53,11 +52,10 @@ class ClassOverviewDataConverter {
     };
     for (let commitRecord of rawData) {
       const columnData = buildColumn(
+        commitRecord,
         {
           methodNameToRowNumberMapping,
         },
-        commitRecord.commitHash,
-        commitRecord
       );
       data.columns.push(columnData);
     }
