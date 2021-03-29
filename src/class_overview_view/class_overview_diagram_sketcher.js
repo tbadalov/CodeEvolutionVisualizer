@@ -122,15 +122,21 @@ class ClassOverviewDiagramSketcher {
     this.diagramPositioner = new ClassOverviewDiagramPositioner();
   }
 
-  convertToVisualizationData(groupedData, branchToColorMapping) {
+  convertToVisualizationData(groupedData, branchToColorMapping, disabledBranches) {
     const data = {
       columns: [],
     };
     data.methodLegend = buildMethodLegend(Object.keys(groupedData.methodNameToRowNumberMapping), this.diagramPositioner);
+    let disabledColumnsCount = 0;
     for (let i = 0; i < groupedData.columns.length; i++) {
-      const columnLine = buildColumnLine(i, data.methodLegend.length, this.diagramPositioner);
-      const columnTitle = buildColumnTitle(i, groupedData.columns[i], this.diagramPositioner, branchToColorMapping);
-      const methods = buildColumnMethods(i, groupedData.columns[i].row, this.diagramPositioner);
+      if (disabledBranches[groupedData.columns[i].branchName]) {
+        disabledColumnsCount++;
+        continue;
+      }
+      const columnIndex = i-disabledColumnsCount;
+      const columnLine = buildColumnLine(columnIndex, data.methodLegend.length, this.diagramPositioner);
+      const columnTitle = buildColumnTitle(columnIndex, groupedData.columns[i], this.diagramPositioner, branchToColorMapping);
+      const methods = buildColumnMethods(columnIndex, groupedData.columns[i].row, this.diagramPositioner);
       console.log(methods);
       const arrows = [];
       data.columns.push({
@@ -143,10 +149,11 @@ class ClassOverviewDiagramSketcher {
     return data;
   }
 
-  draw(stage, groupedData, onCommitClick, branchToColorMapping) {
+  draw(stage, groupedData, onCommitClick, branchToColorMapping, disabledBranches) {
     const visualizationData = this.convertToVisualizationData(
       groupedData,
-      branchToColorMapping
+      branchToColorMapping,
+      disabledBranches
     );
     const stageSize = {
       width: calculateStageWidth(visualizationData.columns.length),

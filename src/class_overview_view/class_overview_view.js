@@ -14,6 +14,7 @@ class ClassOverviewView extends React.Component {
     this.state = {
       classFilterItems: [],
       branchFilterItems: [],
+      disabledBranches: {},
     };
   }
 
@@ -23,6 +24,7 @@ class ClassOverviewView extends React.Component {
         rawData={this.state.rawData}
         startCommit={this.props.startCommit}
         endCommit={this.props.endCommit}
+        disabledBranches={this.state.disabledBranches}
         classToColorMapping={classToColorMapping}
         branchToColorMapping={branchToColorMapping}
         onDiagramChange={this.props.changeDiagram} />
@@ -34,8 +36,21 @@ class ClassOverviewView extends React.Component {
     this.setState({selectedClassName: this.state.classFilterItems[index].label});
   }
 
-  handleBranchFilterItemClick(branchFilterItemPayload) {
-    console.log(branchFilterItemPayload);
+  handleBranchFilterItemClick(clickedBranchFilterItem) {
+    const { branchName } = clickedBranchFilterItem.payload;
+    const updatedBranchFilterItems = this.state.branchFilterItems.map((branchFilterItem, index) => {
+      if (index === clickedBranchFilterItem.index) {
+        branchFilterItem.checked = !branchFilterItem.checked;
+      }
+      return branchFilterItem;
+    });
+    this.setState({
+      branchFilterItems: updatedBranchFilterItems,
+      disabledBranches: {
+        ...this.state.disabledBranches,
+        [branchName]: !updatedBranchFilterItems[clickedBranchFilterItem.index].checked,
+      },
+    });
   }
 
   componentDidMount() {
