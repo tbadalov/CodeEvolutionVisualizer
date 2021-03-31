@@ -290,9 +290,6 @@ class CommitRangeView extends React.Component {
         },
         convertDataToPrimitiveShapes: () => [],
       },
-      onContainerScroll: this.onContainerScroll,
-      onContainerMouseMove: this.onScrollContainerMouseMove,
-      onContainerMouseDown: this.onScrollContainerMouseDown,
       mouseSelectionAreaProps: {
         x: 0,
         y: 0,
@@ -512,14 +509,16 @@ class CommitRangeView extends React.Component {
     return(
       <GeneralDiagram {...this.state}
         scrollContainerRef={this.scrollContainer}
-        largeContainerRef={this.largeContainer} >
+        largeContainerRef={this.largeContainer}
+        onContainerScroll={this.onContainerScroll}
+        onContainerMouseMove={this.onScrollContainerMouseMove}
+        onContainerMouseDown={this.onScrollContainerMouseDown}>
         <Tooltip
           visible={this.state.tooltipVisible}
           left={this.state.tooltipLeft}
           top={this.state.tooltipTop}
           title={this.state.tooltipTitle}
-          items={this.state.tooltipItems}
-        />
+          items={this.state.tooltipItems} />
         <MouseSelectionArea {...this.state.mouseSelectionAreaProps}/>
       </GeneralDiagram>
     );
