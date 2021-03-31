@@ -263,8 +263,6 @@ class CommitRangeView extends React.Component {
     this.scrollContainer = React.createRef();
     this.largeContainer = React.createRef();
     this.selectionRectangleRef = React.createRef();
-    this.chartLayerRef = React.createRef();
-    this.axisLayerRef = React.createRef();
     this.barDataManager = new BarDataManager(this.props.data, this.props.classToColorMapping, this.largeContainer);
     this.clickCommit = this.clickCommit.bind(this);
     this.refreshDiagram = this.refreshDiagram.bind(this);
@@ -420,7 +418,6 @@ class CommitRangeView extends React.Component {
   refreshDiagram() {
     const dx = this.state.scrollLeft;
     const dy = 0;
-    //this.stageData.chartLayer.destroyChildren();
     const visualData = this.barDataManager.barsFromRange(dx-PADDING, (dx+this.state.stageProps.width+PADDING)/this.state.chartLayerProps.scaleX);
     const axis = this.barDataManager.axisData();
     return draw.call(this, { axis: axis, bars: visualData.bars });
@@ -433,13 +430,6 @@ class CommitRangeView extends React.Component {
     this.containers = {
       scrollContainer,
       largeContainer,
-    };
-
-    const axisLayer = this.axisLayerRef.current;
-    const chartLayer = this.chartLayerRef.current;
-    this.stageData = {
-      axisLayer,
-      chartLayer,
     };
 
     document.addEventListener('keydown', onKeyDownEventListener.bind(this));
