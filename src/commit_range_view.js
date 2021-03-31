@@ -5,6 +5,7 @@ const Tooltip = require('./tooltip');
 const TooltipCommitRangeItem = require('./tooltip_commit_range_item');
 const CommitDetailTooltipItem = require('./commit_detail_tooltip_item');
 const MouseSelectionArea = require('./mouse_selection_area');
+const PrimitiveDiagram = require('./primitive_diagram');
 
 const BAR_WIDTH = 30;
 const BAR_PADDING = 2;
@@ -75,12 +76,16 @@ function unstrokeStack() {
 }
 
 function labelMouseLeave() {
-  this.stageData.stage.container().style.cursor = 'auto';
+  this.setState({
+    cursorStyle: 'auto',
+  })
 }
 
 function labelMouseEnter(labelData) {
   return (function(event) {
-    this.stageData.stage.container().style.cursor = 'pointer';
+    this.setState({
+      cursorStyle: 'pointer',
+    });
     disableTooltipTimer();
     tooltipTimeout = setTimeout(() => {
       console.log(labelData);
@@ -230,17 +235,21 @@ function scaleChartLayer(scaleBy) {
 function draw(visualData) {
   const axisLayerElements = [];
   const chartLayerElements = [];
-  axisLayerElements.push(drawAxis(visualData.axis, this.axisLayerRef.current.height()));
+  axisLayerElements.push(drawAxis(visualData.axis, this.state.stageProps.height));
   const stackMouseEnterEventListener = mouseEnterStack.bind(this);
   const stackMouseMoveEventListener = mouseMoveStack.bind(this);
   const stackMouseLeaveEventListener = mouseLeaveStack.bind(this, unstrokeStack.bind(this));
   visualData.bars.forEach((bar, index) => {
     chartLayerElements.push(drawBar.call(this, bar, this.clickCommit, stackMouseEnterEventListener, stackMouseMoveEventListener, stackMouseLeaveEventListener));
   });
-  return {
-    axisLayerElements,
-    chartLayerElements,
-  };
+  return [
+    <ReactKonva.Layer {...this.state.chartLayerProps}>
+      { chartLayerElements }
+    </ReactKonva.Layer>,
+    <ReactKonva.Layer {...this.state.axisLayerProps}>
+      { axisLayerElements }
+    </ReactKonva.Layer>
+  ];
 }
 
 function disableTooltipTimer() {
@@ -272,6 +281,7 @@ class CommitRangeView extends React.Component {
       strokedStackCommit: undefined,
       strokedStackClassName: undefined,
       strokedStackBorderColor: '#000000',
+      cursorStyle: 'auto',
       mouseSelectionAreaProps: {
         x: 0,
         y: 0,
@@ -390,8 +400,8 @@ class CommitRangeView extends React.Component {
 
   hideTooltip() {
     disableTooltipTimer();
-    this.stageData.stage.container().style.cursor = 'auto';
     this.setState({
+      cursorStyle: 'auto',
       tooltipVisible: false,
     });
   }
@@ -495,7 +505,14 @@ class CommitRangeView extends React.Component {
     this.barDataManager.showAssetChanges(this.props.showAssetChanges);
     this.barDataManager.enableAll();
     Object.keys(this.props.disabledClasses).forEach(className => this.barDataManager.disable(className));
-    const konvaLayers = isSizeReady ? this.refreshDiagram() : [];
+    const dataToShapeConverter = isSizeReady ? this.refreshDiagram : () => [];
+    const generalDiagramProps = {
+      stageProps: {
+        ...this.state.stageProps,
+        onWheel: this.onStageWheelEventListener,
+      },
+      convertDataToPrimitiveShapes: dataToShapeConverter,
+    };
     return(
       <div>
         <Tooltip
@@ -521,21 +538,10 @@ class CommitRangeView extends React.Component {
           >
             <div
               className="container"
-              style={{transform: `translate(${this.scrollContainer.current ? this.scrollContainer.current.scrollLeft : 0}px, 0px)`}}
+              style={{transform: `translate(${this.scrollContainer.current ? this.scrollContainer.current.scrollLeft : 0}px, 0px)`, cursor: this.state.cursorStyle}}
               ref={this.diagramContainerRef}
             >
-            <ReactKonva.Stage
-              {...this.state.stageProps}
-              onWheel={this.onStageWheelEventListener}
-              ref={this.stageRef}
-            >
-              <ReactKonva.Layer {...this.state.chartLayerProps} ref={this.chartLayerRef}>
-                { konvaLayers.chartLayerElements }
-              </ReactKonva.Layer>
-              <ReactKonva.Layer {...this.state.axisLayerProps} ref={this.axisLayerRef}>
-                { konvaLayers.axisLayerElements }
-              </ReactKonva.Layer>
-            </ReactKonva.Stage>
+              <PrimitiveDiagram {...generalDiagramProps} />
             </div>
           </div>
           <MouseSelectionArea {...this.state.mouseSelectionAreaProps}/>
