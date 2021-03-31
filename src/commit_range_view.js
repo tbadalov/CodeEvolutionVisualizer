@@ -27,7 +27,6 @@ let scrollInterval;
 let currentX;
 let currentY;
 let tooltipTimeout;
-let isSizeReady = false;
 
 function drawStack(stack, onMouseEnter, onMouseMove, onMouseLeave) {
   const rectProps = {
@@ -236,7 +235,7 @@ function scaleChartLayer(scaleBy) {
 function draw(visualData) {
   const axisLayerElements = [];
   const chartLayerElements = [];
-  axisLayerElements.push(drawAxis(visualData.axis, this.state.stageProps.height));
+  axisLayerElements.push(drawAxis(visualData.axis, this.state.primitiveDiagramProps.stageProps.height));
   const stackMouseEnterEventListener = mouseEnterStack.bind(this);
   const stackMouseMoveEventListener = mouseMoveStack.bind(this);
   const stackMouseLeaveEventListener = mouseLeaveStack.bind(this, unstrokeStack.bind(this));
@@ -281,17 +280,25 @@ class CommitRangeView extends React.Component {
       strokedStackBorderColor: '#000000',
       cursorStyle: 'auto',
       scrollLeft: 0,
+      largeContainerHeight: 0,
+      primitiveDiagramProps: {
+        stageProps: {
+          width: 0,
+          height: 0,
+          x: -PADDING,
+          onWheel: this.onStageWheelEventListener,
+        },
+        convertDataToPrimitiveShapes: () => [],
+      },
+      onContainerScroll: this.onContainerScroll,
+      onContainerMouseMove: this.onScrollContainerMouseMove,
+      onContainerMouseDown: this.onScrollContainerMouseDown,
       mouseSelectionAreaProps: {
         x: 0,
         y: 0,
         width: 0,
         height: 0,
         isActive: false,
-      },
-      stageProps: {
-        width: 0,
-        height: 0,
-        x: -PADDING,
       },
       chartLayerProps: {
         x: PADDING+Y_AXIS_WIDTH,
@@ -418,7 +425,7 @@ class CommitRangeView extends React.Component {
   refreshDiagram() {
     const dx = this.state.scrollLeft;
     const dy = 0;
-    const visualData = this.barDataManager.barsFromRange(dx-PADDING, (dx+this.state.stageProps.width+PADDING)/this.state.chartLayerProps.scaleX);
+    const visualData = this.barDataManager.barsFromRange(dx-PADDING, (dx+this.state.primitiveDiagramProps.stageProps.width+PADDING)/this.state.chartLayerProps.scaleX);
     const axis = this.barDataManager.axisData();
     return draw.call(this, { axis: axis, bars: visualData.bars });
   }
@@ -462,31 +469,37 @@ class CommitRangeView extends React.Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    if (this.props.data === prevProps.data && this.props.disabledClasses === prevProps.disabledClasses && this.state.stageProps.width === prevState.stageProps.width && this.state.stageProps.height === prevState.stageProps.height) {
+    if (this.props.data === prevProps.data && this.props.disabledClasses === prevProps.disabledClasses && this.state.primitiveDiagramProps.stageProps.width === prevState.primitiveDiagramProps.stageProps.width && this.state.largeContainerHeight === prevState.largeContainerHeight) {
       return;
     }
     console.log(this.props);
     const scrollContainer = this.scrollContainer.current;
-    if (this.state.stageProps.width <= 0) {
+    if (this.state.primitiveDiagramProps.stageProps.width <= 0) {
       const stageWidth = this.barDataManager.calculateStageWidth();
       const canvasWidth = stageWidth + Y_AXIS_WIDTH;
       this.setState({
-        stageProps: {
-          ...this.state.stageProps,
-          width: canvasWidth,
+        primitiveDiagramProps: {
+          ...this.state.primitiveDiagramProps,
+          stageProps: {
+            ...this.state.primitiveDiagramProps.stageProps,
+            width: canvasWidth,
+          },
         },
       });
-    } else if(this.state.stageProps.height <= 0) {
+    } else if(this.state.primitiveDiagramProps.stageProps.height <= 0) {
       //height should be assigned after width because of appearing scrollbar
       const canvasHeight = scrollContainer.clientHeight; // todo: should I use this or calculateStageHeight()?
       this.setState({
         largeContainerHeight: canvasHeight,
-        stageProps: {
-          ...this.state.stageProps,
-          height: this.barDataManager.calculateStageHeight(),
+        primitiveDiagramProps: {
+          ...this.state.primitiveDiagramProps,
+          convertDataToPrimitiveShapes: this.refreshDiagram,
+          stageProps: {
+            ...this.state.primitiveDiagramProps.stageProps,
+            height: this.barDataManager.calculateStageHeight(),
+          },
         },
       });
-      isSizeReady = true;
     }
   }
 
@@ -496,25 +509,10 @@ class CommitRangeView extends React.Component {
     this.barDataManager.showAssetChanges(this.props.showAssetChanges);
     this.barDataManager.enableAll();
     Object.keys(this.props.disabledClasses).forEach(className => this.barDataManager.disable(className));
-    const dataToShapeConverter = isSizeReady ? this.refreshDiagram : () => [];
-    const generalDiagramProps = {
-      primitiveDiagramProps: {
-        stageProps: {
-          ...this.state.stageProps,
-          onWheel: this.onStageWheelEventListener,
-        },
-        convertDataToPrimitiveShapes: dataToShapeConverter,
-      },
-      onContainerScroll: this.onContainerScroll,
-      onContainerMouseMove: this.onScrollContainerMouseMove,
-      onContainerMouseDown: this.onScrollContainerMouseDown,
-
-    };
     return(
-      <GeneralDiagram {...generalDiagramProps}
-        scrollRef={this.scrollContainer}
-        largeContainerRef={this.largeContainer}
-      >
+      <GeneralDiagram {...this.state}
+        scrollContainerRef={this.scrollContainer}
+        largeContainerRef={this.largeContainer} >
         <Tooltip
           visible={this.state.tooltipVisible}
           left={this.state.tooltipLeft}
