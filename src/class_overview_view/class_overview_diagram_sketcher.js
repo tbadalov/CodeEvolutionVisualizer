@@ -1,7 +1,14 @@
-const ClassOverviewDiagramPositioner = require('./class_overview_diagram_positioner');
 const Konva = require('konva');
 const constants = require('./constants');
 const contants = require('./constants');
+const {
+  columnPosition,
+  methodPosition,
+  columnLineDashPosition,
+  methodNamePosition,
+  columnTitlePosition,
+  rowPosition,
+} = require('./class_overview_diagram_positioner');
 
 function drawColumnLine(layer, columnLine) {
   for (let i = 0; i < columnLine.length; i++) {
@@ -35,39 +42,38 @@ function drawMethodLegend(layer, methodNames) {
   });
 }
 
-function buildColumnTitle(columnIndex, columnData, diagramPositioner, branchToColorMapping) {
+function buildColumnTitle(columnIndex, columnData, branchToColorMapping) {
   const title = columnData.commitHash;
   const columnTitleText = title.substr(0, 8);
-  const columnTitlePosition = diagramPositioner.columnTitlePosition(columnIndex, columnTitleText);
-  columnTitlePosition.frame = {
+  const columnTitlePositionResult = columnTitlePosition(columnIndex, columnTitleText);
+  columnTitlePositionResult.frame = {
     type: 'rect',
     fill: '#ffffff',
     stroke: branchToColorMapping[columnData.branchName] || '#000000',
     strokeWidth: 3,
-    ...columnTitlePosition.frame,
+    ...columnTitlePositionResult.frame,
   };
-  columnTitlePosition.text = {
+  columnTitlePositionResult.text = {
     type: 'text',
     text: columnTitleText,
     fill: '#000000',
-    ...columnTitlePosition.text,
+    ...columnTitlePositionResult.text,
   };
-  return columnTitlePosition;
+  return columnTitlePositionResult;
 }
 
-function buildMethodLegend(allMethodNames, diagramPositioner) {
+function buildMethodLegend(allMethodNames) {
   return allMethodNames.map((methodName, index) => {
-    const methodNamePosition = diagramPositioner.methodNamePosition(index);
     return {
       type: 'text',
-      ...methodNamePosition,
+      ...methodNamePosition(index),
       fill: '#000000',
       text: methodName,
     };
   });
 }
 
-function buildColumnMethods(columnIndex, columnRows, diagramPositioner) {
+function buildColumnMethods(columnIndex, columnRows) {
   return Object.keys(columnRows).map(rowNumber => ({
     ...columnRows[rowNumber],
     row: rowNumber,
@@ -76,7 +82,7 @@ function buildColumnMethods(columnIndex, columnRows, diagramPositioner) {
       circleRadius,
       circleX,
       circleY,
-    } = diagramPositioner.methodPosition(columnIndex, rowElement.row);
+    } = methodPosition(columnIndex, rowElement.row);
     return {
       type: 'circle',
       x: circleX,
@@ -87,7 +93,7 @@ function buildColumnMethods(columnIndex, columnRows, diagramPositioner) {
   });
 }
 
-function buildColumnLine(columnIndex, totalRowCount, diagramPositioner) {
+function buildColumnLine(columnIndex, totalRowCount) {
   const numberOfDashes = (totalRowCount * constants.ROW_HEIGHT) / (constants.DASH_HEIGHT+constants.DASH_VERTICAL_MARGIN);
   const dashes = [];
   for (let i = 0; i < numberOfDashes; i++) {
@@ -96,7 +102,7 @@ function buildColumnLine(columnIndex, totalRowCount, diagramPositioner) {
       dashStartX,
       dashHeight,
       dashWidth,
-    } = diagramPositioner.columnLineDashPosition(columnIndex, i);
+    } = columnLineDashPosition(columnIndex, i);
     dashes.push({
       type: 'rect',
       x: dashStartX,
@@ -117,67 +123,59 @@ function calculateStageWidth(totalCommitsCount) {
   return constants.METHOD_NAME_COLUMN_WIDTH + totalCommitsCount * constants.COLUMN_WIDTH;
 }
 
-class ClassOverviewDiagramSketcher {
-  constructor() {
-    this.diagramPositioner = new ClassOverviewDiagramPositioner();
-  }
-
-  convertToVisualizationData(groupedData, branchToColorMapping, disabledBranches) {
-    const data = {
-      columns: [],
-    };
-    data.methodLegend = buildMethodLegend(Object.keys(groupedData.methodNameToRowNumberMapping), this.diagramPositioner);
-    let disabledColumnsCount = 0;
-    for (let i = 0; i < groupedData.columns.length; i++) {
-      if (disabledBranches[groupedData.columns[i].branchName]) {
-        disabledColumnsCount++;
-        continue;
-      }
-      const columnIndex = i-disabledColumnsCount;
-      const columnLine = buildColumnLine(columnIndex, data.methodLegend.length, this.diagramPositioner);
-      const columnTitle = buildColumnTitle(columnIndex, groupedData.columns[i], this.diagramPositioner, branchToColorMapping);
-      const methods = buildColumnMethods(columnIndex, groupedData.columns[i].row, this.diagramPositioner);
-      console.log(methods);
-      const arrows = [];
-      data.columns.push({
-        columnLine,
-        columnTitle,
-        methods,
-        arrows,
-      });
+function convertToVisualizationData(groupedData, branchToColorMapping, disabledBranches) {
+  const data = {
+    columns: [],
+  };
+  data.methodLegend = buildMethodLegend(Object.keys(groupedData.methodNameToRowNumberMapping));
+  let disabledColumnsCount = 0;
+  for (let i = 0; i < groupedData.columns.length; i++) {
+    if (disabledBranches[groupedData.columns[i].branchName]) {
+      disabledColumnsCount++;
+      continue;
     }
-    return data;
+    const columnIndex = i-disabledColumnsCount;
+    const columnLine = buildColumnLine(columnIndex, data.methodLegend.length);
+    const columnTitle = buildColumnTitle(columnIndex, groupedData.columns[i], branchToColorMapping);
+    const methods = buildColumnMethods(columnIndex, groupedData.columns[i].row);
+    console.log(methods);
+    const arrows = [];
+    data.columns.push({
+      columnLine,
+      columnTitle,
+      methods,
+      arrows,
+    });
   }
-
-  draw(stage, groupedData, onCommitClick, branchToColorMapping, disabledBranches) {
-    const visualizationData = this.convertToVisualizationData(
-      groupedData,
-      branchToColorMapping,
-      disabledBranches
-    );
-    const stageSize = {
-      width: calculateStageWidth(visualizationData.columns.length),
-      height: calculateStageHeight(visualizationData.methodLegend.length),
-    };
-    console.log(visualizationData);
-    const layer = new Konva.Layer();
-    stage.add(layer);
-    drawMethodLegend(layer, visualizationData.methodLegend);
-    for (let i = 0; i < visualizationData.columns.length; i++) {
-      drawColumnLine(layer, visualizationData.columns[i].columnLine);
-      const columnTitle = drawColumnTitle(layer, visualizationData.columns[i].columnTitle);
-      columnTitle.on('mouseenter', function () {
-        stage.container().style.cursor = 'pointer';
-      });
-      columnTitle.on('mouseleave', function () {
-        stage.container().style.cursor = 'auto';
-      });
-      columnTitle.on('click', () => onCommitClick(groupedData.columns[i].commitHash));
-      drawColumnMethods(layer, visualizationData.columns[i].methods);
-      drawColumnMethodArrows(layer, visualizationData.columns[i].arrows);
-    }
-    return stageSize;
-  }
+  return data;
 }
 
-module.exports = ClassOverviewDiagramSketcher;
+export function draw(stage, groupedData, onCommitClick, branchToColorMapping, disabledBranches) {
+  const visualizationData = convertToVisualizationData(
+    groupedData,
+    branchToColorMapping,
+    disabledBranches
+  );
+  const stageSize = {
+    width: calculateStageWidth(visualizationData.columns.length),
+    height: calculateStageHeight(visualizationData.methodLegend.length),
+  };
+  console.log(visualizationData);
+  const layer = new Konva.Layer();
+  stage.add(layer);
+  drawMethodLegend(layer, visualizationData.methodLegend);
+  for (let i = 0; i < visualizationData.columns.length; i++) {
+    drawColumnLine(layer, visualizationData.columns[i].columnLine);
+    const columnTitle = drawColumnTitle(layer, visualizationData.columns[i].columnTitle);
+    columnTitle.on('mouseenter', function () {
+      stage.container().style.cursor = 'pointer';
+    });
+    columnTitle.on('mouseleave', function () {
+      stage.container().style.cursor = 'auto';
+    });
+    columnTitle.on('click', () => onCommitClick(groupedData.columns[i].commitHash));
+    drawColumnMethods(layer, visualizationData.columns[i].methods);
+    drawColumnMethodArrows(layer, visualizationData.columns[i].arrows);
+  }
+  return stageSize;
+}

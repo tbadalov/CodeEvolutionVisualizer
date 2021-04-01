@@ -1,7 +1,7 @@
 const React = require('react');
-const ClassOverviewDiagramSketcher = require('./class_overview_diagram_sketcher');
 const ItemList = require('../item_list');
 const Konva = require('konva');
+const { draw } = require('./class_overview_diagram_sketcher')
 
 const data = [
   {
@@ -138,7 +138,6 @@ class ClassOverviewDiagram extends React.Component {
     this.diagramContainerRef = React.createRef();
     this.scrollContainerRef = React.createRef();
     this.largeContainerRef = React.createRef();
-    this.diagramSketcher = new ClassOverviewDiagramSketcher();
     this.state = {
       rawData: rawData,
       selectedCommit: 'hhffee',
@@ -156,7 +155,7 @@ class ClassOverviewDiagram extends React.Component {
   componentDidUpdate() {
     if (this.props.rawData) {
     this.stage.destroyChildren();
-      const stageSize = this.diagramSketcher.draw(
+      const stageSize = draw(
           this.stage,
           this.props.rawData,
           (commit) => {
