@@ -28,8 +28,8 @@ class GeneralDiagram extends React.Component {
               <PrimitiveDiagram {...this.props.primitiveDiagramProps}/>
             </div>
           </div>
+          { this.props.children }
         </div>
-        { this.props.children }
       </div>
     );
   }

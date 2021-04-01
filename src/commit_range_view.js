@@ -369,7 +369,7 @@ class CommitRangeView extends React.Component {
       return;
     }
     isSelecting = true;
-    e.preventDefault();
+    mouseMoveEvent.preventDefault();
     this.adjustMouseSelectionAreaSize(offsetLeft, scrollLeft, mouseMoveEvent.pageX);
     let scrollDelta = 0;
     let viewportPositionX = currentX - scrollLeft;
