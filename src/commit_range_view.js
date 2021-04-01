@@ -422,7 +422,7 @@ class CommitRangeView extends React.Component {
   refreshDiagram() {
     const dx = this.state.scrollLeft;
     const dy = 0;
-    const visualData = this.barDataManager.barsFromRange(dx-PADDING, (dx+this.state.primitiveDiagramProps.stageProps.width+PADDING)/this.state.chartLayerProps.scaleX);
+    const visualData = this.barDataManager.barsFromRange(dx-PADDING, (dx+this.scrollContainer.current.clientWidth+PADDING)/this.state.chartLayerProps.scaleX);
     const axis = this.barDataManager.axisData();
     return draw.call(this, { axis: axis, bars: visualData.bars });
   }
