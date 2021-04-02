@@ -32,7 +32,8 @@ router.get('/', function(req, res, next) {
       WITH last_commit
       ORDER BY toInteger(last_commit.timestamp) DESC
       LIMIT 1
-      MATCH (app:App)-[:CHANGED_TO*0..]->(last_commit)
+      MATCH (app:App)
+      WHERE (app)-[:CHANGED_TO*0..]->(last_commit)
       WITH distinct app
       CALL {
         WITH app
