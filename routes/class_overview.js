@@ -8,11 +8,22 @@ router.get('/', function(req, res, next) {
   const session = driver.session();
   const dataFromDb = [];
   const query = `
+  MATCH (last_commit:App)
+    WHERE last_commit.branch='master' OR last_commit.branch="master\\\\n"
+  WITH last_commit
+  ORDER BY last_commit.timestamp DESC
+  LIMIT 1
   MATCH (origin:App)
     WHERE origin.commit = '` + req.query.startCommit + `'
-  MATCH (intermediate_commit:App)-[:CHANGED_TO*0..]->(destination:App)
-    WHERE intermediate_commit.timestamp >= origin.timestamp
-      AND destination.commit='` + req.query.endCommit + `'
+  WITH last_commit, origin
+  LIMIT 1
+  MATCH (destination:App)
+    WHERE destination.commit = '` + req.query.endCommit + `'
+  WITH last_commit, origin, destination
+  LIMIT 1
+  MATCH (intermediate_commit:App)-[:CHANGED_TO*0..]->(last_commit)
+    WHERE toInteger(intermediate_commit.timestamp) >= toInteger(origin.timestamp)
+      AND toInteger(intermediate_commit.timestamp) <= toInteger(destination.timestamp)
   WITH distinct intermediate_commit as app
   OPTIONAL MATCH (app)-[APP_OWNS_CLASS]->(c:Class)-[:CLASS_OWNS_METHOD]->(m:Method)
     WHERE c.name = '` + req.query.className +`'
@@ -46,7 +57,7 @@ router.get('/', function(req, res, next) {
       WHEN methodName IS NULL THEN []
       ELSE collect({status: status, name: methodName, calls: calls})
     END as methods
-  ORDER BY timestamp ASC`;
+  ORDER BY toInteger(timestamp) ASC`;
   console.log(query);
   session.run(query).subscribe({
     onNext: record => {

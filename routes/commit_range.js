@@ -30,7 +30,7 @@ router.get('/', function(req, res, next) {
       MATCH (last_commit:App)
       WHERE last_commit.branch='master' OR last_commit.branch="master\\\n"
       WITH last_commit
-      ORDER BY last_commit.timestamp DESC
+      ORDER BY toInteger(last_commit.timestamp) DESC
       LIMIT 1
       MATCH (app:App)-[:CHANGED_TO*0..]->(last_commit)
       WITH distinct app
@@ -45,7 +45,7 @@ router.get('/', function(req, res, next) {
         RETURN collect( { className: className, changedLinesCount: changedLinesCount } ) as changedClasses, sum(changedLinesCount) as totalChangedLinesCount
       }
       RETURN app.commit as commitHash, app.time as time, app.author as author, app.message as message, app.version_number as versionNumber, app.branch as branchName, changedClasses, totalChangedLinesCount
-      ORDER BY app.timestamp ASC
+      ORDER BY toInteger(app.timestamp) ASC
       `).subscribe({
         onNext: record => {
           result.push({
