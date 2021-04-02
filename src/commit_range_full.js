@@ -176,7 +176,7 @@ class CommitRangeViewFull extends React.Component {
     this.props.addMenuItem(
       <ItemList title='Content filter'>
         <Item label='Show source code changes' checked={this.state.showSourceCodeChanges} onItemChange={this.handleContentFilterClick} payload={{filterType: 'src'}} />
-        <Item label='Show asset changes' checked={this.state.showAssetChanges} onItemChange={this.handleContentFilterClick} payload={{filterType: 'asset'}} />
+        <Item label='Show other changes' checked={this.state.showAssetChanges} onItemChange={this.handleContentFilterClick} payload={{filterType: 'asset'}} />
       </ItemList>
     );
     loadData(this.props.url)
