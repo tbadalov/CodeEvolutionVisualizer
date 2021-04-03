@@ -1,6 +1,6 @@
-const Konva = require('konva');
+const React = require('react');
+const ReactKonva = require('react-konva');
 const constants = require('./constants');
-const contants = require('./constants');
 const {
   columnPosition,
   methodPosition,
@@ -10,36 +10,47 @@ const {
   rowPosition,
 } = require('./class_overview_diagram_positioner');
 
-function drawColumnLine(layer, columnLine) {
-  for (let i = 0; i < columnLine.length; i++) {
-    layer.add(new Konva.Rect(columnLine[i]));
-  }
+function drawColumnLine(columnLine) {
+  const columnIndex = columnLine.payload;
+  return (
+    <ReactKonva.Group key={`line-for-column-${columnIndex}`}>
+      { columnLine.dashes.map((columnDash, index) => <ReactKonva.Rect key={`dash-${index}-for-column-${columnIndex}`} {...columnDash} />) }
+    </ReactKonva.Group>
+  );
 }
 
-function drawColumnTitle(layer, columnTitle) {
-  const group = new Konva.Group();
-  group.add(new Konva.Rect(columnTitle.frame))
-  group.add(new Konva.Text(columnTitle.text));
-  layer.add(group);
-  return group;
+function drawColumnTitle(columnTitle) {
+  const columnIndex = columnTitle.payload;
+  return (
+    <ReactKonva.Group key={`title-for-column-${columnIndex}`}>
+      <ReactKonva.Rect {...columnTitle.frame} />
+      <ReactKonva.Text {...columnTitle.text} />
+    </ReactKonva.Group>
+  )
 }
 
-function drawColumnMethods(layer, columnMethods) {
-  for (let i = 0; i < columnMethods.length; i++) {
-    layer.add(new Konva.Circle(columnMethods[i]));
-  }
+function drawColumnMethods(columnMethods) {
+  const { columnIndex } = columnMethods.payload; 
+  return (
+    <ReactKonva.Group key={`methods-for-column-${columnIndex}`}>
+      { columnMethods.methods.map((columnMethod, index) => <ReactKonva.Circle key={`method-${index}-for-column-${columnIndex}`} {...columnMethod} />) }
+    </ReactKonva.Group>
+  );
 }
 
-function drawColumnMethodArrows(layer, arrows) {
+function drawColumnMethodArrows(arrows) {
   for (let i = 0; i < arrows.length; i++) {
     //layer.add(new Konva.Circle(columnMethods[i]));
   }
+  return null;
 }
 
-function drawMethodLegend(layer, methodNames) {
-  methodNames.forEach(methodName => {
-    layer.add(new Konva.Text(methodName));
-  });
+function drawMethodLegend(methodNames) {
+  return (
+    <ReactKonva.Group key='method-legend'>
+      { methodNames.map((methodName, index) => <ReactKonva.Text key={`method-legend-${index}`} {...methodName} />) }
+    </ReactKonva.Group>
+  );
 }
 
 function buildColumnTitle(columnIndex, columnData, branchToColorMapping) {
@@ -59,6 +70,9 @@ function buildColumnTitle(columnIndex, columnData, branchToColorMapping) {
     fill: '#000000',
     ...columnTitlePositionResult.text,
   };
+  columnTitlePositionResult.payload = {
+    columnIndex,
+  };
   return columnTitlePositionResult;
 }
 
@@ -74,7 +88,7 @@ function buildMethodLegend(allMethodNames) {
 }
 
 function buildColumnMethods(columnIndex, columnRows) {
-  return Object.keys(columnRows).map(rowNumber => ({
+  const methods = Object.keys(columnRows).map(rowNumber => ({
     ...columnRows[rowNumber],
     row: rowNumber,
   })).map(rowElement => {
@@ -89,8 +103,15 @@ function buildColumnMethods(columnIndex, columnRows) {
       y: circleY,
       radius: circleRadius,
       fill: rowElement.status === 'new' ? 'blue' : (rowElement.status === 'changed' ? 'green' : 'gray'),
+      payload: {},
     };
   });
+  return {
+    methods,
+    payload: {
+      columnIndex,
+    },
+  };
 }
 
 function buildColumnLine(columnIndex, totalRowCount) {
@@ -110,16 +131,22 @@ function buildColumnLine(columnIndex, totalRowCount) {
       height: dashHeight,
       width: dashWidth,
       fill: '#000000',
+      payload: {},
     });
   }
-  return dashes;
+  return {
+    dashes,
+    payload: {
+      columnIndex,
+    },
+  };
 }
 
-function calculateStageHeight(totalMethodCount) {
+export function calculateStageHeight(totalMethodCount) {
   return constants.COLUMN_TOP_Y + constants.VERTICAL_MARGIN_FROM_TOP + totalMethodCount * constants.ROW_HEIGHT;
 }
 
-function calculateStageWidth(totalCommitsCount) {
+export function calculateStageWidth(totalCommitsCount) {
   return constants.METHOD_NAME_COLUMN_WIDTH + totalCommitsCount * constants.COLUMN_WIDTH;
 }
 
@@ -150,7 +177,7 @@ function convertToVisualizationData(groupedData, branchToColorMapping, disabledB
   return data;
 }
 
-export function draw(stage, groupedData, onCommitClick, branchToColorMapping, disabledBranches) {
+export function draw(groupedData, onCommitClick, branchToColorMapping, disabledBranches) {
   const visualizationData = convertToVisualizationData(
     groupedData,
     branchToColorMapping,
@@ -161,21 +188,30 @@ export function draw(stage, groupedData, onCommitClick, branchToColorMapping, di
     height: calculateStageHeight(visualizationData.methodLegend.length),
   };
   console.log(visualizationData);
-  const layer = new Konva.Layer();
-  stage.add(layer);
-  drawMethodLegend(layer, visualizationData.methodLegend);
+  const konvaElements = [
+    drawMethodLegend(visualizationData.methodLegend),
+  ];
   for (let i = 0; i < visualizationData.columns.length; i++) {
-    drawColumnLine(layer, visualizationData.columns[i].columnLine);
-    const columnTitle = drawColumnTitle(layer, visualizationData.columns[i].columnTitle);
-    columnTitle.on('mouseenter', function () {
-      stage.container().style.cursor = 'pointer';
-    });
-    columnTitle.on('mouseleave', function () {
-      stage.container().style.cursor = 'auto';
-    });
-    columnTitle.on('click', () => onCommitClick(groupedData.columns[i].commitHash));
-    drawColumnMethods(layer, visualizationData.columns[i].methods);
-    drawColumnMethodArrows(layer, visualizationData.columns[i].arrows);
+    const columnLine = drawColumnLine(visualizationData.columns[i].columnLine);
+    const columnTitle = drawColumnTitle(visualizationData.columns[i].columnTitle);
+    const columnMethods = drawColumnMethods(visualizationData.columns[i].methods);
+    const columnMethodArrows = drawColumnMethodArrows(visualizationData.columns[i].arrows);
+    konvaElements.push(
+      <ReactKonva.Group key={`data-group-for-column-${i}`}>
+        { columnLine }
+        { columnTitle }
+        { columnMethods }
+        { columnMethodArrows }
+      </ReactKonva.Group>
+    );
   }
-  return stageSize;
+  const konvaLayer = [
+    <ReactKonva.Layer key="class-overview-layer">
+      { konvaElements }
+    </ReactKonva.Layer>,
+  ];
+  return {
+    primitiveShapes: konvaLayer,
+    stageSize: stageSize,
+  };
 }
