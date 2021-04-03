@@ -15,17 +15,15 @@ class GeneralDiagram extends React.Component {
         >
           <div
             className="large-container"
-            style={{
-              width: this.props.primitiveDiagramProps.stageProps.width + 'px',
-              height: this.props.largeContainerHeight + 'px',
-            }}
             ref={this.props.largeContainerRef}
           >
             <div
               className="container"
               style={{transform: `translate(${this.props.scrollLeft}px, 0px)`, cursor: this.props.cursorStyle}}
             >
-              <PrimitiveDiagram {...this.props.primitiveDiagramProps}/>
+              <PrimitiveDiagram
+                {...this.props.primitiveDiagramProps}
+                onDraw={this.props.onDraw} />
             </div>
           </div>
           { this.props.children }

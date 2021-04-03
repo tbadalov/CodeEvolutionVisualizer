@@ -1,5 +1,4 @@
 const React = require('react');
-const Konva = require('konva');
 const { draw } = require('./class_overview_diagram_sketcher');
 const GeneralDiagram = require('../general_diagram');
 
@@ -10,24 +9,16 @@ class ClassOverviewDiagram extends React.Component {
     this.largeContainerRef = React.createRef();
     this.state = {
       rawData: { commits: {} },
-      width: 0,
-      height: 0,
       tooltipVisible: false,
       tooltipLeft: 0,
       tooltipTop: 0,
-      strokedStackCommit: undefined,
-      strokedStackClassName: undefined,
-      strokedStackBorderColor: '#000000',
       cursorStyle: 'auto',
-      scrollLeft: 0,
-      largeContainerHeight: 0,
       primitiveDiagramProps: {
         stageProps: {
           width: 0,
           height: 0,
           onWheel: this.onStageWheelEventListener,
         },
-        convertDataToPrimitiveShapes: () => [],
       },
     };
   }
@@ -42,15 +33,17 @@ class ClassOverviewDiagram extends React.Component {
           this.props.branchToColorMapping,
           this.props.disabledBranches
       );
+
+      this.largeContainerRef.current.style.width = drawResult.stageSize.width + 'px';
+      this.largeContainerRef.current.style.height = drawResult.stageSize.height + 'px';
+      this.convertDataToPrimitiveShapes = () => drawResult.primitiveShapes;
       this.setState({
-          largeContainerHeight: drawResult.stageSize.height,
           primitiveDiagramProps: {
               ...this.state.primitiveDiagramProps,
               stageProps: {
                   ...this.state.primitiveDiagramProps.stageProps,
                   ...drawResult.stageSize,
               },
-              convertDataToPrimitiveShapes: () => drawResult.primitiveShapes,
           },
       })
     }
@@ -58,7 +51,11 @@ class ClassOverviewDiagram extends React.Component {
 
   render() {
     return(
-      <GeneralDiagram {...this.state} scrollContainerRef={this.scrollContainerRef} largeContainerRef={this.largeContainerRef} />
+      <GeneralDiagram
+        {...this.state}
+        scrollContainerRef={this.scrollContainerRef}
+        largeContainerRef={this.largeContainerRef}
+        onDraw={this.convertDataToPrimitiveShapes} />
     );
   }
 }

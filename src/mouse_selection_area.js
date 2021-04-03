@@ -20,7 +20,7 @@ class MouseSelectionArea extends React.PureComponent {
           left: this.props.x,
           top: this.props.y,
           width: this.props.width,
-          height: divHeight,
+          height: divHeight || undefined,
         }
       );
     }
