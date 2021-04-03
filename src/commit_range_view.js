@@ -5,6 +5,8 @@ const Tooltip = require('./tooltip');
 const TooltipCommitRangeItem = require('./tooltip_commit_range_item');
 const CommitDetailTooltipItem = require('./commit_detail_tooltip_item');
 const MouseSelectionArea = require('./mouse_selection_area');
+const PrimitiveDiagram = require('./primitive_diagram');
+const GeneralDiagram = require('./general_diagram');
 
 const BAR_WIDTH = 30;
 const BAR_PADDING = 2;
@@ -25,7 +27,6 @@ let scrollInterval;
 let currentX;
 let currentY;
 let tooltipTimeout;
-let isSizeReady = false;
 
 function drawStack(stack, onMouseEnter, onMouseMove, onMouseLeave) {
   const rectProps = {
@@ -75,12 +76,16 @@ function unstrokeStack() {
 }
 
 function labelMouseLeave() {
-  this.stageData.stage.container().style.cursor = 'auto';
+  this.setState({
+    cursorStyle: 'auto',
+  })
 }
 
 function labelMouseEnter(labelData) {
   return (function(event) {
-    this.stageData.stage.container().style.cursor = 'pointer';
+    this.setState({
+      cursorStyle: 'pointer',
+    });
     disableTooltipTimer();
     tooltipTimeout = setTimeout(() => {
       console.log(labelData);
@@ -230,17 +235,21 @@ function scaleChartLayer(scaleBy) {
 function draw(visualData) {
   const axisLayerElements = [];
   const chartLayerElements = [];
-  axisLayerElements.push(drawAxis(visualData.axis, this.axisLayerRef.current.height()));
+  axisLayerElements.push(drawAxis(visualData.axis, this.state.primitiveDiagramProps.stageProps.height));
   const stackMouseEnterEventListener = mouseEnterStack.bind(this);
   const stackMouseMoveEventListener = mouseMoveStack.bind(this);
   const stackMouseLeaveEventListener = mouseLeaveStack.bind(this, unstrokeStack.bind(this));
   visualData.bars.forEach((bar, index) => {
     chartLayerElements.push(drawBar.call(this, bar, this.clickCommit, stackMouseEnterEventListener, stackMouseMoveEventListener, stackMouseLeaveEventListener));
   });
-  return {
-    axisLayerElements,
-    chartLayerElements,
-  };
+  return [
+    <ReactKonva.Layer {...this.state.chartLayerProps}>
+      { chartLayerElements }
+    </ReactKonva.Layer>,
+    <ReactKonva.Layer {...this.state.axisLayerProps}>
+      { axisLayerElements }
+    </ReactKonva.Layer>
+  ];
 }
 
 function disableTooltipTimer() {
@@ -250,19 +259,16 @@ function disableTooltipTimer() {
 class CommitRangeView extends React.Component {
   constructor(props) {
     super(props);
-    this.diagramContainerRef = React.createRef();
     this.scrollContainer = React.createRef();
     this.largeContainer = React.createRef();
     this.selectionRectangleRef = React.createRef();
-    this.stageRef = React.createRef();
-    this.chartLayerRef = React.createRef();
-    this.axisLayerRef = React.createRef();
     this.barDataManager = new BarDataManager(this.props.data, this.props.classToColorMapping, this.largeContainer);
     this.clickCommit = this.clickCommit.bind(this);
     this.refreshDiagram = this.refreshDiagram.bind(this);
     this.onScrollContainerMouseMove = this.onScrollContainerMouseMove.bind(this);
     this.onStageWheelEventListener = onStageWheelEventListener.bind(this);
     this.onContainerScroll = this.onContainerScroll.bind(this);
+    this.onScrollContainerMouseDown = this.onScrollContainerMouseDown.bind(this);
     this.state = {
       width: 0,
       height: 0,
@@ -272,17 +278,24 @@ class CommitRangeView extends React.Component {
       strokedStackCommit: undefined,
       strokedStackClassName: undefined,
       strokedStackBorderColor: '#000000',
+      cursorStyle: 'auto',
+      scrollLeft: 0,
+      largeContainerHeight: 0,
+      primitiveDiagramProps: {
+        stageProps: {
+          width: 0,
+          height: 0,
+          x: -PADDING,
+          onWheel: this.onStageWheelEventListener,
+        },
+        convertDataToPrimitiveShapes: () => [],
+      },
       mouseSelectionAreaProps: {
         x: 0,
         y: 0,
         width: 0,
         height: 0,
         isActive: false,
-      },
-      stageProps: {
-        width: 0,
-        height: 0,
-        x: -PADDING,
       },
       chartLayerProps: {
         x: PADDING+Y_AXIS_WIDTH,
@@ -295,15 +308,18 @@ class CommitRangeView extends React.Component {
     };
   }
 
-  onContainerScroll() {
+  onContainerScroll(scrollEvent) {
+    const scrollContainer = scrollEvent.target;
+    const scrollLeft = scrollContainer.scrollLeft;
     // we always want to re-render when scrolling
     if (this.state.tooltipVisible) {
       this.hideTooltip();
     } else {
       this.setState({
+        scrollLeft: scrollLeft,
         chartLayerProps: {
           ...this.state.chartLayerProps,
-          x: PADDING + Y_AXIS_WIDTH - (this.scrollContainer.current ? this.scrollContainer.current.scrollLeft : 0),
+          x: PADDING + Y_AXIS_WIDTH - scrollLeft,
         },
       });
     }
@@ -330,9 +346,8 @@ class CommitRangeView extends React.Component {
     }
   }
 
-  adjustMouseSelectionAreaSize(mousePositionPageX) {
-    const scrollContainer = this.scrollContainer.current;
-    currentX = mousePositionPageX - scrollContainer.offsetLeft + scrollContainer.scrollLeft;
+  adjustMouseSelectionAreaSize(scrollContainerOffsetLeft, scrollContainerScrollLeft, mousePositionPageX) {
+    currentX = mousePositionPageX - scrollContainerOffsetLeft + scrollContainerScrollLeft;
     const selectionRectangleLeftX = Math.min(selectionStartX, currentX);
     const selectionWidth = Math.max(selectionStartX, currentX) - selectionRectangleLeftX;
     this.setState({
@@ -346,21 +361,22 @@ class CommitRangeView extends React.Component {
     });
   }
 
-  onScrollContainerMouseMove(e) {
-    this.ensureTooltipCloses(e.pageX, e.pageY);
-    const scrollContainer = this.scrollContainer.current;
+  onScrollContainerMouseMove(mouseMoveEvent) {
+    this.ensureTooltipCloses(mouseMoveEvent.pageX, mouseMoveEvent.pageY);
+    const scrollContainer = mouseMoveEvent.target;
+    const { offsetLeft, scrollLeft, clientWidth } = scrollContainer;
     if (!isMouseDown) {
       return;
     }
     isSelecting = true;
-    e.preventDefault();
-    this.adjustMouseSelectionAreaSize(e.pageX);
+    mouseMoveEvent.preventDefault();
+    this.adjustMouseSelectionAreaSize(offsetLeft, scrollLeft, mouseMoveEvent.pageX);
     let scrollDelta = 0;
-    let viewportPositionX = currentX - scrollContainer.scrollLeft;
+    let viewportPositionX = currentX - scrollLeft;
     const SCROLL_AREA_WIDTH = 30;
     const MAX_SCROLL_SPEED = 30; // pixels per interval
-    if (viewportPositionX > scrollContainer.clientWidth - SCROLL_AREA_WIDTH) {
-      scrollDelta = (Math.min(viewportPositionX, scrollContainer.clientWidth) - (scrollContainer.clientWidth - SCROLL_AREA_WIDTH)) / SCROLL_AREA_WIDTH * MAX_SCROLL_SPEED;
+    if (viewportPositionX > clientWidth - SCROLL_AREA_WIDTH) {
+      scrollDelta = (Math.min(viewportPositionX, clientWidth) - (clientWidth - SCROLL_AREA_WIDTH)) / SCROLL_AREA_WIDTH * MAX_SCROLL_SPEED;
       isAutoScrolling = true;
     } else if (viewportPositionX < SCROLL_AREA_WIDTH) {
       scrollDelta = (Math.max(0, viewportPositionX) - SCROLL_AREA_WIDTH) / SCROLL_AREA_WIDTH * MAX_SCROLL_SPEED;
@@ -388,18 +404,24 @@ class CommitRangeView extends React.Component {
     }
   }
 
+  onScrollContainerMouseDown(mouseDownEvent) {
+    const { offsetLeft, offsetTop, scrollTop } = mouseDownEvent.target;
+    isMouseDown = true;
+    selectionStartX = mouseDownEvent.pageX - offsetLeft + this.state.scrollLeft;
+    selectionStartY = mouseDownEvent.pageY - offsetTop + scrollTop;
+  }
+
   hideTooltip() {
     disableTooltipTimer();
-    this.stageData.stage.container().style.cursor = 'auto';
     this.setState({
+      cursorStyle: 'auto',
       tooltipVisible: false,
     });
   }
 
   refreshDiagram() {
-    const dx = this.scrollContainer.current.scrollLeft;
+    const dx = this.state.scrollLeft;
     const dy = 0;
-    //this.stageData.chartLayer.destroyChildren();
     const visualData = this.barDataManager.barsFromRange(dx-PADDING, (dx+this.scrollContainer.current.clientWidth+PADDING)/this.state.chartLayerProps.scaleX);
     const axis = this.barDataManager.axisData();
     return draw.call(this, { axis: axis, bars: visualData.bars });
@@ -407,30 +429,13 @@ class CommitRangeView extends React.Component {
 
   componentDidMount() {
     console.log("mounting....")
-    const diagramContainer = this.diagramContainerRef.current;
     const scrollContainer = this.scrollContainer.current;
     const largeContainer = this.largeContainer.current;
     this.containers = {
-      diagramContainer,
       scrollContainer,
       largeContainer,
     };
 
-    const stage = this.stageRef.current;
-    const axisLayer = this.axisLayerRef.current;
-    const chartLayer = this.chartLayerRef.current;
-    this.stageData = {
-      stage,
-      axisLayer,
-      chartLayer,
-    };
-    scrollContainer.addEventListener('mousedown', (e) => {
-      isMouseDown = true;
-      selectionStartX = e.pageX - scrollContainer.offsetLeft + scrollContainer.scrollLeft;
-      selectionStartY = e.pageY - scrollContainer.offsetTop + scrollContainer.scrollTop;
-      console.log(selectionStartX, selectionStartY);
-      console.log(e);
-    });
     document.addEventListener('keydown', onKeyDownEventListener.bind(this));
     document.addEventListener('mouseup', () => {
       isMouseDown = false;
@@ -461,31 +466,37 @@ class CommitRangeView extends React.Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    if (this.props.data === prevProps.data && this.props.disabledClasses === prevProps.disabledClasses && this.state.stageProps.width === prevState.stageProps.width && this.state.stageProps.height === prevState.stageProps.height) {
+    if (this.props.data === prevProps.data && this.props.disabledClasses === prevProps.disabledClasses && this.state.primitiveDiagramProps.stageProps.width === prevState.primitiveDiagramProps.stageProps.width && this.state.largeContainerHeight === prevState.largeContainerHeight) {
       return;
     }
     console.log(this.props);
     const scrollContainer = this.scrollContainer.current;
-    if (this.state.stageProps.width <= 0) {
+    if (this.state.primitiveDiagramProps.stageProps.width <= 0) {
       const stageWidth = this.barDataManager.calculateStageWidth();
       const canvasWidth = stageWidth + Y_AXIS_WIDTH;
       this.setState({
-        stageProps: {
-          ...this.state.stageProps,
-          width: canvasWidth,
+        primitiveDiagramProps: {
+          ...this.state.primitiveDiagramProps,
+          stageProps: {
+            ...this.state.primitiveDiagramProps.stageProps,
+            width: canvasWidth,
+          },
         },
       });
-    } else if(this.state.stageProps.height <= 0) {
+    } else if(this.state.primitiveDiagramProps.stageProps.height <= 0) {
       //height should be assigned after width because of appearing scrollbar
       const canvasHeight = scrollContainer.clientHeight; // todo: should I use this or calculateStageHeight()?
       this.setState({
         largeContainerHeight: canvasHeight,
-        stageProps: {
-          ...this.state.stageProps,
-          height: this.barDataManager.calculateStageHeight(),
+        primitiveDiagramProps: {
+          ...this.state.primitiveDiagramProps,
+          convertDataToPrimitiveShapes: this.refreshDiagram,
+          stageProps: {
+            ...this.state.primitiveDiagramProps.stageProps,
+            height: this.barDataManager.calculateStageHeight(),
+          },
         },
       });
-      isSizeReady = true;
     }
   }
 
@@ -495,52 +506,21 @@ class CommitRangeView extends React.Component {
     this.barDataManager.showAssetChanges(this.props.showAssetChanges);
     this.barDataManager.enableAll();
     Object.keys(this.props.disabledClasses).forEach(className => this.barDataManager.disable(className));
-    const konvaLayers = isSizeReady ? this.refreshDiagram() : [];
     return(
-      <div>
+      <GeneralDiagram {...this.state}
+        scrollContainerRef={this.scrollContainer}
+        largeContainerRef={this.largeContainer}
+        onContainerScroll={this.onContainerScroll}
+        onContainerMouseMove={this.onScrollContainerMouseMove}
+        onContainerMouseDown={this.onScrollContainerMouseDown}>
         <Tooltip
           visible={this.state.tooltipVisible}
           left={this.state.tooltipLeft}
           top={this.state.tooltipTop}
           title={this.state.tooltipTitle}
-          items={this.state.tooltipItems}
-        />
-        <div
-          className="scroll-container"
-          onScroll={this.onContainerScroll}
-          onMouseMove={this.onScrollContainerMouseMove}
-          ref={this.scrollContainer}
-        >
-          <div
-            className="large-container"
-            style={{
-              width: this.state.stageProps.width + 'px',
-              height: this.state.largeContainerHeight + 'px',
-            }}
-            ref={this.largeContainer}
-          >
-            <div
-              className="container"
-              style={{transform: `translate(${this.scrollContainer.current ? this.scrollContainer.current.scrollLeft : 0}px, 0px)`}}
-              ref={this.diagramContainerRef}
-            >
-            <ReactKonva.Stage
-              {...this.state.stageProps}
-              onWheel={this.onStageWheelEventListener}
-              ref={this.stageRef}
-            >
-              <ReactKonva.Layer {...this.state.chartLayerProps} ref={this.chartLayerRef}>
-                { konvaLayers.chartLayerElements }
-              </ReactKonva.Layer>
-              <ReactKonva.Layer {...this.state.axisLayerProps} ref={this.axisLayerRef}>
-                { konvaLayers.axisLayerElements }
-              </ReactKonva.Layer>
-            </ReactKonva.Stage>
-            </div>
-          </div>
-          <MouseSelectionArea {...this.state.mouseSelectionAreaProps}/>
-        </div>
-      </div>
+          items={this.state.tooltipItems} />
+        <MouseSelectionArea {...this.state.mouseSelectionAreaProps}/>
+      </GeneralDiagram>
     );
   }
 }

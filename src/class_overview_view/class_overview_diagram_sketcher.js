@@ -1,74 +1,94 @@
-const ClassOverviewDiagramPositioner = require('./class_overview_diagram_positioner');
-const Konva = require('konva');
+const React = require('react');
+const ReactKonva = require('react-konva');
 const constants = require('./constants');
-const contants = require('./constants');
+const {
+  columnPosition,
+  methodPosition,
+  columnLineDashPosition,
+  methodNamePosition,
+  columnTitlePosition,
+  rowPosition,
+} = require('./class_overview_diagram_positioner');
 
-function drawColumnLine(layer, columnLine) {
-  for (let i = 0; i < columnLine.length; i++) {
-    layer.add(new Konva.Rect(columnLine[i]));
-  }
+function drawColumnLine(columnLine) {
+  const columnIndex = columnLine.payload;
+  return (
+    <ReactKonva.Group key={`line-for-column-${columnIndex}`}>
+      { columnLine.dashes.map((columnDash, index) => <ReactKonva.Rect key={`dash-${index}-for-column-${columnIndex}`} {...columnDash} />) }
+    </ReactKonva.Group>
+  );
 }
 
-function drawColumnTitle(layer, columnTitle) {
-  const group = new Konva.Group();
-  group.add(new Konva.Rect(columnTitle.frame))
-  group.add(new Konva.Text(columnTitle.text));
-  layer.add(group);
-  return group;
+function drawColumnTitle(columnTitle) {
+  const columnIndex = columnTitle.payload;
+  return (
+    <ReactKonva.Group key={`title-for-column-${columnIndex}`}>
+      <ReactKonva.Rect {...columnTitle.frame} />
+      <ReactKonva.Text {...columnTitle.text} />
+    </ReactKonva.Group>
+  )
 }
 
-function drawColumnMethods(layer, columnMethods) {
-  for (let i = 0; i < columnMethods.length; i++) {
-    layer.add(new Konva.Circle(columnMethods[i]));
-  }
+function drawColumnMethods(columnMethods) {
+  const { columnIndex } = columnMethods.payload; 
+  return (
+    <ReactKonva.Group key={`methods-for-column-${columnIndex}`}>
+      { columnMethods.methods.map((columnMethod, index) => <ReactKonva.Circle key={`method-${index}-for-column-${columnIndex}`} {...columnMethod} />) }
+    </ReactKonva.Group>
+  );
 }
 
-function drawColumnMethodArrows(layer, arrows) {
+function drawColumnMethodArrows(arrows) {
   for (let i = 0; i < arrows.length; i++) {
     //layer.add(new Konva.Circle(columnMethods[i]));
   }
+  return null;
 }
 
-function drawMethodLegend(layer, methodNames) {
-  methodNames.forEach(methodName => {
-    layer.add(new Konva.Text(methodName));
-  });
+function drawMethodLegend(methodNames) {
+  return (
+    <ReactKonva.Group key='method-legend'>
+      { methodNames.map((methodName, index) => <ReactKonva.Text key={`method-legend-${index}`} {...methodName} />) }
+    </ReactKonva.Group>
+  );
 }
 
-function buildColumnTitle(columnIndex, columnData, diagramPositioner, branchToColorMapping) {
+function buildColumnTitle(columnIndex, columnData, branchToColorMapping) {
   const title = columnData.commitHash;
   const columnTitleText = title.substr(0, 8);
-  const columnTitlePosition = diagramPositioner.columnTitlePosition(columnIndex, columnTitleText);
-  columnTitlePosition.frame = {
+  const columnTitlePositionResult = columnTitlePosition(columnIndex, columnTitleText);
+  columnTitlePositionResult.frame = {
     type: 'rect',
     fill: '#ffffff',
     stroke: branchToColorMapping[columnData.branchName] || '#000000',
     strokeWidth: 3,
-    ...columnTitlePosition.frame,
+    ...columnTitlePositionResult.frame,
   };
-  columnTitlePosition.text = {
+  columnTitlePositionResult.text = {
     type: 'text',
     text: columnTitleText,
     fill: '#000000',
-    ...columnTitlePosition.text,
+    ...columnTitlePositionResult.text,
   };
-  return columnTitlePosition;
+  columnTitlePositionResult.payload = {
+    columnIndex,
+  };
+  return columnTitlePositionResult;
 }
 
-function buildMethodLegend(allMethodNames, diagramPositioner) {
+function buildMethodLegend(allMethodNames) {
   return allMethodNames.map((methodName, index) => {
-    const methodNamePosition = diagramPositioner.methodNamePosition(index);
     return {
       type: 'text',
-      ...methodNamePosition,
+      ...methodNamePosition(index),
       fill: '#000000',
       text: methodName,
     };
   });
 }
 
-function buildColumnMethods(columnIndex, columnRows, diagramPositioner) {
-  return Object.keys(columnRows).map(rowNumber => ({
+function buildColumnMethods(columnIndex, columnRows) {
+  const methods = Object.keys(columnRows).map(rowNumber => ({
     ...columnRows[rowNumber],
     row: rowNumber,
   })).map(rowElement => {
@@ -76,18 +96,25 @@ function buildColumnMethods(columnIndex, columnRows, diagramPositioner) {
       circleRadius,
       circleX,
       circleY,
-    } = diagramPositioner.methodPosition(columnIndex, rowElement.row);
+    } = methodPosition(columnIndex, rowElement.row);
     return {
       type: 'circle',
       x: circleX,
       y: circleY,
       radius: circleRadius,
       fill: rowElement.status === 'new' ? 'blue' : (rowElement.status === 'changed' ? 'green' : 'gray'),
+      payload: {},
     };
   });
+  return {
+    methods,
+    payload: {
+      columnIndex,
+    },
+  };
 }
 
-function buildColumnLine(columnIndex, totalRowCount, diagramPositioner) {
+function buildColumnLine(columnIndex, totalRowCount) {
   const numberOfDashes = (totalRowCount * constants.ROW_HEIGHT) / (constants.DASH_HEIGHT+constants.DASH_VERTICAL_MARGIN);
   const dashes = [];
   for (let i = 0; i < numberOfDashes; i++) {
@@ -96,7 +123,7 @@ function buildColumnLine(columnIndex, totalRowCount, diagramPositioner) {
       dashStartX,
       dashHeight,
       dashWidth,
-    } = diagramPositioner.columnLineDashPosition(columnIndex, i);
+    } = columnLineDashPosition(columnIndex, i);
     dashes.push({
       type: 'rect',
       x: dashStartX,
@@ -104,80 +131,87 @@ function buildColumnLine(columnIndex, totalRowCount, diagramPositioner) {
       height: dashHeight,
       width: dashWidth,
       fill: '#000000',
+      payload: {},
     });
   }
-  return dashes;
+  return {
+    dashes,
+    payload: {
+      columnIndex,
+    },
+  };
 }
 
-function calculateStageHeight(totalMethodCount) {
+export function calculateStageHeight(totalMethodCount) {
   return constants.COLUMN_TOP_Y + constants.VERTICAL_MARGIN_FROM_TOP + totalMethodCount * constants.ROW_HEIGHT;
 }
 
-function calculateStageWidth(totalCommitsCount) {
+export function calculateStageWidth(totalCommitsCount) {
   return constants.METHOD_NAME_COLUMN_WIDTH + totalCommitsCount * constants.COLUMN_WIDTH;
 }
 
-class ClassOverviewDiagramSketcher {
-  constructor() {
-    this.diagramPositioner = new ClassOverviewDiagramPositioner();
-  }
-
-  convertToVisualizationData(groupedData, branchToColorMapping, disabledBranches) {
-    const data = {
-      columns: [],
-    };
-    data.methodLegend = buildMethodLegend(Object.keys(groupedData.methodNameToRowNumberMapping), this.diagramPositioner);
-    let disabledColumnsCount = 0;
-    for (let i = 0; i < groupedData.columns.length; i++) {
-      if (disabledBranches[groupedData.columns[i].branchName]) {
-        disabledColumnsCount++;
-        continue;
-      }
-      const columnIndex = i-disabledColumnsCount;
-      const columnLine = buildColumnLine(columnIndex, data.methodLegend.length, this.diagramPositioner);
-      const columnTitle = buildColumnTitle(columnIndex, groupedData.columns[i], this.diagramPositioner, branchToColorMapping);
-      const methods = buildColumnMethods(columnIndex, groupedData.columns[i].row, this.diagramPositioner);
-      console.log(methods);
-      const arrows = [];
-      data.columns.push({
-        columnLine,
-        columnTitle,
-        methods,
-        arrows,
-      });
+function convertToVisualizationData(groupedData, branchToColorMapping, disabledBranches) {
+  const data = {
+    columns: [],
+  };
+  data.methodLegend = buildMethodLegend(Object.keys(groupedData.methodNameToRowNumberMapping));
+  let disabledColumnsCount = 0;
+  for (let i = 0; i < groupedData.columns.length; i++) {
+    if (disabledBranches[groupedData.columns[i].branchName]) {
+      disabledColumnsCount++;
+      continue;
     }
-    return data;
+    const columnIndex = i-disabledColumnsCount;
+    const columnLine = buildColumnLine(columnIndex, data.methodLegend.length);
+    const columnTitle = buildColumnTitle(columnIndex, groupedData.columns[i], branchToColorMapping);
+    const methods = buildColumnMethods(columnIndex, groupedData.columns[i].row);
+    console.log(methods);
+    const arrows = [];
+    data.columns.push({
+      columnLine,
+      columnTitle,
+      methods,
+      arrows,
+    });
   }
-
-  draw(stage, groupedData, onCommitClick, branchToColorMapping, disabledBranches) {
-    const visualizationData = this.convertToVisualizationData(
-      groupedData,
-      branchToColorMapping,
-      disabledBranches
-    );
-    const stageSize = {
-      width: calculateStageWidth(visualizationData.columns.length),
-      height: calculateStageHeight(visualizationData.methodLegend.length),
-    };
-    console.log(visualizationData);
-    const layer = new Konva.Layer();
-    stage.add(layer);
-    drawMethodLegend(layer, visualizationData.methodLegend);
-    for (let i = 0; i < visualizationData.columns.length; i++) {
-      drawColumnLine(layer, visualizationData.columns[i].columnLine);
-      const columnTitle = drawColumnTitle(layer, visualizationData.columns[i].columnTitle);
-      columnTitle.on('mouseenter', function () {
-        stage.container().style.cursor = 'pointer';
-      });
-      columnTitle.on('mouseleave', function () {
-        stage.container().style.cursor = 'auto';
-      });
-      columnTitle.on('click', () => onCommitClick(groupedData.columns[i].commitHash));
-      drawColumnMethods(layer, visualizationData.columns[i].methods);
-      drawColumnMethodArrows(layer, visualizationData.columns[i].arrows);
-    }
-    return stageSize;
-  }
+  return data;
 }
 
-module.exports = ClassOverviewDiagramSketcher;
+export function draw(groupedData, onCommitClick, branchToColorMapping, disabledBranches) {
+  const visualizationData = convertToVisualizationData(
+    groupedData,
+    branchToColorMapping,
+    disabledBranches
+  );
+  const stageSize = {
+    width: calculateStageWidth(visualizationData.columns.length),
+    height: calculateStageHeight(visualizationData.methodLegend.length),
+  };
+  console.log(visualizationData);
+  const konvaElements = [
+    drawMethodLegend(visualizationData.methodLegend),
+  ];
+  for (let i = 0; i < visualizationData.columns.length; i++) {
+    const columnLine = drawColumnLine(visualizationData.columns[i].columnLine);
+    const columnTitle = drawColumnTitle(visualizationData.columns[i].columnTitle);
+    const columnMethods = drawColumnMethods(visualizationData.columns[i].methods);
+    const columnMethodArrows = drawColumnMethodArrows(visualizationData.columns[i].arrows);
+    konvaElements.push(
+      <ReactKonva.Group key={`data-group-for-column-${i}`}>
+        { columnLine }
+        { columnTitle }
+        { columnMethods }
+        { columnMethodArrows }
+      </ReactKonva.Group>
+    );
+  }
+  const konvaLayer = [
+    <ReactKonva.Layer key="class-overview-layer">
+      { konvaElements }
+    </ReactKonva.Layer>,
+  ];
+  return {
+    primitiveShapes: konvaLayer,
+    stageSize: stageSize,
+  };
+}
