@@ -1,5 +1,6 @@
 .commit-range-tooltip-item {
   display: flex;
+  align-items: baseline;
 }
 
 .tooltip-text {

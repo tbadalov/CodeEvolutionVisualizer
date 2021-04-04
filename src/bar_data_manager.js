@@ -124,6 +124,7 @@ class BarDataManager {
           commitMessage: commit.message,
           commitAuthor: commit.author,
           commitTime: commit.time,
+          commitBranchName: commit.branchName,
         },
         commitHash: commit.commitHash,
         stacks: stack.map(stackData => stackData.payload),
