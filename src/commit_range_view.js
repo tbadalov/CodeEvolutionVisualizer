@@ -299,7 +299,7 @@ class CommitRangeView extends React.Component {
         isActive: false,
       },
       chartLayerProps: {
-        x: PADDING+Y_AXIS_WIDTH,
+        x: PADDING,
         scaleX: 1.0,
         scaleY: 1.0,
       },
@@ -320,7 +320,7 @@ class CommitRangeView extends React.Component {
         scrollLeft: scrollLeft,
         chartLayerProps: {
           ...this.state.chartLayerProps,
-          x: PADDING + Y_AXIS_WIDTH - scrollLeft,
+          x: PADDING - scrollLeft,
         },
       });
     }
@@ -478,7 +478,7 @@ class CommitRangeView extends React.Component {
     }
     console.log(this.props);
     const stageWidth = this.barDataManager.calculateStageWidth();
-    const canvasWidth = stageWidth + Y_AXIS_WIDTH;
+    const canvasWidth = stageWidth;
     this.largeContainerRef.current.style.width = canvasWidth + 'px';
     /*//height should be assigned after width because of appearing scrollbar
     const canvasHeight = this.scrollContainerRef.current.clientHeight; // todo: should I use this or calculateStageHeight()?
@@ -502,21 +502,24 @@ class CommitRangeView extends React.Component {
     this.barDataManager.enableAll();
     Object.keys(this.props.disabledClasses).forEach(className => this.barDataManager.disable(className));
     return(
-      <GeneralDiagram {...this.state}
-        scrollContainerRef={this.scrollContainerRef}
-        largeContainerRef={this.largeContainerRef}
-        onContainerScroll={this.onContainerScroll}
-        onContainerMouseMove={this.onScrollContainerMouseMove}
-        onContainerMouseDown={this.onScrollContainerMouseDown}
-        onDraw={this.convertDataToPrimitiveShapes}>
-        <Tooltip
-          visible={this.state.tooltipVisible}
-          left={this.state.tooltipLeft}
-          top={this.state.tooltipTop}
-          title={this.state.tooltipTitle}
-          items={this.state.tooltipItems} />
-        <MouseSelectionArea {...this.state.mouseSelectionAreaProps}/>
-      </GeneralDiagram>
+      <React.Fragment>
+        <div style={{width: '200px', height: '100%', backgroundColor: '#ccc'}}></div>
+        <GeneralDiagram {...this.state}
+          scrollContainerRef={this.scrollContainerRef}
+          largeContainerRef={this.largeContainerRef}
+          onContainerScroll={this.onContainerScroll}
+          onContainerMouseMove={this.onScrollContainerMouseMove}
+          onContainerMouseDown={this.onScrollContainerMouseDown}
+          onDraw={this.convertDataToPrimitiveShapes}>
+          <Tooltip
+            visible={this.state.tooltipVisible}
+            left={this.state.tooltipLeft}
+            top={this.state.tooltipTop}
+            title={this.state.tooltipTitle}
+            items={this.state.tooltipItems} />
+          <MouseSelectionArea {...this.state.mouseSelectionAreaProps}/>
+        </GeneralDiagram>
+      </React.Fragment>
     );
   }
 }

@@ -5,7 +5,7 @@ class GeneralDiagram extends React.Component {
 
   render() {
     return(
-      <div>
+      <React.Fragment>
         <div
           className="scroll-container"
           onScroll={this.props.onContainerScroll}
@@ -28,7 +28,7 @@ class GeneralDiagram extends React.Component {
           </div>
           { this.props.children }
         </div>
-      </div>
+      </React.Fragment>
     );
   }
 }
