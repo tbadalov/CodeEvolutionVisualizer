@@ -21,7 +21,7 @@ const defaultStageProps = {
   },
 };
 
-export function CommitRangeViewAxis(props) {
+function CommitRangeViewAxis(props) {
   const scrollContainerRef = React.createRef();
   const [axisStageProps, setStageHeight] = useAxisStageProps();
   const stageHeight = axisStageProps.stageProps.height;
@@ -34,7 +34,7 @@ export function CommitRangeViewAxis(props) {
       maxValue: props.maxValue || 0,
     },
     stageHeight,
-  }); console.log(axisVisualData);
+  });
   const konvaShapes = axisVisualData ? drawAxis(axisVisualData, stageHeight) : null;
   const onDraw = () => (
     <ReactKonva.Layer key='commit-range-view-axis-y-layer'>
@@ -45,7 +45,6 @@ export function CommitRangeViewAxis(props) {
   return (
     <GeneralDiagram
       width={Y_AXIS_WIDTH}
-      height={stageHeight}
       scrollContainerRef={scrollContainerRef}
       primitiveDiagramProps={axisStageProps}
       onDraw={onDraw} />
@@ -123,3 +122,5 @@ function drawAxis(axisVisualData, height) {
     </ReactKonva.Group>
   );
 }
+
+module.exports = React.memo(CommitRangeViewAxis);
