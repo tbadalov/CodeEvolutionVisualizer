@@ -270,6 +270,8 @@ class CommitRangeView extends React.Component {
     this.onContainerScroll = this.onContainerScroll.bind(this);
     this.convertDataToPrimitiveShapes = this.convertDataToPrimitiveShapes.bind(this);
     this.onScrollContainerMouseDown = this.onScrollContainerMouseDown.bind(this);
+    this.onKeyDownEventListener = onKeyDownEventListener.bind(this);
+    this.onMouseUp = this.onMouseUp.bind(this);
     this.state = {
       width: 0,
       height: 0,
@@ -432,35 +434,42 @@ class CommitRangeView extends React.Component {
     return draw.call(this, { axis: axis, bars: visualData.bars });
   }
 
+  onMouseUp(e) {
+    isMouseDown = false;
+    if (isSelecting) {
+      this.setState({
+        mouseSelectionAreaProps: {
+          ...this.state.mouseSelectionAreaProps,
+          isActive: false,
+        },
+      });
+      clearInterval(scrollInterval);
+      scrollInterval = null;
+      isSelecting = false;
+      isAutoScrolling = false;
+      const rawSubData = this.barDataManager.dataFromRange(Math.min(selectionStartX, currentX)-Y_AXIS_WIDTH-BAR_LAYER_LEFT_MARGIN, Math.max(selectionStartX, currentX)-Y_AXIS_WIDTH-BAR_LAYER_LEFT_MARGIN);
+      const commitHashes = rawSubData.map(commit => commit.commitHash);
+      console.log(commitHashes);
+      console.log("first:" + commitHashes[0]);
+      this.changeDiagram(
+        'classOverviewView',
+        {
+          startCommit: commitHashes[0],
+          endCommit: commitHashes[commitHashes.length-1],
+        }
+      );
+    }
+  }
+
   componentDidMount() {
     console.log("mounting....")
-    document.addEventListener('keydown', onKeyDownEventListener.bind(this));
-    document.addEventListener('mouseup', () => {
-      isMouseDown = false;
-      if (isSelecting) {
-        this.setState({
-          mouseSelectionAreaProps: {
-            ...this.state.mouseSelectionAreaProps,
-            isActive: false,
-          },
-        });
-        clearInterval(scrollInterval);
-        scrollInterval = null;
-        isSelecting = false;
-        isAutoScrolling = false;
-        const rawSubData = this.barDataManager.dataFromRange(Math.min(selectionStartX, currentX)-Y_AXIS_WIDTH-BAR_LAYER_LEFT_MARGIN, Math.max(selectionStartX, currentX)-Y_AXIS_WIDTH-BAR_LAYER_LEFT_MARGIN);
-        const commitHashes = rawSubData.map(commit => commit.commitHash);
-        console.log(commitHashes);
-        console.log("first:" + commitHashes[0]);
-        this.changeDiagram(
-          'classOverviewView',
-          {
-            startCommit: commitHashes[0],
-            endCommit: commitHashes[commitHashes.length-1],
-          }
-        );
-      }
-    });
+    document.addEventListener('keydown', this.onKeyDownEventListener);
+    document.addEventListener('mouseup', this.onMouseUp);
+  }
+
+  componentWillUnmount() {
+    document.removeEventListener('mouseup', this.onMouseUp);
+    document.removeEventListener('keydown', this.onKeyDownEventListener);
   }
 
   componentDidUpdate(prevProps, prevState) {
