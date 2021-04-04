@@ -7,6 +7,7 @@ const CommitDetailTooltipItem = require('./commit_detail_tooltip_item');
 const MouseSelectionArea = require('./mouse_selection_area');
 const PrimitiveDiagram = require('./primitive_diagram');
 const GeneralDiagram = require('./general_diagram');
+const { CommitRangeViewAxis } = require('./commit_range_view_axis');
 
 const BAR_WIDTH = 30;
 const BAR_PADDING = 2;
@@ -233,9 +234,7 @@ function scaleChartLayer(scaleBy) {
 
 
 function draw(visualData) {
-  const axisLayerElements = [];
   const chartLayerElements = [];
-  axisLayerElements.push(drawAxis(visualData.axis, this.state.primitiveDiagramProps.stageProps.height));
   const stackMouseEnterEventListener = mouseEnterStack.bind(this);
   const stackMouseMoveEventListener = mouseMoveStack.bind(this);
   const stackMouseLeaveEventListener = mouseLeaveStack.bind(this, unstrokeStack.bind(this));
@@ -246,9 +245,6 @@ function draw(visualData) {
     <ReactKonva.Layer {...this.state.chartLayerProps}>
       { chartLayerElements }
     </ReactKonva.Layer>,
-    <ReactKonva.Layer {...this.state.axisLayerProps}>
-      { axisLayerElements }
-    </ReactKonva.Layer>
   ];
 }
 
@@ -273,8 +269,6 @@ class CommitRangeView extends React.Component {
     this.onKeyDownEventListener = onKeyDownEventListener.bind(this);
     this.onMouseUp = this.onMouseUp.bind(this);
     this.state = {
-      width: 0,
-      height: 0,
       tooltipVisible: false,
       tooltipLeft: 0,
       tooltipTop: 0,
@@ -430,8 +424,7 @@ class CommitRangeView extends React.Component {
     const dx = this.state.scrollLeft;
     const dy = 0;
     const visualData = this.barDataManager.barsFromRange(dx-PADDING, (dx+this.scrollContainerRef.current.clientWidth+PADDING)/this.state.chartLayerProps.scaleX);
-    const axis = this.barDataManager.axisData();
-    return draw.call(this, { axis: axis, bars: visualData.bars });
+    return draw.call(this, { bars: visualData.bars });
   }
 
   onMouseUp(e) {
@@ -503,7 +496,8 @@ class CommitRangeView extends React.Component {
     Object.keys(this.props.disabledClasses).forEach(className => this.barDataManager.disable(className));
     return(
       <React.Fragment>
-        <div style={{width: '200px', height: '100%', backgroundColor: '#ccc'}}></div>
+        <CommitRangeViewAxis
+          maxValue={this.barDataManager.largestCommitSize} />
         <GeneralDiagram {...this.state}
           scrollContainerRef={this.scrollContainerRef}
           largeContainerRef={this.largeContainerRef}

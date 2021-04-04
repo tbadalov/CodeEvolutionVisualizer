@@ -4,8 +4,9 @@ const PrimitiveDiagram = require('./primitive_diagram');
 class GeneralDiagram extends React.Component {
 
   render() {
+    const {width, height} = this.props;
     return(
-      <React.Fragment>
+      <div style={{width, height, minWidth: width, overflow: 'auto'}}>
         <div
           className="scroll-container"
           onScroll={this.props.onContainerScroll}
@@ -28,7 +29,7 @@ class GeneralDiagram extends React.Component {
           </div>
           { this.props.children }
         </div>
-      </React.Fragment>
+      </div>
     );
   }
 }
