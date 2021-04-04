@@ -2,6 +2,7 @@ const { useEffect, useState } = require('react');
 const GeneralDiagram = require('./general_diagram');
 const ReactKonva = require('react-konva');
 const React = require('react');
+const { usePrimitiveDiagramProps } = require('./common');
 
 const BAR_WIDTH = 30;
 const BAR_PADDING = 2;
@@ -23,7 +24,7 @@ const defaultStageProps = {
 
 function CommitRangeViewAxis(props) {
   const scrollContainerRef = React.createRef();
-  const [axisStageProps, setStageHeight] = useAxisStageProps();
+  const [axisStageProps, setStageHeight] = usePrimitiveDiagramProps(defaultStageProps);
   const stageHeight = axisStageProps.stageProps.height;
   useEffect(
     () => setStageHeight(scrollContainerRef.current.clientHeight),
@@ -84,18 +85,6 @@ function convertToVisualData({ axisData, stageHeight }) {
     },
     segments: segments,
   };
-}
-
-function useAxisStageProps() {
-  const [axisStageProps, setAxisStageProps] = useState(defaultStageProps);
-  const setStageHeight = (stageHeight) => setAxisStageProps({
-    ...axisStageProps,
-    stageProps: {
-      ...axisStageProps.stageProps,
-      height: stageHeight,
-    },
-  });
-  return [axisStageProps, setStageHeight, setAxisStageProps];
 }
 
 function drawAxis(axisVisualData, height) {
