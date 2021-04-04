@@ -1,12 +1,15 @@
 const React = require('react');
 const { draw } = require('./class_overview_diagram_sketcher');
 const GeneralDiagram = require('../general_diagram');
+const ClassOverviewMethodLegend = require('./class_overview_method_legend');
 
 class ClassOverviewDiagram extends React.Component {
   constructor(props) {
     super(props);
     this.scrollContainerRef = React.createRef();
+    this.methodLegendScrollContainerRef = React.createRef();
     this.largeContainerRef = React.createRef();
+    this.onScroll = this.onScroll.bind(this);
     this.state = {
       rawData: { commits: {} },
       tooltipVisible: false,
@@ -21,6 +24,13 @@ class ClassOverviewDiagram extends React.Component {
         },
       },
     };
+  }
+
+  onScroll(e) {
+    const scrollContainer = e.target;
+    console.log(e);
+    //this.scrollContainerRef.current.scrollTo(0, scrollContainer.scrollTop);
+    this.methodLegendScrollContainerRef.current.scrollTo(0, scrollContainer.scrollTop);
   }
 
   componentDidUpdate(prevProps) {
@@ -50,12 +60,24 @@ class ClassOverviewDiagram extends React.Component {
   }
 
   render() {
+    const methodNameToRowNumberMapping = this.props.rawData ? this.props.rawData.methodNameToRowNumberMapping : {};
+    const methods = Object.entries(methodNameToRowNumberMapping)
+      .sort(([, methodRow1], [, methodRow2]) => methodRow1 - methodRow2)
+      .map(([methodName]) => ({
+        methodName,
+      }));
     return(
-      <GeneralDiagram
-        {...this.state}
-        scrollContainerRef={this.scrollContainerRef}
-        largeContainerRef={this.largeContainerRef}
-        onDraw={this.convertDataToPrimitiveShapes} />
+      <React.Fragment>
+        <ClassOverviewMethodLegend
+          scrollContainerRef={this.methodLegendScrollContainerRef}
+          methods={methods}/>
+        <GeneralDiagram
+          {...this.state}
+          onContainerScroll={this.onScroll}
+          scrollContainerRef={this.scrollContainerRef}
+          largeContainerRef={this.largeContainerRef}
+          onDraw={this.convertDataToPrimitiveShapes} />
+      </React.Fragment>
     );
   }
 }

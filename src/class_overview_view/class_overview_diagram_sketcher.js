@@ -154,7 +154,6 @@ function convertToVisualizationData(groupedData, branchToColorMapping, disabledB
   const data = {
     columns: [],
   };
-  data.methodLegend = buildMethodLegend(Object.keys(groupedData.methodNameToRowNumberMapping));
   let disabledColumnsCount = 0;
   for (let i = 0; i < groupedData.columns.length; i++) {
     if (disabledBranches[groupedData.columns[i].branchName]) {
@@ -162,7 +161,7 @@ function convertToVisualizationData(groupedData, branchToColorMapping, disabledB
       continue;
     }
     const columnIndex = i-disabledColumnsCount;
-    const columnLine = buildColumnLine(columnIndex, data.methodLegend.length);
+    const columnLine = buildColumnLine(columnIndex, Object.keys(groupedData.methodNameToRowNumberMapping).length);
     const columnTitle = buildColumnTitle(columnIndex, groupedData.columns[i], branchToColorMapping);
     const methods = buildColumnMethods(columnIndex, groupedData.columns[i].row);
     console.log(methods);
@@ -185,11 +184,10 @@ export function draw(groupedData, onCommitClick, branchToColorMapping, disabledB
   );
   const stageSize = {
     width: calculateStageWidth(visualizationData.columns.length),
-    height: calculateStageHeight(visualizationData.methodLegend.length),
+    height: calculateStageHeight(Object.keys(groupedData.methodNameToRowNumberMapping).length),
   };
   console.log(visualizationData);
   const konvaElements = [
-    drawMethodLegend(visualizationData.methodLegend),
   ];
   for (let i = 0; i < visualizationData.columns.length; i++) {
     const columnLine = drawColumnLine(visualizationData.columns[i].columnLine);
