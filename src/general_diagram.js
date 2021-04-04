@@ -4,9 +4,13 @@ const PrimitiveDiagram = require('./primitive_diagram');
 class GeneralDiagram extends React.Component {
 
   render() {
-    const {width, height} = this.props;
+    const componentRootStyle = {
+      overflow: 'auto',
+      minWidth: this.props.width,
+      ...this.props.rootStyle,
+    };
     return(
-      <div style={{width, height, minWidth: width, overflow: 'auto'}}>
+      <div style={componentRootStyle}>
         <div
           className="scroll-container"
           onScroll={this.props.onContainerScroll}
