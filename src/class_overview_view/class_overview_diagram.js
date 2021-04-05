@@ -76,20 +76,20 @@ class ClassOverviewDiagram extends React.Component {
         <ClassOverviewMethodLegend
           scrollContainerRef={this.methodLegendScrollContainerRef}
           methods={methods} />
-        <ClassOverviewColumnTitles
-          scrollContainerRef={this.columnTitlesScrollContainerRef}
-          columnTitles={columnTitles} />
         <GeneralDiagram
           {...this.state}
           rootStyle={{
             position: 'absolute',
             left: constants.METHOD_NAME_COLUMN_WIDTH + 'px',
-            top: columnTotalTitleFrameHeight() + 'px',
+            top: (constants.COLUMN_TOP_Y + columnTotalTitleFrameHeight()) + 'px',
           }}
           onContainerScroll={this.onScroll}
           scrollContainerRef={this.scrollContainerRef}
           largeContainerRef={this.largeContainerRef}
           onDraw={this.convertDataToPrimitiveShapes} />
+        <ClassOverviewColumnTitles
+          scrollContainerRef={this.columnTitlesScrollContainerRef}
+          columnTitles={columnTitles} />
       </React.Fragment>
     );
   }

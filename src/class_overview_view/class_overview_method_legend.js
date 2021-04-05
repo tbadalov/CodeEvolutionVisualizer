@@ -31,7 +31,7 @@ function ClassOverviewMethodLegend(props) {
       rootStyle={{
         height: methodLegendStageProps.stageProps.height + 'px',
         width: constants.METHOD_NAME_COLUMN_WIDTH + 'px',
-        top: columnTotalTitleFrameHeight() + 'px',
+        top: (constants.COLUMN_TOP_Y + columnTotalTitleFrameHeight()) + 'px',
       }}
       primitiveDiagramProps={methodLegendStageProps}
       scrollContainerRef={props.scrollContainerRef}
