@@ -499,6 +499,10 @@ class CommitRangeView extends React.Component {
         <CommitRangeViewAxis
           maxValue={this.barDataManager.largestCommitSize} />
         <GeneralDiagram {...this.state}
+          rootStyle={{
+            position: 'absolute',
+            left: Y_AXIS_WIDTH + 'px',
+          }}
           scrollContainerRef={this.scrollContainerRef}
           largeContainerRef={this.largeContainerRef}
           onContainerScroll={this.onContainerScroll}

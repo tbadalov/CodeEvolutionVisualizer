@@ -45,7 +45,10 @@ function CommitRangeViewAxis(props) {
 
   return (
     <GeneralDiagram
-      width={Y_AXIS_WIDTH}
+      rootStyle={{
+        position: 'absolute',
+        width: Y_AXIS_WIDTH + 'px',
+      }}
       scrollContainerRef={scrollContainerRef}
       primitiveDiagramProps={axisStageProps}
       onDraw={onDraw} />

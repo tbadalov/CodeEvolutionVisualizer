@@ -4,35 +4,29 @@ const PrimitiveDiagram = require('./primitive_diagram');
 class GeneralDiagram extends React.Component {
 
   render() {
-    const componentRootStyle = {
-      overflow: 'auto',
-      minWidth: this.props.width,
-      ...this.props.rootStyle,
-    };
     return(
-      <div style={componentRootStyle}>
+      <div
+        className="scroll-container"
+        onScroll={this.props.onContainerScroll}
+        onMouseMove={this.props.onContainerMouseMove}
+        onMouseDown={this.props.onContainerMouseDown}
+        style={this.props.rootStyle}
+        ref={this.props.scrollContainerRef}
+      >
         <div
-          className="scroll-container"
-          onScroll={this.props.onContainerScroll}
-          onMouseMove={this.props.onContainerMouseMove}
-          onMouseDown={this.props.onContainerMouseDown}
-          ref={this.props.scrollContainerRef}
+          className="large-container"
+          ref={this.props.largeContainerRef}
         >
           <div
-            className="large-container"
-            ref={this.props.largeContainerRef}
+            className="container"
+            style={{transform: `translate(${this.props.scrollLeft}px, 0px)`, cursor: this.props.cursorStyle}}
           >
-            <div
-              className="container"
-              style={{transform: `translate(${this.props.scrollLeft}px, 0px)`, cursor: this.props.cursorStyle}}
-            >
-              <PrimitiveDiagram
-                {...this.props.primitiveDiagramProps}
-                onDraw={this.props.onDraw} />
-            </div>
+            <PrimitiveDiagram
+              {...this.props.primitiveDiagramProps}
+              onDraw={this.props.onDraw} />
           </div>
-          { this.props.children }
         </div>
+        { this.props.children }
       </div>
     );
   }

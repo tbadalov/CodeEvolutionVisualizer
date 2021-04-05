@@ -22,5 +22,5 @@
 .box-2 {
   flex: 2;
   overflow: hidden;
-  display: flex;
+  position: relative;
 }

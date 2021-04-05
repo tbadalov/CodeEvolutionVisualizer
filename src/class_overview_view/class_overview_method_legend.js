@@ -28,8 +28,10 @@ function ClassOverviewMethodLegend(props) {
 
   return (
     <GeneralDiagram
-      width={constants.METHOD_NAME_COLUMN_WIDTH}
-      height={methodLegendStageProps.stageProps.height}
+      rootStyle={{
+        height: methodLegendStageProps.stageProps.height + 'px',
+        width: constants.METHOD_NAME_COLUMN_WIDTH + 'px',
+      }}
       primitiveDiagramProps={methodLegendStageProps}
       scrollContainerRef={props.scrollContainerRef}
       onDraw={onDraw} />
