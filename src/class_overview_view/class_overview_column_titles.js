@@ -19,7 +19,7 @@ function ClassOverviewColumnTitles(props) {
   const largeContainerRef = props.largeContainerRef || React.createRef();
   const [columnTitlesStageProps,, setStageWidth] = usePrimitiveDiagramProps(defaultStageProps);
   const { branchToColorMapping } = useContext(ColorContext);
-  const columnTitlesVisualData = convertToVisualData(props.columnTitles, branchToColorMapping);
+  const columnTitlesVisualData = convertToVisualData(props.columnTitles, branchToColorMapping, props.disabledBranches || {});
   const konvaShapes = drawColumnTitles(columnTitlesVisualData);
   const onDraw = () => konvaShapes;
   const stageWidth = calculateStageWidth(columnTitlesVisualData.length);
@@ -48,8 +48,10 @@ function ClassOverviewColumnTitles(props) {
   )
 }
 
-function convertToVisualData(columnTitles, branchToColorMapping) {
-  return columnTitles.map(buildColumnTitle.bind(null, branchToColorMapping));
+function convertToVisualData(columnTitles, branchToColorMapping, disabledBranches) {
+  return columnTitles
+    .filter(columnTitle => !disabledBranches[columnTitle.branchName])
+    .map(buildColumnTitle.bind(null, branchToColorMapping));
 }
 
 function buildColumnTitle(branchToColorMapping, columnTitleData, columnIndex) {

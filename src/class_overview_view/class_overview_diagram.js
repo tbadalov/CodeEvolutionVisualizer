@@ -88,6 +88,7 @@ class ClassOverviewDiagram extends React.Component {
           largeContainerRef={this.largeContainerRef}
           onDraw={this.convertDataToPrimitiveShapes} />
         <ClassOverviewColumnTitles
+          disabledBranches={this.props.disabledBranches}
           scrollContainerRef={this.columnTitlesScrollContainerRef}
           columnTitles={columnTitles} />
       </React.Fragment>
