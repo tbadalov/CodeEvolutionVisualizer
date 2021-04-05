@@ -23,6 +23,17 @@
         position: relative;
       }
 
+      /* Hiding scrollbar taken from https://stackoverflow.com/a/13184693 */
+      .hide-scrollbar {
+        /* This is the magic bit for Firefox */
+        scrollbar-width: none;
+      }
+
+      .hide-scrollbar::-webkit-scrollbar {
+        /* This is the magic bit for WebKit */
+        display: none;
+      }
+
       select {
   -webkit-appearance: none;
   -moz-appearance: none;
