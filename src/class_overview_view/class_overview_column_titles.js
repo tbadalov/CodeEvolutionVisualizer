@@ -37,7 +37,6 @@ function ClassOverviewColumnTitles(props) {
           position: 'absolute',
           left: constants.METHOD_NAME_COLUMN_WIDTH + 'px',
           top: (constants.COLUMN_TOP_Y-constants.TITLE_FRAME_STROKE_WIDTH) + 'px',
-          backgroundColor: '#ccc',
           height: columnTitlesStageProps.stageProps.height + 'px',
         }}
         hideScrollbar
