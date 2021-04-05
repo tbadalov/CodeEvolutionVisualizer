@@ -162,13 +162,11 @@ function convertToVisualizationData(groupedData, branchToColorMapping, disabledB
     }
     const columnIndex = i-disabledColumnsCount;
     const columnLine = buildColumnLine(columnIndex, Object.keys(groupedData.methodNameToRowNumberMapping).length);
-    const columnTitle = buildColumnTitle(columnIndex, groupedData.columns[i], branchToColorMapping);
     const methods = buildColumnMethods(columnIndex, groupedData.columns[i].row);
     console.log(methods);
     const arrows = [];
     data.columns.push({
       columnLine,
-      columnTitle,
       methods,
       arrows,
     });
@@ -191,13 +189,11 @@ export function draw(groupedData, onCommitClick, branchToColorMapping, disabledB
   ];
   for (let i = 0; i < visualizationData.columns.length; i++) {
     const columnLine = drawColumnLine(visualizationData.columns[i].columnLine);
-    const columnTitle = drawColumnTitle(visualizationData.columns[i].columnTitle);
     const columnMethods = drawColumnMethods(visualizationData.columns[i].methods);
     const columnMethodArrows = drawColumnMethodArrows(visualizationData.columns[i].arrows);
     konvaElements.push(
       <ReactKonva.Group key={`data-group-for-column-${i}`}>
         { columnLine }
-        { columnTitle }
         { columnMethods }
         { columnMethodArrows }
       </ReactKonva.Group>

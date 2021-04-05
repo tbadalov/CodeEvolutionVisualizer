@@ -2,11 +2,15 @@ const React = require('react');
 const { draw } = require('./class_overview_diagram_sketcher');
 const GeneralDiagram = require('../general_diagram');
 const ClassOverviewMethodLegend = require('./class_overview_method_legend');
+const ClassOverviewColumnTitles = require('./class_overview_column_titles');
+const constants = require('./constants');
+const { columnTotalTitleFramHeight, columnTotalTitleFrameHeight } = require('./class_overview_diagram_positioner');
 
 class ClassOverviewDiagram extends React.Component {
   constructor(props) {
     super(props);
     this.scrollContainerRef = React.createRef();
+    this.columnTitlesScrollContainerRef = React.createRef();
     this.methodLegendScrollContainerRef = React.createRef();
     this.largeContainerRef = React.createRef();
     this.onScroll = this.onScroll.bind(this);
@@ -27,10 +31,10 @@ class ClassOverviewDiagram extends React.Component {
   }
 
   onScroll(e) {
-    const scrollContainer = e.target;
+    const { scrollLeft, scrollTop } = e.target;
     console.log(e);
-    //this.scrollContainerRef.current.scrollTo(0, scrollContainer.scrollTop);
-    this.methodLegendScrollContainerRef.current.scrollTo(0, scrollContainer.scrollTop);
+    this.columnTitlesScrollContainerRef.current.scrollTo(scrollLeft, scrollTop);
+    this.methodLegendScrollContainerRef.current.scrollTo(scrollLeft, scrollTop);
   }
 
   componentDidUpdate(prevProps) {
@@ -66,13 +70,22 @@ class ClassOverviewDiagram extends React.Component {
       .map(([methodName]) => ({
         methodName,
       }));
+    const columnTitles = this.props.rawData ? this.props.rawData.columns : [];
     return(
       <React.Fragment>
         <ClassOverviewMethodLegend
           scrollContainerRef={this.methodLegendScrollContainerRef}
-          methods={methods}/>
+          methods={methods} />
+        <ClassOverviewColumnTitles
+          scrollContainerRef={this.columnTitlesScrollContainerRef}
+          columnTitles={columnTitles} />
         <GeneralDiagram
           {...this.state}
+          rootStyle={{
+            position: 'absolute',
+            left: constants.METHOD_NAME_COLUMN_WIDTH + 'px',
+            top: columnTotalTitleFrameHeight() + 'px',
+          }}
           onContainerScroll={this.onScroll}
           scrollContainerRef={this.scrollContainerRef}
           largeContainerRef={this.largeContainerRef}

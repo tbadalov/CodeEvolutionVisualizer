@@ -9,5 +9,12 @@ export function usePrimitiveDiagramProps(defaultProps) {
       height: stageHeight,
     },
   });
-  return [primitiveDiagramProps, setStageHeight, setPrimitiveDiagramProps];
+  const setStageWidth = (stageWidth) => setPrimitiveDiagramProps({
+    ...primitiveDiagramProps,
+    stageProps: {
+      ...primitiveDiagramProps.stageProps,
+      width: stageWidth,
+    },
+  });
+  return [primitiveDiagramProps, setStageHeight, setStageWidth, setPrimitiveDiagramProps];
 }

@@ -2,7 +2,7 @@ const constants = require('./constants');
 
 export function columnPosition(columnIndex) {
   const columnStartY = constants.COLUMN_TOP_Y;
-  const columnStartX = constants.METHOD_NAME_COLUMN_WIDTH + columnIndex * constants.COLUMN_WIDTH;
+  const columnStartX = columnIndex * constants.COLUMN_WIDTH;
   const columnWidth = constants.COLUMN_WIDTH;
   const columnCenterX = columnStartX + constants.COLUMN_WIDTH / 2;
   return {
@@ -54,13 +54,21 @@ export function methodNamePosition(rowNumber) {
   };
 }
 
+export function columnTitleHeight() {
+  return constants.TITLE_FONT_SIZE + constants.TITLE_FRAME_VERTICAL_PADDING * 2;
+}
+
+export function columnTotalTitleFrameHeight() {
+  return columnTitleHeight() + constants.TITLE_FRAME_STROKE_WIDTH * 2;
+}
+
 export function columnTitlePosition(columnIndex, title) {
   const { columnCenterX } = columnPosition(columnIndex);
   const titleTextWidth = Math.min(title.length * 0.5 * constants.TITLE_FONT_SIZE, constants.COLUMN_WIDTH - constants.TITLE_FRAME_HORIZONTAL_PADDING*2);
   const titleFrameWidth = Math.min(titleTextWidth + constants.TITLE_FRAME_HORIZONTAL_PADDING*2, constants.COLUMN_WIDTH);
   const titleFrameStartX = columnCenterX - titleFrameWidth / 2;
-  const titleFrameStartY = constants.COLUMN_TOP_Y;
-  const titleFrameHeight = constants.TITLE_FONT_SIZE + constants.TITLE_FRAME_VERTICAL_PADDING * 2;
+  const titleFrameStartY = 0;
+  const titleFrameHeight = columnTitleHeight();
   const titleTextStartY = titleFrameStartY + constants.TITLE_FRAME_VERTICAL_PADDING;
   const titleTextHeight = titleFrameHeight - constants.TITLE_FRAME_VERTICAL_PADDING * 2;
   const titleTextStartX = columnCenterX - titleTextWidth / 2;

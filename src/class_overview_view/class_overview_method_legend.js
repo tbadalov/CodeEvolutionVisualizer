@@ -1,6 +1,6 @@
 const GeneralDiagram = require('../general_diagram');
 
-const { methodNamePosition } = require('./class_overview_diagram_positioner');
+const { methodNamePosition, columnTotalTitleFrameHeight } = require('./class_overview_diagram_positioner');
 const React = require('react');
 const ReactKonva = require('react-konva');
 const constants = require('./constants');
@@ -31,6 +31,7 @@ function ClassOverviewMethodLegend(props) {
       rootStyle={{
         height: methodLegendStageProps.stageProps.height + 'px',
         width: constants.METHOD_NAME_COLUMN_WIDTH + 'px',
+        top: columnTotalTitleFrameHeight() + 'px',
       }}
       primitiveDiagramProps={methodLegendStageProps}
       scrollContainerRef={props.scrollContainerRef}
