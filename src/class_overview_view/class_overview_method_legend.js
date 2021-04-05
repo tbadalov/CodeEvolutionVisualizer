@@ -15,13 +15,17 @@ const defaultStageProps = {
 };
 
 function ClassOverviewMethodLegend(props) {
+  const largeContainerRef = props.largeContainerRef || React.createRef();
   const [methodLegendStageProps, setStageHeight] = usePrimitiveDiagramProps(defaultStageProps);
   const visualizationData = convertToVisualData(props.methods);
   const konvaShapes = drawMethodLegend(visualizationData);
   const onDraw = () => konvaShapes;
   const methodLegendHeight = calculateStageHeight(visualizationData);
   useEffect(
-    () => setStageHeight(methodLegendHeight),
+    () => {
+      largeContainerRef.current.style.height = methodLegendHeight + 'px';
+      setStageHeight(methodLegendHeight);
+    },
     [methodLegendHeight]
   );
   //useEffect(() => scrollContainerRef.current.scrollTo(0, props.scrollTop));
@@ -29,11 +33,12 @@ function ClassOverviewMethodLegend(props) {
   return (
     <GeneralDiagram
       rootStyle={{
-        height: methodLegendStageProps.stageProps.height + 'px',
         width: constants.METHOD_NAME_COLUMN_WIDTH + 'px',
         top: (constants.COLUMN_TOP_Y + columnTotalTitleFrameHeight()) + 'px',
       }}
+      hideScrollbar
       primitiveDiagramProps={methodLegendStageProps}
+      largeContainerRef={largeContainerRef}
       scrollContainerRef={props.scrollContainerRef}
       onDraw={onDraw} />
   );
