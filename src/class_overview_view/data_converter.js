@@ -1,24 +1,27 @@
-const { groupBy } = require('../utils');
-
 function buildColumn(commitData, props) {
-  const { methodNameToRowNumberMapping } = props;
+  const { methodNameToRowNumberMapping, didMethodChangeInBranchBeforeCommit } = props;
   const commitHash = commitData.commitHash;
   const columnData = {
     commitHash: commitHash,
     branchName: commitData.branchName,
     row: {},
   };
+
   const rows = commitData.methods.reduce(
     (rows, record) => {
       const methodName = record.name;
       const methodRow = methodNameToRowNumberMapping[methodName];
-      const status = record.status;
+      const wasMethodChangedInMergedBranch = commitData.mergedBranchNames.find(mergedBranchName => didMethodChangeInBranchBeforeCommit[mergedBranchName][methodName] && didMethodChangeInBranchBeforeCommit[mergedBranchName][methodName][commitHash]);
+      const status = record.status === 'same' && wasMethodChangedInMergedBranch ? 'semi-changed' : record.status;
       const calls = record.calls.map(called_method_name => methodNameToRowNumberMapping[called_method_name]);
       rows[methodRow] = {
         methodName,
         status,
         calls,
       };
+      if (status === 'semi-changed') {
+        rows[methodRow].changingBranch = wasMethodChangedInMergedBranch;
+      }
       return rows;
     },
     {},
@@ -42,10 +45,46 @@ function mapMethodNamesToRowNumber(methodNames) {
   return methodNameToRowMapping;
 }
 
+function findMergeCommitsAfterMethodChangingBranches(rawData) {
+  const result = {};
+  const tempData = {};
+
+  for (let i = 0; i < rawData.length; i++) {
+    const commitRecord = rawData[i];
+    if (commitRecord.mergedBranchNames.length == 0) {
+      if (!tempData[commitRecord.branchName]) {
+        tempData[commitRecord.branchName] = {};
+      }
+      commitRecord.methods.forEach(method => {
+        tempData[commitRecord.branchName][method.name] = tempData[commitRecord.branchName][method.name] || method.status !== 'same';
+      });
+    } else {
+      commitRecord.mergedBranchNames.forEach(mergedBranchName => {
+        if (tempData[mergedBranchName]) {
+          Object.keys(tempData[mergedBranchName]).forEach(changedMethodName => {
+            if (!result[mergedBranchName]) {
+              result[mergedBranchName] = {};
+            }
+            if (!result[mergedBranchName][changedMethodName]) {
+              result[mergedBranchName][changedMethodName] = {};
+            }
+            if (tempData[mergedBranchName][changedMethodName]) {
+              result[mergedBranchName][changedMethodName][commitRecord.commitHash] = true;
+            }
+          });
+        }
+        delete tempData[mergedBranchName];
+      });
+    }
+  }
+
+  return result;
+}
 
 class ClassOverviewDataConverter {
   groupDataIntoCommitColumnsAndMethodRows(rawData) {
     const methodNameToRowNumberMapping = mapMethodNamesToRowNumber(getAllMethodNames(rawData));
+    const didMethodChangeInBranchBeforeCommit = findMergeCommitsAfterMethodChangingBranches(rawData);
     const data = {
       columns: [],
       methodNameToRowNumberMapping,
@@ -55,6 +94,7 @@ class ClassOverviewDataConverter {
         commitRecord,
         {
           methodNameToRowNumberMapping,
+          didMethodChangeInBranchBeforeCommit
         },
       );
       data.columns.push(columnData);
@@ -64,23 +104,3 @@ class ClassOverviewDataConverter {
 }
 
 module.exports = ClassOverviewDataConverter;
-
-/*
-{
-  columns: [
-    {
-      commit: 'hhhhdddsdfsdfjsldkfjas',
-      row: {
-        3: {
-          methodName: 'hello()',
-          status: 'new' | 'changed' | 'same',
-          calls: [4, 5]
-        }
-      }
-    },
-    {
-
-    }
-  ]
-}
-*/

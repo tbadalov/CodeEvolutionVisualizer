@@ -29,31 +29,30 @@ router.get('/', function(req, res, next) {
   OPTIONAL MATCH (app)-[APP_OWNS_CLASS]->(c:Class)-[:CLASS_OWNS_METHOD]->(m:Method)
     WHERE c.name = '` + req.query.className +`'
   OPTIONAL MATCH (app)<-[:CHANGED_TO]-(previousApp:App)-[:APP_OWNS_CLASS]->(:Class)-[:CLASS_OWNS_METHOD]->(m)
-  OPTIONAL MATCH (app)<-[:CHANGED_TO]-(mergedApp:App)
-    WHERE mergedApp.branch <> app.branch
+  OPTIONAL MATCH (mergedApp:App)
+    WHERE (mergedApp)-[:CHANGED_TO]->(app)<-[:CHANGED_TO]-(:App)
+      AND mergedApp.branch <> app.branch
   OPTIONAL MATCH (m)-[changed_to:CHANGED_TO]->(new_method:Method)
   OPTIONAL MATCH (m)<-[changed_from:CHANGED_TO]-(old_method:Method)
   OPTIONAL MATCH (m)-[:CALLS]->(called_method:Method)<-[:CLASS_OWNS_METHOD]-(c)
   WITH app,
     m,
-    previousApp,
-    new_method,
-    old_method,
-    collect(mergedApp.branch) as merged_branches,
-    collect(called_method.name) as calls
-  WITH app.commit as commitHash,
-    app.branch as branchName,
-    app.timestamp as timestamp,
-    app.version_number as version,
-    m.name as methodName,
-    calls,
-    merged_branches,
     CASE
       WHEN m IS NULL THEN NULL
       WHEN previousApp IS NOT NULL THEN 'same'
       WHEN old_method IS NULL THEN 'new'
       ELSE 'changed'
-    END as status
+    END as status,
+    collect(distinct mergedApp.branch) as merged_branches,
+    collect(distinct called_method.name) as calls
+  WITH app.commit as commitHash,
+    app.branch as branchName,
+    app.timestamp as timestamp,
+    app.version_number as version,
+    m.name as methodName,
+    merged_branches,
+    status,
+    calls
   RETURN commitHash,
     branchName,
     timestamp,
@@ -69,6 +68,7 @@ router.get('/', function(req, res, next) {
     onNext: record => {
       dataFromDb.push({
         commitHash: record.get('commitHash'),
+        mergedBranchNames: record.get('merged_branches'),
         branchName: record.get('branchName'),
         version: record.get('version').low,
         timestamp: record.get('timestamp'),

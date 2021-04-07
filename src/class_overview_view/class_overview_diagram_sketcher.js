@@ -30,10 +30,24 @@ function drawColumnTitle(columnTitle) {
 }
 
 function drawColumnMethods(columnMethods) {
+  console.log(columnMethods);
   const { columnIndex } = columnMethods.payload; 
   return (
     <ReactKonva.Group key={`methods-for-column-${columnIndex}`}>
-      { columnMethods.methods.map((columnMethod, index) => <ReactKonva.Circle key={`method-${index}-for-column-${columnIndex}`} {...columnMethod} />) }
+      {
+        columnMethods.methods.map((columnMethod, index) => {
+          if (columnMethod.type === 'circle') {
+            return (
+              <ReactKonva.Circle key={`method-${index}-for-column-${columnIndex}`} {...columnMethod} />
+            );
+          }
+          if (columnMethod.type === 'arc') {
+            return (
+              <ReactKonva.Arc key={`semi-changed-method-${index}-for-column-${columnIndex}`} {...columnMethod} />
+            );
+          }
+        })
+      }
     </ReactKonva.Group>
   );
 }
@@ -91,20 +105,35 @@ function buildColumnMethods(columnIndex, columnRows) {
   const methods = Object.keys(columnRows).map(rowNumber => ({
     ...columnRows[rowNumber],
     row: rowNumber,
-  })).map(rowElement => {
+  })).flatMap(rowElement => {
     const {
       circleRadius,
       circleX,
       circleY,
     } = methodPosition(columnIndex, rowElement.row);
-    return {
-      type: 'circle',
-      x: circleX,
-      y: circleY,
-      radius: circleRadius,
-      fill: rowElement.status === 'new' ? 'blue' : (rowElement.status === 'changed' ? 'green' : 'gray'),
-      payload: {},
-    };
+    const result = [
+      {
+        type: 'circle',
+        x: circleX,
+        y: circleY,
+        radius: circleRadius,
+        fill: rowElement.status === 'new' ? 'blue' : (rowElement.status === 'changed' ? 'green' : 'gray'),
+        payload: {},
+      },
+    ];
+    if (rowElement.status === 'semi-changed') {
+      result.push({
+        type: 'arc',
+        x: circleX,
+        y: circleY,
+        innerRadius: 0,
+        outerRadius: circleRadius,
+        angle: 180,
+        rotation: 90,
+        fill: 'green',
+      });
+    }
+    return result;
   });
   return {
     methods,

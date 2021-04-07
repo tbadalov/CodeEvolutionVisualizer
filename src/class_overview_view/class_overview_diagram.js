@@ -32,7 +32,6 @@ class ClassOverviewDiagram extends React.Component {
 
   onScroll(e) {
     const { scrollLeft, scrollTop } = e.target;
-    console.log(e);
     this.columnTitlesScrollContainerRef.current.scrollTo(scrollLeft, scrollTop);
     this.methodLegendScrollContainerRef.current.scrollTo(scrollLeft, scrollTop);
   }
