@@ -29,6 +29,8 @@ router.get('/', function(req, res, next) {
   OPTIONAL MATCH (app)-[APP_OWNS_CLASS]->(c:Class)-[:CLASS_OWNS_METHOD]->(m:Method)
     WHERE c.name = '` + req.query.className +`'
   OPTIONAL MATCH (app)<-[:CHANGED_TO]-(previousApp:App)-[:APP_OWNS_CLASS]->(:Class)-[:CLASS_OWNS_METHOD]->(m)
+  OPTIONAL MATCH (app)<-[:CHANGED_TO]-(mergedApp:App)
+    WHERE mergedApp.branch <> app.branch
   OPTIONAL MATCH (m)-[changed_to:CHANGED_TO]->(new_method:Method)
   OPTIONAL MATCH (m)<-[changed_from:CHANGED_TO]-(old_method:Method)
   OPTIONAL MATCH (m)-[:CALLS]->(called_method:Method)<-[:CLASS_OWNS_METHOD]-(c)
@@ -37,6 +39,7 @@ router.get('/', function(req, res, next) {
     previousApp,
     new_method,
     old_method,
+    collect(mergedApp.branch) as merged_branches,
     collect(called_method.name) as calls
   WITH app.commit as commitHash,
     app.branch as branchName,
@@ -44,6 +47,7 @@ router.get('/', function(req, res, next) {
     app.version_number as version,
     m.name as methodName,
     calls,
+    merged_branches,
     CASE
       WHEN m IS NULL THEN NULL
       WHEN previousApp IS NOT NULL THEN 'same'
@@ -54,6 +58,7 @@ router.get('/', function(req, res, next) {
     branchName,
     timestamp,
     version,
+    merged_branches,
     CASE
       WHEN methodName IS NULL THEN []
       ELSE collect({status: status, name: methodName, calls: calls})
