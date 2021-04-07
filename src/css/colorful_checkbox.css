@@ -15,12 +15,21 @@
   margin-right: 10px;
 }
 
-.colorful-checkbox > input[type="checkbox"]:checked + label:after {
+.colorful-checkbox-checked > input[type="checkbox"]:checked + label:after {
   position: relative;
   top: -4px;
   left: 2px;
   content: '\2714';
   line-height: 20px;
+}
+
+.colorful-checkbox-indeterminate > input[type="checkbox"]:checked + label:after {
+  position: relative;
+  top: -4px;
+  left: 2px;
+  content: '\2012';
+  line-height: 20px;
+  font-weight: 1000;
 }
 
 .colorful-checkbox > input[type="checkbox"] {

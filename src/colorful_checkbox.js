@@ -14,14 +14,17 @@ class ColorfulCheckbox extends React.PureComponent {
     super(props);
   }
 
-  componentDidMount() {
-  }
-
   render() {
     const randomUuid = uuidv4();
+    const classNames = ['colorful-checkbox'];
+    if (this.props.checked) {
+      classNames.push('colorful-checkbox-checked');
+    } else if (this.props.indeterminate) {
+      classNames.push('colorful-checkbox-indeterminate');
+    }
     return(
-      <div className="colorful-checkbox">
-        <input type="checkbox" id={randomUuid} defaultChecked={this.props.checked || false} onChange={this.props.onChange} />
+      <div className={classNames.join(' ')}>
+        <input type="checkbox" id={randomUuid} defaultChecked={this.props.checked || this.props.indeterminate || false} onChange={this.props.onChange} />
         <label htmlFor={randomUuid} style={{border: '5px solid ' + (this.props.color || '#000')}}></label>
         <p>{this.props.label}</p>
       </div>
