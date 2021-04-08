@@ -107,6 +107,8 @@ class ClassOverviewDataConverter {
     if (groupedData.columns.length > 0) {
       resultingColumns.push({
         ...groupedData.columns[0],
+        isAggregation: false,
+        aggregatedColumns: [],
       });
     }
     for (let i = 1; i < groupedData.columns.length; i++) {
@@ -119,10 +121,14 @@ class ClassOverviewDataConverter {
       if (mergedRowNumbers.length > Object.keys(prevColumn.row).length || mergedRowNumbers.length > Object.keys(currentColumn.row).length) {
         resultingColumns.push({
           ...currentColumn,
+          isAggregation: false,
+          aggregatedColumns: [],
         });
       } else if (Object.entries(mergedRowsData).some(([rowNumber,]) => prevColumn.row[rowNumber].status !== currentColumn.row[rowNumber].status)) {
         resultingColumns.push({
           ...currentColumn,
+          isAggregation: false,
+          aggregatedColumns: [],
         })
       } else if (resultingColumns[resultingColumns.length-1].isAggregation) {
         resultingColumns[resultingColumns.length-1].aggregatedColumns.push({
@@ -130,11 +136,9 @@ class ClassOverviewDataConverter {
         });
       } else {
         resultingColumns[resultingColumns.length-1].isAggregation = true;
-        resultingColumns[resultingColumns.length-1].aggregatedColumns = [
-          {
+        resultingColumns[resultingColumns.length-1].aggregatedColumns.push({
             ...prevColumn,
-          },
-        ];
+        });
       }
     }
     return {

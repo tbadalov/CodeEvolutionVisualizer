@@ -1,4 +1,4 @@
-const { useContext, useEffect } = require('react');
+const { useContext, useEffect, useState } = require('react');
 const React = require('react');
 const ReactKonva = require('react-konva');
 const GeneralDiagram = require('../general_diagram');
@@ -17,10 +17,16 @@ const defaultStageProps = {
 
 function ClassOverviewColumnTitles(props) {
   const largeContainerRef = props.largeContainerRef || React.createRef();
+  const [cursorStyle, setCursorStyle] = useState('auto');
   const [columnTitlesStageProps,, setStageWidth] = usePrimitiveDiagramProps(defaultStageProps);
   const { branchToColorMapping } = useContext(ColorContext);
-  const columnTitlesVisualData = convertToVisualData(props.columnTitles, branchToColorMapping);
-  const konvaShapes = drawColumnTitles(columnTitlesVisualData);
+  const columnTitlesVisualData = convertToVisualData(props.columnTitles, {
+    branchToColorMapping,
+  });
+  const konvaShapes = drawColumnTitles(columnTitlesVisualData, {
+    setCursorStylePointer: setCursorStyle.bind(null, 'pointer'),
+    setCursorStyleAuto: setCursorStyle.bind(null, 'auto'),
+  });
   const onDraw = () => konvaShapes;
   const stageWidth = calculateStageWidth(columnTitlesVisualData.length);
   useEffect(
@@ -43,19 +49,23 @@ function ClassOverviewColumnTitles(props) {
         largeContainerRef={largeContainerRef}
         scrollContainerRef={props.scrollContainerRef}
         primitiveDiagramProps={columnTitlesStageProps}
+        cursorStyle={cursorStyle}
         onDraw={onDraw} />
     </React.Fragment>
   )
 }
 
-function convertToVisualData(columnTitles, branchToColorMapping) {
+function convertToVisualData(columnTitles, params) {
   return columnTitles
-    .map(buildColumnTitle.bind(null, branchToColorMapping));
+    .map(buildColumnTitle.bind(null, params));
 }
 
-function buildColumnTitle(branchToColorMapping, columnTitleData, columnIndex) {
+function buildColumnTitle(params, columnTitleData, columnIndex) {
+  const {
+    branchToColorMapping,
+  } = params;
   const title = columnTitleData.commitHash;
-  const columnTitleText = title.substr(0, 8);
+  const columnTitleText = columnTitleData.isAggregation ? '       ...' : title.substr(0, 8);
   const columnTitlePositionResult = columnTitlePosition(columnIndex, columnTitleText);
   columnTitlePositionResult.frame = {
     type: 'rect',
@@ -71,18 +81,31 @@ function buildColumnTitle(branchToColorMapping, columnTitleData, columnIndex) {
     ...columnTitlePositionResult.text,
   };
   columnTitlePositionResult.payload = {
+    isAggregation: columnTitleData.isAggregation,
+    aggregatedColumns: columnTitleData.aggregatedColumns,
     columnIndex,
   };
   return columnTitlePositionResult;
 }
 
-function drawColumnTitles(columnTitlesVisualData) {
-  const konvaShapes = columnTitlesVisualData.map((columnTitleVisualData, columnIndex) => (
-    <ReactKonva.Group key={`title-for-column-${columnIndex}`}>
-      <ReactKonva.Rect {...columnTitleVisualData.frame} />
-      <ReactKonva.Text {...columnTitleVisualData.text} />
-    </ReactKonva.Group>
-  ));
+function drawColumnTitles(columnTitlesVisualData, params) {
+  const {
+    setCursorStyleAuto,
+    setCursorStylePointer,
+  } = params;
+  const konvaShapes = columnTitlesVisualData.map((columnTitleVisualData, columnIndex) => {
+    const groupProps = {};
+    if (columnTitleVisualData.payload.isAggregation) {
+      groupProps.onMouseEnter = setCursorStylePointer;
+      groupProps.onMouseLeave = setCursorStyleAuto;
+    }
+    return (
+      <ReactKonva.Group key={`title-for-column-${columnIndex}`} {...groupProps}>
+        <ReactKonva.Rect {...columnTitleVisualData.frame} />
+        <ReactKonva.Text {...columnTitleVisualData.text} />
+      </ReactKonva.Group>
+    );
+  });
   return (
     <ReactKonva.Layer key='class-overview-title-layer'>
       { konvaShapes }
