@@ -101,6 +101,47 @@ class ClassOverviewDataConverter {
     }
     return data;
   }
+
+  combineColumnsWithTheSameState(groupedData) {
+    const resultingColumns = [];
+    if (groupedData.columns.length > 0) {
+      resultingColumns.push({
+        ...groupedData.columns[0],
+      });
+    }
+    for (let i = 1; i < groupedData.columns.length; i++) {
+      const [prevColumn, currentColumn] = [groupedData.columns[i-1], groupedData.columns[i]];
+      const mergedRowsData = {
+        ...prevColumn.row,
+        ...currentColumn.row,
+      };
+      const mergedRowNumbers = Object.keys(mergedRowsData);
+      if (mergedRowNumbers.length > Object.keys(prevColumn.row).length || mergedRowNumbers.length > Object.keys(currentColumn.row).length) {
+        resultingColumns.push({
+          ...currentColumn,
+        });
+      } else if (Object.entries(mergedRowsData).some(([rowNumber,]) => prevColumn.row[rowNumber].status !== currentColumn.row[rowNumber].status)) {
+        resultingColumns.push({
+          ...currentColumn,
+        })
+      } else if (resultingColumns[resultingColumns.length-1].isAggregation) {
+        resultingColumns[resultingColumns.length-1].aggregatedColumns.push({
+          ...currentColumn,
+        });
+      } else {
+        resultingColumns[resultingColumns.length-1].isAggregation = true;
+        resultingColumns[resultingColumns.length-1].aggregatedColumns = [
+          {
+            ...prevColumn,
+          },
+        ];
+      }
+    }
+    return {
+      ...groupedData,
+      columns: resultingColumns,
+    };
+  }
 }
 
 module.exports = ClassOverviewDataConverter;

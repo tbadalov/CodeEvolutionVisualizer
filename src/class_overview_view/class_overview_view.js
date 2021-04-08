@@ -97,8 +97,8 @@ class ClassOverviewView extends React.Component {
     .catch(error => console.log(error));
   }
 
-  componentDidUpdate() {
-    if (this.state.lastClassName === this.state.selectedClassName) {
+  componentDidUpdate(prevProps, prevState) {
+    if (this.state.lastClassName === this.state.selectedClassName && this.state.collapseSameCommits === prevState.collapseSameCommits) {
       return;
     }
     const diagramDataLoader = new DiagramDataLoader();
@@ -116,7 +116,7 @@ class ClassOverviewView extends React.Component {
   .then(rawData => new DataConverter().groupDataIntoCommitColumnsAndMethodRows(rawData))
   .then(groupedData => {
     console.log(groupedData);
-    return groupedData;
+    return this.state.collapseSameCommits ? new DataConverter().combineColumnsWithTheSameState(groupedData) : groupedData;
   })
   .then(groupedData => this.setState({rawData: groupedData, lastClassName: this.state.selectedClassName}))
   .catch(error => console.log(error));
