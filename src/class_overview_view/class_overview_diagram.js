@@ -69,7 +69,8 @@ class ClassOverviewDiagram extends React.Component {
       .map(([methodName]) => ({
         methodName,
       }));
-    const columnTitles = this.props.rawData ? this.props.rawData.columns : [];
+    const columnTitles = (this.props.rawData ? this.props.rawData.columns : [])
+      .filter(columnTitle => !this.props.disabledBranches[columnTitle.branchName])
     return(
       <React.Fragment>
         <ClassOverviewMethodLegend
@@ -87,7 +88,6 @@ class ClassOverviewDiagram extends React.Component {
           largeContainerRef={this.largeContainerRef}
           onDraw={this.convertDataToPrimitiveShapes} />
         <ClassOverviewColumnTitles
-          disabledBranches={this.props.disabledBranches}
           scrollContainerRef={this.columnTitlesScrollContainerRef}
           columnTitles={columnTitles} />
       </React.Fragment>
