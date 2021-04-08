@@ -70,12 +70,20 @@ class App extends React.Component {
   }
 
   addMenuItem(menuItem, priority) {
-    const menuItems = [...this.state.menuItems];
+    let menuItems = [...this.state.menuItems];
     priority = Math.min(priority || menuItems.length, menuItems.length);
     menuItems.splice(priority, 0, menuItem);
     this.setState({
       menuItems: menuItems,
     });
+    const replace = (newItem) => {
+      menuItems = [...this.state.menuItems];
+      menuItems.splice(priority, 1, newItem);
+      this.setState({
+        menuItems: menuItems,
+      });
+    }
+    return replace;
   }
 
   render() {

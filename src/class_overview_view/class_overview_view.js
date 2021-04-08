@@ -2,6 +2,7 @@ const React = require('react');
 const ClassOverviewDiagram = require('./class_overview_diagram');
 const DiagramDataLoader = require('../diagram_data_loader');
 const DataConverter = require('./data_converter');
+const Item = require('../item');
 const ItemList = require('../item_list');
 const ColorContext = require('../contexts/color_context');
 const { extractUniqueValues } = require('../utils');
@@ -11,10 +12,12 @@ class ClassOverviewView extends React.Component {
     super(props);
     this.mapContextValueToView = this.mapContextValueToView.bind(this);
     this.handleBranchFilterItemClick = this.handleBranchFilterItemClick.bind(this);
+    this.onCollapseItems = this.onCollapseItems.bind(this);
     this.state = {
       classFilterItems: [],
       branchFilterItems: [],
       disabledBranches: {},
+      collapseSameCommits: false,
     };
   }
 
@@ -27,8 +30,15 @@ class ClassOverviewView extends React.Component {
         disabledBranches={this.state.disabledBranches}
         classToColorMapping={classToColorMapping}
         branchToColorMapping={branchToColorMapping}
+        onCollapseItems={this.onCollapseItems}
         onDiagramChange={this.props.changeDiagram} />
     );
+  }
+
+  onCollapseItems() {
+    this.setState({
+      collapseSameCommits: !this.state.collapseSameCommits,
+    });
   }
 
   handleItemChange(index) {
@@ -54,6 +64,11 @@ class ClassOverviewView extends React.Component {
   }
 
   componentDidMount() {
+    this.updateContentFilter = this.props.addMenuItem(
+      <ItemList title='Content filter'>
+        <Item label='Collapse equal states' checked={this.state.collapseSameCommits} onItemChange={this.onCollapseItems} />
+      </ItemList>
+    );
     const { startCommit, endCommit } = this.props;
     const diagramDataLoader = new DiagramDataLoader();
     diagramDataLoader.load(
@@ -116,9 +131,17 @@ class ClassOverviewView extends React.Component {
   .then(rawData => new DataConverter().groupDataIntoCommitColumnsAndMethodRows(rawData))
   .then(groupedData => {
     console.log(groupedData);
+    console.log("ufanki");
     return this.state.collapseSameCommits ? new DataConverter().combineColumnsWithTheSameState(groupedData) : groupedData;
   })
-  .then(groupedData => this.setState({rawData: groupedData, lastClassName: this.state.selectedClassName}))
+  .then(groupedData => {
+    this.setState({rawData: groupedData, lastClassName: this.state.selectedClassName});
+    this.updateContentFilter(
+      <ItemList title='Content filter'>
+        <Item label='Collapse equal states' checked={this.state.collapseSameCommits} onItemChange={this.onCollapseItems} />
+      </ItemList>
+    );
+  })
   .catch(error => console.log(error));
   }
 
