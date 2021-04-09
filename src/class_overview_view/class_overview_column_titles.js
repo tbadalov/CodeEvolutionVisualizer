@@ -70,7 +70,7 @@ function buildColumnTitle(params, columnTitleData, columnIndex) {
   columnTitlePositionResult.frame = {
     type: 'rect',
     fill: '#ffffff',
-    stroke: branchToColorMapping[columnTitleData.branchName] || '#000000',
+    stroke: columnTitleData.isAggregation ? '#000000' : branchToColorMapping[columnTitleData.branchName] || '#000000',
     strokeWidth: constants.TITLE_FRAME_STROKE_WIDTH,
     ...columnTitlePositionResult.frame,
   };

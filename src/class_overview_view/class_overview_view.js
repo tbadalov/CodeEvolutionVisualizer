@@ -28,6 +28,7 @@ class ClassOverviewView extends React.Component {
         startCommit={this.props.startCommit}
         endCommit={this.props.endCommit}
         disabledBranches={this.state.disabledBranches}
+        collapseSameCommits={this.state.collapseSameCommits}
         classToColorMapping={classToColorMapping}
         branchToColorMapping={branchToColorMapping}
         onCollapseItems={this.onCollapseItems}
@@ -113,36 +114,37 @@ class ClassOverviewView extends React.Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    if (this.state.lastClassName === this.state.selectedClassName && this.state.collapseSameCommits === prevState.collapseSameCommits) {
-      return;
+    if (this.state.lastClassName !== this.state.selectedClassName) {
+      const diagramDataLoader = new DiagramDataLoader();
+      diagramDataLoader.load(
+        this.props.url,
+        {
+          className: this.state.selectedClassName,
+          startCommit: this.props.startCommit,
+          endCommit: this.props.endCommit,
+        }
+      ).then(rawData => {
+        console.log(rawData);
+        return rawData;
+      })
+      .then(rawData => new DataConverter().groupDataIntoCommitColumnsAndMethodRows(rawData))
+      .then(groupedData => {
+        console.log(groupedData);
+        return groupedData;
+      })
+      .then(groupedData => {
+        this.setState({rawData: groupedData, lastClassName: this.state.selectedClassName});
+      })
+      .catch(error => console.log(error));
     }
-    const diagramDataLoader = new DiagramDataLoader();
-    diagramDataLoader.load(
-      this.props.url,
-      {
-        className: this.state.selectedClassName,
-        startCommit: this.props.startCommit,
-        endCommit: this.props.endCommit,
-      }
-    ).then(rawData => {
-    console.log(rawData);
-    return rawData;
-  })
-  .then(rawData => new DataConverter().groupDataIntoCommitColumnsAndMethodRows(rawData))
-  .then(groupedData => {
-    console.log(groupedData);
-    console.log("ufanki");
-    return this.state.collapseSameCommits ? new DataConverter().combineColumnsWithTheSameState(groupedData) : groupedData;
-  })
-  .then(groupedData => {
-    this.setState({rawData: groupedData, lastClassName: this.state.selectedClassName});
-    this.updateContentFilter(
-      <ItemList title='Content filter'>
-        <Item label='Collapse equal states' checked={this.state.collapseSameCommits} onItemChange={this.onCollapseItems} />
-      </ItemList>
-    );
-  })
-  .catch(error => console.log(error));
+
+    if (this.state.collapseSameCommits !== prevState.collapseSameCommits) {
+      this.updateContentFilter(
+        <ItemList title='Content filter'>
+          <Item label='Collapse equal states' checked={this.state.collapseSameCommits} onItemChange={this.onCollapseItems} />
+        </ItemList>
+      );
+    }
   }
 
   handleItemClick() {

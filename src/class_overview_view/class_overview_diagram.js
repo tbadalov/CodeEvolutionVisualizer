@@ -5,6 +5,7 @@ const ClassOverviewMethodLegend = require('./class_overview_method_legend');
 const ClassOverviewColumnTitles = require('./class_overview_column_titles');
 const constants = require('./constants');
 const { columnTotalTitleFramHeight, columnTotalTitleFrameHeight } = require('./class_overview_diagram_positioner');
+const ClassOverviewDataConverter = require('./data_converter');
 
 class ClassOverviewDiagram extends React.Component {
   constructor(props) {
@@ -37,9 +38,14 @@ class ClassOverviewDiagram extends React.Component {
   }
 
   componentDidUpdate(prevProps) {
-    if (this.props.rawData !== prevProps.rawData || this.props.branchToColorMapping !== prevProps.branchToColorMapping || this.props.disabledBranches !== prevProps.disabledBranches) {
+    if (this.props.rawData !== prevProps.rawData || this.props.branchToColorMapping !== prevProps.branchToColorMapping || this.props.disabledBranches !== prevProps.disabledBranches || this.props.collapseSameCommits !== prevProps.collapseSameCommits) {
+      let rawData = {
+        ...this.props.rawData,
+      };
+      rawData.columns = rawData.columns.filter(columnData => !this.props.disabledBranches[columnData.branchName]);
+      rawData = this.props.collapseSameCommits ? new ClassOverviewDataConverter().combineColumnsWithTheSameState(rawData) : rawData;
       const drawResult = draw(
-          this.props.rawData,
+          rawData,
           (commit) => {
             this.props.onDiagramChange('callVolumeView', {label: commit, classToColorMapping: this.props.classToColorMapping});
           },
@@ -51,6 +57,7 @@ class ClassOverviewDiagram extends React.Component {
       this.largeContainerRef.current.style.height = drawResult.stageSize.height + 'px';
       this.convertDataToPrimitiveShapes = () => drawResult.primitiveShapes;
       this.setState({
+          processedData: rawData,
           primitiveDiagramProps: {
               ...this.state.primitiveDiagramProps,
               stageProps: {
@@ -63,13 +70,13 @@ class ClassOverviewDiagram extends React.Component {
   }
 
   render() {
-    const methodNameToRowNumberMapping = this.props.rawData ? this.props.rawData.methodNameToRowNumberMapping : {};
+    const methodNameToRowNumberMapping = this.state.processedData ? this.state.processedData.methodNameToRowNumberMapping : {};
     const methods = Object.entries(methodNameToRowNumberMapping)
       .sort(([, methodRow1], [, methodRow2]) => methodRow1 - methodRow2)
       .map(([methodName]) => ({
         methodName,
       }));
-    const columnTitles = (this.props.rawData ? this.props.rawData.columns : [])
+    const columnTitles = (this.state.processedData ? this.state.processedData.columns : [])
       .filter(columnTitle => !this.props.disabledBranches[columnTitle.branchName])
     return(
       <React.Fragment>
