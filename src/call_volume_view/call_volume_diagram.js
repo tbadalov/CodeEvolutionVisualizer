@@ -3,6 +3,7 @@ const CallVolumeDiagramSketcher = require('./call_volume_diagram_sketcher');
 const Konva = require('konva');
 const SwitchCommitButton = require('./buttons/switch_commit_button');
 const PlayButton = require('./buttons/play_button');
+const GeneralDiagram = require('../general_diagram');
 
 const scale = 5;
 const circleMarginX = 6;
@@ -60,12 +61,6 @@ function updateSize() {
 class CallVolumeDiagram extends React.Component {
   constructor(props) {
     super(props);
-    this.diagramContainerRef = React.createRef();
-    this.scrollContainerRef = React.createRef();
-    this.largeContainerRef = React.createRef();
-    this.state = {
-      selectedCommit: this.props.selectedCommit,
-    };
     this.callVolumeDiagramSketcher = new CallVolumeDiagramSketcher(this.props.rawData, this.props.classToColorMapping);
   }
 
@@ -144,21 +139,11 @@ class CallVolumeDiagram extends React.Component {
       this.forceUpdate();
       };
     return(
-      <div
-        className="scroll-container"
-        ref={this.scrollContainerRef} >
-        <div
-          className="large-container"
-          ref={this.largeContainerRef} >
-          <div
-            className="container"
-            ref={this.diagramContainerRef} >
-          </div>
-        </div>
+      <GeneralDiagram>
         <SwitchCommitButton direction='prev' onSwitchCommitButtonClick={randomDiagramGenerator} />
         <SwitchCommitButton direction='next' onSwitchCommitButtonClick={randomDiagramGenerator} />
         <PlayButton />
-      </div>
+      </GeneralDiagram>
     );
   }
 }
