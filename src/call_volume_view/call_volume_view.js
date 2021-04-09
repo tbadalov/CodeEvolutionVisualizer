@@ -141,7 +141,7 @@ class CallVolumeView extends React.Component {
     rawData.commits[this.props.selectedCommit] = rawData.commits.hhffee;
     this.state = {
       rawData: rawData,
-      selectedCommit: this.props.selectedCommit || 'hhffee',
+      selectedCommit: undefined,
     };
     console.log(props);
   }
@@ -173,7 +173,10 @@ class CallVolumeView extends React.Component {
         color: this.context.classToColorMapping[className],
         checked: this.props.selectedClassNames.includes(className),
       }));
-      this.props.addMenuItem(
+      this.setState({
+          classFilterItems: items,
+      });
+      this.updateMenuItem = this.props.addMenuItem(
         <ItemList items={items} onItemChange={this.handleItemChange}/>
       );
       //this.setState({items: items});
@@ -181,6 +184,34 @@ class CallVolumeView extends React.Component {
       return classNames[0];
     })
     .catch(error => console.log(error));
+    this.setState({
+        selectedCommit: this.props.selectedCommit,
+    });
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    if (this.state.classFilterItems !== prevState.classFilterItems) {
+        if (this.updateMenuItem) {
+            this.updateMenuItem(
+                <ItemList items={this.state.classFilterItems} onItemChange={this.handleItemChange}/>
+            );
+        }
+    }
+    if (this.state.selectedCommit !== prevState.selectedCommit) {
+        const diagramDataLoader = new DiagramDataLoader();
+        diagramDataLoader.load(
+            this.props.url,
+            {
+                commit: this.state.selectedCommit,
+            }
+        ).then(classes => {
+            this.setState({
+                rawData: classes,
+            });
+            console.log(classes);
+        })
+        .catch(error => console.log(error));
+    }
   }
 
   render() {
