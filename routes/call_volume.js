@@ -6,22 +6,47 @@ var router = express.Router();
 router.get('/', function(req, res, next) {
   const driver = neo4j.driver(neo4jconfig.uri, neo4j.auth.basic(neo4jconfig.user, neo4jconfig.password));
   const session = driver.session();
-  const dataFromDb = [];
-  session.run(`
-    MATCH (app:App)-[:APP_OWNS_CLASS]->(class:Class)-[:CLASS_OWNS_METHOD]->(m:Method)
-    WHERE app.commit='` + req.query.commit + `'
-    WITH class, m, toInteger(rand() * 10) as callAmount
-    RETURN class.name as className, collect({ method: m.name, callAmount: callAmount }) as calledMethods, sum(callAmount) as totalCallAmount
-    ORDER BY totalCallAmount
-  `).subscribe({
-    onNext: record => {
-      dataFromDb.push({
-        class: record.get('className'),
-        methods: record.get('calledMethods').map(calledMethod => { calledMethod.callAmount = calledMethod.callAmount.low; return calledMethod; }),
-        totalCallAmount: record.get('totalCallAmount').low,
+  let dataFromDb = {};
+  const query = `
+  MATCH (app:App)-[:APP_OWNS_CLASS]->(class:Class)-[:CLASS_OWNS_METHOD]->(m:Method)
+  WHERE app.commit='` + req.query.commit + `'
+  OPTIONAL MATCH (caller_class:Class)-[:CLASS_OWNS_METHOD]->(caller:Method)-[:CALLS]->(m)
+    WHERE (app)-[:APP_OWNS_CLASS]->(caller_class)
+  WITH class,
+    m,
+    caller_class,
+    caller.name as caller_name,
+    count(caller) as number_of_calls
+  WITH class,
+    m,
+    caller_class,
+    collect({callerMethodName: caller_name, number_of_calls: number_of_calls}) as caller_methods
+  WITH class,
+    m,
+    CASE
+      WHEN caller_class IS NULL THEN []
+      ELSE collect({
+        callerClassName: caller_class.name,
+        callerMethods: caller_methods
       })
+	END as callers
+  WITH class.name as className,
+    collect({
+      methodName: m.name,
+      callers: callers
+    }) as methods
+  RETURN collect({
+    className: className,
+    methods: methods
+  }) as classes
+  `;
+  console.log(query);
+  session.run(query).subscribe({
+    onNext: record => {
+      dataFromDb = record.get('classes');
     },
     onCompleted: () => {
+      console.log(dataFromDb);
       res.setHeader('Content-Type', 'application/json');
       res.end(JSON.stringify(dataFromDb));
     }
