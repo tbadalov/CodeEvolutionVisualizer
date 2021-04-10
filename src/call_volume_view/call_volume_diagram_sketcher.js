@@ -195,11 +195,19 @@ function drawBranches(branches) {
   return branchKonvaShapes;
 }
 
-export function draw(visualData) {
+export function draw(visualData, params) {
+  const {
+    layerRef,
+    key
+  } = params;
+  console.log(params);
   const branchKonvaShapes = drawBranches(visualData);
-  return (
-    <ReactKonva.Layer key='call-volume-layer'>
+  return [
+    <ReactKonva.Layer
+      key={`${key}-call-volume-layer`}
+      opacity={key === 'prev' ? 1 : 0 }
+      ref={layerRef}>
       { branchKonvaShapes }
     </ReactKonva.Layer>
-  );
+  ];
 }

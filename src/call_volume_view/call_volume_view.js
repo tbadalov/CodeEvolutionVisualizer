@@ -130,6 +130,7 @@ class CallVolumeView extends React.Component {
     super(props);
     this.mapContextValueToView = this.mapContextValueToView.bind(this);
     this.handleItemChange = this.handleItemChange.bind(this);
+    this.switchCommit = this.switchCommit.bind(this);
     this.state = {
       rawData: undefined,
       selectedCommit: undefined,
@@ -149,8 +150,31 @@ class CallVolumeView extends React.Component {
         previousCommitHash={this.state.rawData && this.state.rawData.previousCommitHash}
         nextCommitHash={this.state.rawData && this.state.rawData.nextCommitHash}
         selectedClassNames={this.props.selectedClassNames}
+        switchCommit={this.switchCommit}
         classToColorMapping={classToColorMapping} />
     );
+  }
+
+  switchCommit(commitHash) {
+    this.setState({
+        selectedCommit: commitHash,
+    });
+  }
+
+  loadCommit() {
+    const diagramDataLoader = new DiagramDataLoader();
+    diagramDataLoader.load(
+        this.props.url,
+        {
+            commit: this.state.selectedCommit,
+        }
+    ).then(rawData => {
+        this.setState({
+            rawData: rawData,
+        });
+        console.log(rawData);
+    })
+    .catch(error => console.log(error));
   }
 
   componentDidMount() {
@@ -191,19 +215,7 @@ class CallVolumeView extends React.Component {
         }
     }
     if (this.state.selectedCommit !== prevState.selectedCommit) {
-        const diagramDataLoader = new DiagramDataLoader();
-        diagramDataLoader.load(
-            this.props.url,
-            {
-                commit: this.state.selectedCommit,
-            }
-        ).then(rawData => {
-            this.setState({
-                rawData: rawData,
-            });
-            console.log(rawData);
-        })
-        .catch(error => console.log(error));
+        this.loadCommit();
     }
   }
 

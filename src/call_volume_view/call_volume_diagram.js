@@ -109,7 +109,11 @@ class CallVolumeDiagram extends React.Component {
   constructor(props) {
     super(props);
     this.scrollContainerRef = React.createRef();
+    this.previousLayerRef = React.createRef();
+    this.currentLayerRef = React.createRef();
     this.onWheel = this.onWheel.bind(this);
+    this.onSwitchButtonClicked = this.onSwitchButtonClicked.bind(this);
+    this.onDraw = this.onDraw.bind(this);
     this.state = {
       primitiveDiagramProps: {
         stageProps: {
@@ -122,6 +126,18 @@ class CallVolumeDiagram extends React.Component {
         },
       },
     };
+  }
+
+  onDraw() {
+    return this.state.shapesToDraw;
+  }
+
+  onSwitchButtonClicked(direction) {
+    if (direction === 'prev') {
+      this.props.switchCommit(this.props.previousCommitHash);
+    } else if (direction === 'next') {
+      this.props.switchCommit(this.props.nextCommitHash);
+    }
   }
 
   onWheel(e) {
@@ -169,28 +185,108 @@ class CallVolumeDiagram extends React.Component {
     });
   }
 
+  removePreviousLayer() {
+    this.setState({
+      shapesToDraw: this.state.currentLayerShapes,
+    });
+  }
+
+  isAnimationFinished(prevState) {
+    return this.state.isAnimationFinished && this.state.isAnimationFinished !== prevState.isAnimationFinished;
+  }
+
+  isDataNotAvailableYet() {
+    return this.props.rawData === undefined;
+  }
+
+  convertRawDataToVisualShapes(filteredRawData, params) {
+    const visualizationData = convertToVisualizationData(filteredRawData, {
+      classToColorMapping: this.props.classToColorMapping,
+      ...params.visualizationParams,
+    });
+    const konvaShapes = draw(visualizationData, params.drawParams);
+    return konvaShapes;
+  }
+
+  buildPreviousCommitLayer(filteredRawData) {
+    this.previousLayerRef = React.createRef();
+    const prevKonvaShapes = this.convertRawDataToVisualShapes(
+      filteredRawData,
+      {
+        drawParams: {
+          layerRef: this.previousLayerRef,
+          key: 'prev',
+        },
+      }
+    );
+    return prevKonvaShapes;
+  }
+
+  buildCurrentCommitLayer(filteredRawData) {
+    this.currentLayerRef = React.createRef();
+    const currentKonvaShapes = this.convertRawDataToVisualShapes(
+      filteredRawData,
+      {
+        drawParams: {
+          layerRef: this.currentLayerRef,
+          key: 'current',
+        },
+      }
+    )
+    return currentKonvaShapes;
+  }
+
+  filterRawData(originalRawData={}) {
+    const filteredRawData = (originalRawData.classes || [])
+      .filter(classRecord => classRecord.totalCallAmount > 0)
+      .map(classRecord => {
+        classRecord.methods = classRecord.methods.sort((method1, method2) => method1.totalCallAmount - method2.totalCallAmount);
+        return classRecord;
+      }).sort((classRecord1, classRecord2) => classRecord1.className.localeCompare(classRecord2.className));
+    return filteredRawData;
+  }
+
   componentDidUpdate(prevProps, prevState) {
-    if (this.props.rawData === undefined) {
+    if (this.isDataNotAvailableYet()) {
       return;
     }
 
+    if (this.isAnimationFinished(prevState)) {
+      this.removePreviousLayer();
+    }
+
     if (this.props.rawData !== prevProps.rawData) {
-      console.log(this.props.rawData);
-      const rawData = this.props.rawData.classes
-        .filter(classRecord => classRecord.totalCallAmount > 0)
-        .map(classRecord => {
-          classRecord.methods = classRecord.methods.sort((method1, method2) => method1.totalCallAmount - method2.totalCallAmount);
-          return classRecord;
-        });
-      const visualizationData = convertToVisualizationData(rawData, {
+      console.log(prevProps.rawData);
+      const previousLayerData = this.filterRawData(prevProps.rawData);
+      const currentLayerData = this.filterRawData(this.props.rawData);
+      const currentCommitLayer = this.buildCurrentCommitLayer(currentLayerData);
+      const diagramLayers = this.buildPreviousCommitLayer(previousLayerData).concat(currentCommitLayer);
+      this.setState({
+        shapesToDraw: diagramLayers,
+        isAnimationNeeded: true,
+        isAnimationFinished: false,
+        currentLayerShapes: currentCommitLayer,
+      });
+      const visualizationData = convertToVisualizationData(currentLayerData, {
         classToColorMapping: this.props.classToColorMapping,
       });
-      console.log(visualizationData);
-      const konvaShapes = draw(visualizationData);
-      this.onDraw = () => {
-        return konvaShapes;
+      if (shouldAdaptCamera) {
+        this.positionCameraToCenterAtFirstLoad(currentLayerData, visualizationData);
       }
-      this.positionCameraToCenterAtFirstLoad(rawData, visualizationData);
+    } else if (this.state.isAnimationNeeded) {
+      this.previousLayerRef.current.to({opacity: 0});
+      const layerRefAtAnimationStart = this.currentLayerRef;
+      this.currentLayerRef.current.to({
+        opacity: 1,
+        onFinish: () => {
+          if (this.currentLayerRef === layerRefAtAnimationStart) {
+            this.setState({
+              isAnimationNeeded: false,
+              isAnimationFinished: true,
+            });
+          }
+        }
+      });
     }
   }
 
@@ -221,8 +317,8 @@ class CallVolumeDiagram extends React.Component {
         onWheel={this.onWheel}
         scrollContainerRef={this.scrollContainerRef}
         onDraw={this.onDraw}>
-        { this.props.previousCommitHash ? <SwitchCommitButton direction='prev' onSwitchCommitButtonClick={()=>{}} /> : null }
-        { this.props.nextCommitHash ? <SwitchCommitButton direction='next' onSwitchCommitButtonClick={()=>{}} /> : null }
+        { this.props.previousCommitHash ? <SwitchCommitButton direction='prev' onSwitchCommitButtonClick={this.onSwitchButtonClicked} /> : null }
+        { this.props.nextCommitHash ? <SwitchCommitButton direction='next' onSwitchCommitButtonClick={this.onSwitchButtonClicked} /> : null }
         <PlayButton />
       </GeneralDiagram>
     );
