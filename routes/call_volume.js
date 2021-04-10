@@ -20,19 +20,23 @@ router.get('/', function(req, res, next) {
   WITH class,
     m,
     caller_class,
-    collect({callerMethodName: caller_name, number_of_calls: number_of_calls}) as caller_methods
+    collect({callerMethodName: caller_name, number_of_calls: toString(number_of_calls)}) as caller_methods,
+    sum(number_of_calls) as total_calls
   WITH class,
     m,
     CASE
       WHEN caller_class IS NULL THEN []
       ELSE collect({
         callerClassName: caller_class.name,
+        totalCalls: toString(total_calls),
         callerMethods: caller_methods
       })
-	END as callers
+    END as callers,
+    sum(total_calls) as total_calls
   WITH class.name as className,
     collect({
       methodName: m.name,
+      totalCalls: toString(total_calls),
       callers: callers
     }) as methods
   RETURN collect({
