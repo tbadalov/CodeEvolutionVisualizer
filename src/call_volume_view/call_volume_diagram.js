@@ -170,9 +170,13 @@ class CallVolumeDiagram extends React.Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    if (this.props.rawData !== prevProps.rawData || this.state.primitiveDiagramProps !== prevState.primitiveDiagramProps) {
+    if (this.props.rawData === undefined) {
+      return;
+    }
+
+    if (this.props.rawData !== prevProps.rawData) {
       console.log(this.props.rawData);
-      const rawData = this.props.rawData
+      const rawData = this.props.rawData.classes
         .filter(classRecord => classRecord.totalCallAmount > 0)
         .map(classRecord => {
           classRecord.methods = classRecord.methods.sort((method1, method2) => method1.totalCallAmount - method2.totalCallAmount);
@@ -207,22 +211,18 @@ class CallVolumeDiagram extends React.Component {
           },
         },
       });
-      shouldAdaptCamera = this.props.rawData.length === 0;
+      shouldAdaptCamera = this.props.rawData.classes.length === 0;
     }
   }
 
   render() {
-    const randomDiagramGenerator = () => {
-      this.props.rawData.commits[this.state.selectedCommit].classesArray = shuffle(this.props.rawData.commits[this.state.selectedCommit].classesArray);
-      this.forceUpdate();
-      };
     return(
       <GeneralDiagram {...this.state}
         onWheel={this.onWheel}
         scrollContainerRef={this.scrollContainerRef}
         onDraw={this.onDraw}>
-        <SwitchCommitButton direction='prev' onSwitchCommitButtonClick={randomDiagramGenerator} />
-        <SwitchCommitButton direction='next' onSwitchCommitButtonClick={randomDiagramGenerator} />
+        { this.props.previousCommitHash ? <SwitchCommitButton direction='prev' onSwitchCommitButtonClick={()=>{}} /> : null }
+        { this.props.nextCommitHash ? <SwitchCommitButton direction='next' onSwitchCommitButtonClick={()=>{}} /> : null }
         <PlayButton />
       </GeneralDiagram>
     );

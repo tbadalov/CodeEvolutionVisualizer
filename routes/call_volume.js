@@ -8,21 +8,47 @@ router.get('/', function(req, res, next) {
   const session = driver.session();
   let dataFromDb = {};
   const query = `
-  MATCH (app:App)-[:APP_OWNS_CLASS]->(class:Class)-[:CLASS_OWNS_METHOD]->(m:Method)
-  WHERE app.commit='` + req.query.commit + `'
+  MATCH (app:App)
+    WHERE app.branch='master' OR app.branch="master\\\\n"
+  WITH app as last_commit
+  ORDER BY app.timestamp DESC
+  LIMIT 1
+  MATCH (app:App)
+    WHERE app.commit='` + req.query.commit + `'
+  OPTIONAL MATCH (next_commit:App)<-[:CHANGED_TO]-(app)
+    WHERE (next_commit)-[:CHANGED_TO*0..]->(last_commit)
+  WITH app, next_commit
+  ORDER BY next_commit.timestamp ASC
+  LIMIT 1
+  OPTIONAL MATCH (prev_commit:App)-[:CHANGED_TO]->(app)
+  WITH app,
+    prev_commit,
+    next_commit
+  ORDER BY prev_commit.timestamp DESC
+  LIMIT 1
+  MATCH (app)-[:APP_OWNS_CLASS]->(class:Class)-[:CLASS_OWNS_METHOD]->(m:Method)
   OPTIONAL MATCH (caller_class:Class)-[:CLASS_OWNS_METHOD]->(caller:Method)-[:CALLS]->(m)
     WHERE (app)-[:APP_OWNS_CLASS]->(caller_class)
-  WITH class,
+  WITH app,
+    prev_commit,
+    next_commit,
+    class,
     m,
     caller_class,
     caller.name as caller_name,
     count(caller) as number_of_calls
-  WITH class,
+  WITH app,
+    prev_commit,
+    next_commit,
+    class,
     m,
     caller_class,
     collect({callerMethodName: caller_name, number_of_calls: toString(number_of_calls)}) as caller_methods,
     sum(number_of_calls) as total_calls
-  WITH class,
+  WITH app,
+    prev_commit,
+    next_commit,
+    class,
     m,
     CASE
       WHEN caller_class IS NULL THEN []
@@ -33,14 +59,20 @@ router.get('/', function(req, res, next) {
       })
     END as callers,
     sum(total_calls) as total_calls
-  WITH class.name as className,
+  WITH app,
+    prev_commit,
+    next_commit,
+    class.name as className,
     collect({
       methodName: m.name,
       totalCallAmount: toString(total_calls),
       callers: callers
     }) as methods,
     sum(total_calls) as total_calls
-  RETURN collect({
+  RETURN app.commit as commitHash,
+  prev_commit.commit as previousCommitHash,
+  next_commit.commit as nextCommitHash,
+  collect({
     className: className,
     totalCallAmount: toString(total_calls),
     methods: methods
@@ -49,7 +81,12 @@ router.get('/', function(req, res, next) {
   console.log(query);
   session.run(query).subscribe({
     onNext: record => {
-      dataFromDb = record.get('classes');
+      dataFromDb = {
+        commitHash: record.get('commitHash'),
+        previousCommitHash: record.get('previousCommitHash'),
+        nextCommitHash: record.get('nextCommitHash'),
+        classes: record.get('classes'),
+      };
     },
     onCompleted: () => {
       console.log(dataFromDb);

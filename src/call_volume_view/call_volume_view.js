@@ -131,7 +131,7 @@ class CallVolumeView extends React.Component {
     this.mapContextValueToView = this.mapContextValueToView.bind(this);
     this.handleItemChange = this.handleItemChange.bind(this);
     this.state = {
-      rawData: [],
+      rawData: undefined,
       selectedCommit: undefined,
     };
     console.log(props);
@@ -146,6 +146,8 @@ class CallVolumeView extends React.Component {
       <CallVolumeDiagram
         rawData={this.state.rawData}
         selectedCommit={this.state.selectedCommit}
+        previousCommitHash={this.state.rawData && this.state.rawData.previousCommitHash}
+        nextCommitHash={this.state.rawData && this.state.rawData.nextCommitHash}
         selectedClassNames={this.props.selectedClassNames}
         classToColorMapping={classToColorMapping} />
     );
@@ -195,11 +197,11 @@ class CallVolumeView extends React.Component {
             {
                 commit: this.state.selectedCommit,
             }
-        ).then(classes => {
+        ).then(rawData => {
             this.setState({
-                rawData: classes,
+                rawData: rawData,
             });
-            console.log(classes);
+            console.log(rawData);
         })
         .catch(error => console.log(error));
     }
