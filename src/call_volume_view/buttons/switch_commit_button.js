@@ -36,7 +36,6 @@ class SwitchCommitButton extends React.PureComponent {
     return(
       <a
         className={ classNames.join(' ') }
-        href="#"
         onClick={ () => this.props.onSwitchCommitButtonClick(direction) } >
         { direction == 'prev' ? '<' : '>' }
       </a>
