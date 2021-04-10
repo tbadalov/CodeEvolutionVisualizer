@@ -23,7 +23,6 @@ const floors = [];
 export function convertToVisualizationData(
   classesArray,
   {
-    stageSize,
     classToColorMapping,
   }
 ) {
@@ -32,7 +31,7 @@ export function convertToVisualizationData(
   }
 
   const branches = [];
-  const diagramPositioner = new CallVolumeDiagramPositioner(classesArray, stageSize);
+  const diagramPositioner = new CallVolumeDiagramPositioner(classesArray);
   window.diagramPositioner = diagramPositioner;
   for (let i = 0; i < classesArray.length; i++) {
     const classData = classesArray[i];

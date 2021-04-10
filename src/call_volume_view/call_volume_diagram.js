@@ -113,6 +113,7 @@ class CallVolumeDiagram extends React.Component {
           ...this.state.primitiveDiagramProps.stageProps,
           width: this.scrollContainerRef.current.clientWidth,
           height: this.scrollContainerRef.current.clientHeight,
+          x: this.scrollContainerRef.current.clientWidth/2,
         },
       },
     });
@@ -122,7 +123,6 @@ class CallVolumeDiagram extends React.Component {
     if (this.props.rawData !== prevProps.rawData || this.state.primitiveDiagramProps !== prevState.primitiveDiagramProps) {
       console.log(this.props.rawData);
       const visualizationData = convertToVisualizationData(this.props.rawData, {
-        stageSize: this.state.primitiveDiagramProps.stageProps,
         classToColorMapping: this.props.classToColorMapping,
       });
       console.log(visualizationData);

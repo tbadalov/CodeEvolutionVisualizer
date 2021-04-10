@@ -17,14 +17,14 @@ const INIT_STEM_LENGTH = 10;
 const floors = [];
 
 class CallVolumeDiagramPositioner {
-  constructor(classesArray, stageSize) {
+  constructor(classesArray) {
     this.classesArray = classesArray;
     this.trunkHeightCache = new Array(classesArray.length);
     this.branchXCache = new Array(classesArray.length);
     this.trunkXCache = new Array(classesArray.length);
     this.midIndex = Math.floor(classesArray.length / 2);
     this.stemData = new Array(classesArray.length);
-    this.centerX = stageSize.width / 2;
+    this.centerX = 0;
     for (let i = 0; i < this.stemData.length; i++){
       this.stemData[i] = new Array(this.stemData.length);
     }
