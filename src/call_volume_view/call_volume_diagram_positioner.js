@@ -51,11 +51,11 @@ class CallVolumeDiagramPositioner {
   }
 
   pipeWidth(index) {
-    return Math.ceil(this.classesArray[index].totalCallAmount * 0.25);
+    return Math.ceil(Number(this.classesArray[index].totalCallAmount) * 0.25);
   }
 
   nodeRadius(classIndex, methodIndex) {
-    return this.classesArray[classIndex].methods[methodIndex].callAmount;
+    return Number(this.classesArray[classIndex].methods[methodIndex].totalCallAmount);
   }
 
   maxRadius(index) {

@@ -1,4 +1,4 @@
-const Konva = require('konva');
+const React = require('react');
 const ReactKonva = require('react-konva');
 const CallVolumeDiagramPositioner = require('./call_volume_diagram_positioner');
 
@@ -20,7 +20,13 @@ const FLOOR_MARGIN_VERTICAL = 2;
 const INIT_STEM_LENGTH = 10;
 const floors = [];
 
-export function convertToVisualizationData(classesArray, stageSize) {
+export function convertToVisualizationData(
+  classesArray,
+  {
+    stageSize,
+    classToColorMapping,
+  }
+) {
   if (classesArray.length == 0) {
     return [];
   }
@@ -31,9 +37,9 @@ export function convertToVisualizationData(classesArray, stageSize) {
   for (let i = 0; i < classesArray.length; i++) {
     const classData = classesArray[i];
     const branchData = {
-      color: this.classToColorMapping[classData.class],
+      color: classToColorMapping[classData.className],
     };
-    const methods = classData.methods.sort((method1, method2) => method1.callAmount - method2.callAmount);
+    const methods = classData.methods.sort((method1, method2) => method1.totalCallAmount - method2.totalCallAmount);
     const pipes = [
       {
         type: 'rect',
@@ -45,16 +51,12 @@ export function convertToVisualizationData(classesArray, stageSize) {
       },
     ];
     const leaves = [];
-    currentPositionX = diagramPositioner.branchStartX(i);
-    branchStartingPositionY = diagramPositioner.branchStartY(i);
     let branchStartingPositionX = diagramPositioner.branchStartX(i);
-    let directionX = diagramPositioner.directionX(i);
-    let directionY = diagramPositioner.directionY(i);
     for ( let m = 0; m < methods.length; m++ ) {
       const method = methods[m];
       leaves.push({
         data: {
-          name: method.name,
+          name: method.methodName,
         },
         stem: {
           type: 'rect',
@@ -190,7 +192,9 @@ function drawBranches(branches) {
 
 export function draw(visualData) {
   const branchKonvaShapes = drawBranches(visualData);
-  return branchKonvaShapes;
+  return (
+    <ReactKonva.Layer key='call-volume-layer'>
+      { branchKonvaShapes }
+    </ReactKonva.Layer>
+  );
 }
-
-module.exports = CallVolumeDiagramSketcher;

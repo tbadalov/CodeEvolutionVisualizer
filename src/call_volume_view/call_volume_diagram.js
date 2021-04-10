@@ -1,9 +1,8 @@
 const React = require('react');
-const CallVolumeDiagramSketcher = require('./call_volume_diagram_sketcher');
-const Konva = require('konva');
 const SwitchCommitButton = require('./buttons/switch_commit_button');
 const PlayButton = require('./buttons/play_button');
 const GeneralDiagram = require('../general_diagram');
+const { draw, convertToVisualizationData } = require('./call_volume_diagram_sketcher');
 
 const scale = 5;
 const circleMarginX = 6;
@@ -48,89 +47,86 @@ function redraw() {
   this.callVolumeDiagramSketcher.draw(this.stageData.stage, this.state.selectedCommit);
 }
 
-function updateSize() {
-  const largeContainer = this.largeContainerRef.current;
-  const scrollContainer = this.scrollContainerRef.current;
-  const stage = this.stageData.stage;
-  largeContainer.style.width = scrollContainer.clientWidth + 'px';
-  largeContainer.style.height = scrollContainer.clientHeight + 'px';
-  stage.width(scrollContainer.clientWidth);
-  stage.height(scrollContainer.clientHeight);
+function dragBoundary(pos) {
+  var newY = Math.min(0, pos.y);
+  return {
+    x: pos.x,
+    y: newY,
+  };
 }
 
 class CallVolumeDiagram extends React.Component {
   constructor(props) {
     super(props);
-    this.callVolumeDiagramSketcher = new CallVolumeDiagramSketcher(this.props.rawData, this.props.classToColorMapping);
+    this.scrollContainerRef = React.createRef();
+    this.onWheel = this.onWheel.bind(this);
+    this.state = {
+      primitiveDiagramProps: {
+        stageProps: {
+          draggable: true,
+          dragBoundFunc: dragBoundary,
+          scaleX: 3,
+          scaleY: 3,
+          width: 0,
+          height: 0,
+        },
+      },
+    };
+  }
+
+  onWheel(e) {
+    const scaleBy = 1.03;
+    const stage = e.target.getStage();
+    var pointer = stage.getPointerPosition();
+    var oldScale = stage.scaleX();
+    var mousePointTo = {
+      x: (pointer.x - stage.x()) / oldScale,
+      y: (pointer.y - stage.y()) / oldScale,
+    };
+    var newScale =
+        e.evt.deltaY > 0 ? oldScale * scaleBy : (e.evt.deltaY < 0 ? oldScale / scaleBy : oldScale);
+
+    var newPos = {
+      x: pointer.x - mousePointTo.x * newScale,
+      y: pointer.y - mousePointTo.y * newScale,
+    };
+    stage.scale({
+      x: newScale,
+      y: newScale,
+    });
+    stage.position(dragBoundary(newPos));
+    stage.batchDraw();
   }
 
   componentDidMount() {
-    function dragBoundary(pos) {
-      var newY = Math.min(0, pos.y);
-      return {
-        x: pos.x,
-        y: newY,
-      };
-    }
-    const largeContainer = this.largeContainerRef.current;
-    largeContainer.style.width = this.scrollContainerRef.current.clientWidth + 'px';
-    largeContainer.style.height = this.scrollContainerRef.current.clientHeight + 'px';
-    const stage = new Konva.Stage({
-      container: this.diagramContainerRef.current,
-      draggable: true,
-      dragBoundFunc: dragBoundary,
-      scale: {
-        x: 3,
-        y: 3,
+    // what? ?stage.position(dragBoundary({x: -(stage.width()/2)*stage.scaleX() + this.scrollContainerRef.current.clientWidth / 2, y: stage.y()}));
+    console.log(this.scrollContainerRef.current.clientWidth);
+    this.setState({
+      primitiveDiagramProps: {
+        ...this.state.primitiveDiagramProps,
+        stageProps: {
+          ...this.state.primitiveDiagramProps.stageProps,
+          width: this.scrollContainerRef.current.clientWidth,
+          height: this.scrollContainerRef.current.clientHeight,
+        },
       },
     });
-    console.log("stage wiiiiidth");
-    this.stageData = {
-      stage,
-    };
-    updateSize.call(this);
-    console.log(stage.width());
-    stage.position(dragBoundary({x: -(stage.width()/2)*stage.scaleX() + this.scrollContainerRef.current.clientWidth / 2, y: stage.y()}));
-    var scaleBy = 1.03;
-    window.stage = stage;
-    stage.on('wheel', (e) => {
-      e.evt.preventDefault();
-      var pointer = stage.getPointerPosition();
-      var oldScale = stage.scaleX();
-      var mousePointTo = {
-        x: (pointer.x - stage.x()) / oldScale,
-        y: (pointer.y - stage.y()) / oldScale,
-      };
-      var newScale =
-          e.evt.deltaY > 0 ? oldScale * scaleBy : (e.evt.deltaY < 0 ? oldScale / scaleBy : oldScale);
-
-      stage.scale({ x: newScale, y: newScale });
-
-      stage.destroyChildren();
-
-      var newPos = {
-        x: pointer.x - mousePointTo.x * newScale,
-        y: pointer.y - mousePointTo.y * newScale,
-      };
-      stage.position(dragBoundary(newPos));
-      redraw.call(this);
-    });
-    redraw.call(this);
   }
 
-  componentDidUpdate() {
-    redraw.call(this);
-    console.log("boo");
-    /*array = shuffle(data);
-    console.log(array);
-    const branchesVisualData = convertToVisualizationData(array, this.props.classToColorMapping);
-    console.log(branchesVisualData);
-
-    var layer = new Konva.Layer();
-    this.stageData.stage.add(layer);
-    drawBranches(layer, branchesVisualData);
-    this.stageData.stage.scale({x: 3, y: 3});
-    layer.draw();*/
+  componentDidUpdate(prevProps, prevState) {
+    if (this.props.rawData !== prevProps.rawData || this.state.primitiveDiagramProps !== prevState.primitiveDiagramProps) {
+      console.log(this.props.rawData);
+      const visualizationData = convertToVisualizationData(this.props.rawData, {
+        stageSize: this.state.primitiveDiagramProps.stageProps,
+        classToColorMapping: this.props.classToColorMapping,
+      });
+      console.log(visualizationData);
+      const konvaShapes = draw(visualizationData);
+      this.onDraw = () => {
+        return konvaShapes;
+      }
+      this.forceUpdate();
+    }
   }
 
   render() {
@@ -139,7 +135,10 @@ class CallVolumeDiagram extends React.Component {
       this.forceUpdate();
       };
     return(
-      <GeneralDiagram>
+      <GeneralDiagram {...this.state}
+        onWheel={this.onWheel}
+        scrollContainerRef={this.scrollContainerRef}
+        onDraw={this.onDraw}>
         <SwitchCommitButton direction='prev' onSwitchCommitButtonClick={randomDiagramGenerator} />
         <SwitchCommitButton direction='next' onSwitchCommitButtonClick={randomDiagramGenerator} />
         <PlayButton />
