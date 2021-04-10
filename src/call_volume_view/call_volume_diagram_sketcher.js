@@ -136,8 +136,8 @@ function drawBranches(branches) {
   const branchKonvaShapes = [];
   for (let i = 0; i < branches.length; i++) {
     const branch = branches[i];
-    for (let pipe of branch.pipes) {
-      if (pipe.type == 'rect') {
+    const currentBranchPipeShapes = branch.pipes.map((pipe, index) => {
+      if (pipe.type === 'rect') {
         const pipeProps = {
           x: pipe.startX,
           y: pipe.startY,
@@ -147,8 +147,8 @@ function drawBranches(branches) {
           scaleX: pipe.scaleX,
           scaleY: pipe.scaleY,
         };
-        branchKonvaShapes.push(
-          <ReactKonva.Rect {...pipeProps} />
+        return (
+          <ReactKonva.Rect key={`pipe-${index}-of-branch-${i}`} {...pipeProps} />
         );
       } else if (pipe.type == 'arc') {
         const pipeCornerProps = {
@@ -161,12 +161,12 @@ function drawBranches(branches) {
           scaleX: pipe.scaleX,
           scaleY: pipe.scaleY,
         };
-        branchKonvaShapes.push(
-          <ReactKonva.Arc {...pipeCornerProps} />
+        return (
+          <ReactKonva.Arc {...pipeCornerProps} key={`corner-${index}-of-branch-${i}`} />
         );
       }
-    }
-    for (let leave of branch.leaves) {
+    });
+    const currentBranchLeafShapes = branch.leaves.map((leave, index) => {
       const leaveProps = {
         x: leave.stem.startX,
         y: leave.stem.startY,
@@ -182,9 +182,19 @@ function drawBranches(branches) {
         radius: leave.node.radius,
         fill: leave.node.color,
       };
-      branchKonvaShapes.push(<ReactKonva.Rect {...leaveProps} />);
-      branchKonvaShapes.push(<ReactKonva.Circle {...circleProps} />);
-    }
+      return (
+        <ReactKonva.Group key={`leaf-${index}-of-branch-${i}`}>
+          <ReactKonva.Rect {...leaveProps} />
+          <ReactKonva.Circle {...circleProps} />
+        </ReactKonva.Group>
+      );
+    });
+    branchKonvaShapes.push(
+      <ReactKonva.Group key={`branch-${i}`}>
+        { currentBranchPipeShapes }
+        { currentBranchLeafShapes }
+      </ReactKonva.Group>
+    );
   }
   return branchKonvaShapes;
 }
