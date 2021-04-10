@@ -90,12 +90,17 @@ class CallVolumeDiagram extends React.Component {
       x: pointer.x - mousePointTo.x * newScale,
       y: pointer.y - mousePointTo.y * newScale,
     };
-    stage.scale({
-      x: newScale,
-      y: newScale,
+    this.setState({
+      primitiveDiagramProps: {
+        ...this.state.primitiveDiagramProps,
+        stageProps: {
+          ...this.state.primitiveDiagramProps.stageProps,
+          ...dragBoundary(newPos),
+          scaleX: newScale,
+          scaleY: newScale,
+        },
+      },
     });
-    stage.position(dragBoundary(newPos));
-    stage.batchDraw();
   }
 
   componentDidMount() {

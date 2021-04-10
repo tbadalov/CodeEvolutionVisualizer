@@ -23,6 +23,7 @@ class GeneralDiagram extends React.Component {
           >
             <PrimitiveDiagram
               {...this.props.primitiveDiagramProps}
+              onWheel={this.props.onWheel}
               onDraw={this.props.onDraw} />
           </div>
         </div>
