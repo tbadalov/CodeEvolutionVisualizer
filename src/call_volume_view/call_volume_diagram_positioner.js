@@ -1,21 +1,7 @@
-const scale = 5;
 const circleMarginX = 6;
-const circleMarginY = 4;
-const strokeWidth = 0;
-const pipeAngleRadius = 4;
-const floorMargin = 10;
-const stemLength = 10;
-const stemWidth = 6;
-var width = 1600;
-var height = 1000;
-const centerY = 0;
-const marginTop = 0;
-const trunkHeight = 45; //todo remove and use INITIAL_TRUNK_HEIGHT
 const INITIAL_TRUNK_HEIGHT = 45;
 const FLOOR_MARGIN_VERTICAL = 2;
 const MINIMUM_CIRCLE_RADIUS = 1;
-const INIT_STEM_LENGTH = 10;
-const floors = [];
 
 class CallVolumeDiagramPositioner {
   constructor(classesArray) {

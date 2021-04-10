@@ -2,24 +2,7 @@ const React = require('react');
 const ReactKonva = require('react-konva');
 const CallVolumeDiagramPositioner = require('./call_volume_diagram_positioner');
 
-const scale = 5;
-const circleMarginX = 6;
-const circleMarginY = 4;
-const strokeWidth = 0;
-const pipeAngleRadius = 4;
-const floorMargin = 10;
-const stemLength = 10;
-const stemWidth = 6;
-var width = 1600;
-var height = 1000;
-const centerY = 0;
 const marginTop = 0;
-const trunkHeight = 45; //todo remove and use INITIAL_TRUNK_HEIGHT
-const INITIAL_TRUNK_HEIGHT = 45;
-const FLOOR_MARGIN_VERTICAL = 2;
-const INIT_STEM_LENGTH = 10;
-const floors = [];
-
 export function convertToVisualizationData(
   classesArray,
   {
@@ -198,6 +181,7 @@ function drawBranches(branches) {
 export function draw(visualData, params) {
   const {
     layerRef,
+    opacity,
     key
   } = params;
   console.log(params);
@@ -205,7 +189,7 @@ export function draw(visualData, params) {
   return [
     <ReactKonva.Layer
       key={`${key}-call-volume-layer`}
-      opacity={key === 'prev' ? 1 : 0 }
+      opacity={opacity}
       ref={layerRef}>
       { branchKonvaShapes }
     </ReactKonva.Layer>

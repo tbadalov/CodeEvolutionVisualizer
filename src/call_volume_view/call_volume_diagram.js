@@ -5,49 +5,7 @@ const GeneralDiagram = require('../general_diagram');
 const { draw, convertToVisualizationData } = require('./call_volume_diagram_sketcher');
 const CallVolumeDiagramPositioner = require('./call_volume_diagram_positioner');
 
-const scale = 5;
-const circleMarginX = 6;
-const circleMarginY = 4;
-const strokeWidth = 0;
-const pipeAngleRadius = 4;
-const floorMargin = 10;
-const stemLength = 10;
-const stemWidth = 6;
-var width = 1000;
-var height = 600;
-const centerX = width / 5;
-const centerY = 0;
-const marginTop = 0;
-const trunkHeight = 45; //todo remove and use INITIAL_TRUNK_HEIGHT
-const INITIAL_TRUNK_HEIGHT = 45;
-const FLOOR_MARGIN_VERTICAL = 2;
-const INIT_STEM_LENGTH = 10;
-const floors = [];
 let shouldAdaptCamera = true;
-
-function shuffle(array) {
-  var currentIndex = array.length, temporaryValue, randomIndex;
-
-  // While there remain elements to shuffle...
-  while (0 !== currentIndex) {
-    // Pick a remaining element...
-    randomIndex = Math.floor(Math.random() * currentIndex);
-    currentIndex -= 1;
-
-    // And swap it with the current element.
-    temporaryValue = array[currentIndex];
-    array[currentIndex] = array[randomIndex];
-    array[randomIndex] = temporaryValue;
-  }
-
-  return array;
-}
-
-function redraw() {
-  this.stageData.stage.destroyChildren();
-  updateSize.call(this);
-  this.callVolumeDiagramSketcher.draw(this.stageData.stage, this.state.selectedCommit);
-}
 
 function dragBoundary(pos) {
   var newY = Math.min(0, pos.y);
@@ -216,6 +174,7 @@ class CallVolumeDiagram extends React.Component {
         drawParams: {
           layerRef: this.previousLayerRef,
           key: 'prev',
+          opacity: 1,
         },
       }
     );
@@ -230,6 +189,7 @@ class CallVolumeDiagram extends React.Component {
         drawParams: {
           layerRef: this.currentLayerRef,
           key: 'current',
+          opacity: 0,
         },
       }
     )
