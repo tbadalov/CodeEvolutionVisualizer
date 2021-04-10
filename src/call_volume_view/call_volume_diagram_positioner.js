@@ -13,6 +13,7 @@ const marginTop = 0;
 const trunkHeight = 45; //todo remove and use INITIAL_TRUNK_HEIGHT
 const INITIAL_TRUNK_HEIGHT = 45;
 const FLOOR_MARGIN_VERTICAL = 2;
+const MINIMUM_CIRCLE_RADIUS = 1;
 const INIT_STEM_LENGTH = 10;
 const floors = [];
 
@@ -55,7 +56,11 @@ class CallVolumeDiagramPositioner {
   }
 
   nodeRadius(classIndex, methodIndex) {
-    return Number(this.classesArray[classIndex].methods[methodIndex].totalCallAmount);
+    return Math.max(MINIMUM_CIRCLE_RADIUS, Number(this.classesArray[classIndex].methods[methodIndex].totalCallAmount));
+  }
+
+  nodeInnerRadius(classIndex, methodIndex) {
+    return this.classesArray[classIndex].methods[methodIndex].totalCallAmount > 0 ? 0 : 0.7 * this.nodeRadius(classIndex, methodIndex);
   }
 
   maxRadius(index) {
@@ -68,23 +73,29 @@ class CallVolumeDiagramPositioner {
     if (this.directionY(classIndex) == 0) {
       if (this.classesArray[classIndex].methods.length == 1) {
         return {
-          centerX: stemPosition.startX + stemPosition.width/2,
-          centerY: stemPosition.startY + 0.9 * stemPosition.height + this.nodeRadius(classIndex, methodIndex),
-          radius: this.nodeRadius(classIndex, methodIndex),
+          x: stemPosition.startX + stemPosition.width/2,
+          y: stemPosition.startY + 0.9 * stemPosition.height + this.nodeRadius(classIndex, methodIndex),
+          outerRadius: this.nodeRadius(classIndex, methodIndex),
+          innerRadius: this.nodeInnerRadius(classIndex, methodIndex),
+          angle: 360,
         };
       }
       if (this.classesArray[classIndex].methods.length > 0) {
         return {
-          centerX: stemPosition.startX + 0.9 * stemPosition.width * (methodIndex % 2 == 0 ? -1 : 1),
-          centerY: stemPosition.startY + stemPosition.height / 2,
-          radius: this.nodeRadius(classIndex, methodIndex),
+          x: stemPosition.startX + 0.9 * (stemPosition.width + this.nodeRadius(classIndex, methodIndex)) * (methodIndex % 2 == 0 ? -1 : 1),
+          y: stemPosition.startY + stemPosition.height / 2,
+          outerRadius: this.nodeRadius(classIndex, methodIndex),
+          innerRadius: this.nodeInnerRadius(classIndex, methodIndex),
+          angle: 360,
         }
       }
     }
     return {
-      centerX: stemPosition.startX + stemPosition.width / 2 * this.directionX(classIndex),
-      centerY: this.branchStartY(classIndex) + (0.9 * stemPosition.height + this.nodeRadius(classIndex, methodIndex)) * this.directionY(classIndex),
-      radius: this.nodeRadius(classIndex, methodIndex),
+      x: stemPosition.startX + stemPosition.width / 2 * this.directionX(classIndex),
+      y: this.branchStartY(classIndex) + (0.9 * stemPosition.height + this.nodeRadius(classIndex, methodIndex)) * this.directionY(classIndex),
+      outerRadius: this.nodeRadius(classIndex, methodIndex),
+      innerRadius: this.nodeInnerRadius(classIndex, methodIndex),
+      angle: 360,
     };
   }
 

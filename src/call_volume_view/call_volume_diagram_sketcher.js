@@ -38,7 +38,8 @@ export function convertToVisualizationData(
     const branchData = {
       color: classToColorMapping[classData.className],
     };
-    const methods = classData.methods.sort((method1, method2) => method1.totalCallAmount - method2.totalCallAmount);
+    //const methods = classData.methods.sort((method1, method2) => method1.totalCallAmount - method2.totalCallAmount);
+    const methods = classData.methods;
     const pipes = [
       {
         type: 'rect',
@@ -59,14 +60,15 @@ export function convertToVisualizationData(
         },
         stem: {
           type: 'rect',
-          color: branchData.color,
+          fill: branchData.color,
           ...diagramPositioner.stemPosition(i, m),
         },
         node: {
-          type: 'circle',
-          color: branchData.color,
+          type: 'arc',
+          fill: branchData.color,
           ...diagramPositioner.nodePosition(i, m),
         },
+
       });
     }
     if (diagramPositioner.directionY(i) == 0) {
@@ -172,20 +174,14 @@ function drawBranches(branches) {
         y: leave.stem.startY,
         width: leave.stem.width,
         height: leave.stem.height,
-        fill: leave.stem.color,
+        fill: leave.stem.fill,
         scaleX: leave.stem.scaleX,
         scaleY: leave.stem.scaleY,
-      };
-      const circleProps = {
-        x: leave.node.centerX,
-        y: leave.node.centerY,
-        radius: leave.node.radius,
-        fill: leave.node.color,
       };
       return (
         <ReactKonva.Group key={`leaf-${index}-of-branch-${i}`}>
           <ReactKonva.Rect {...leaveProps} />
-          <ReactKonva.Circle {...circleProps} />
+          <ReactKonva.Arc {...leave.node} />
         </ReactKonva.Group>
       );
     });

@@ -125,22 +125,13 @@ const data = [
   },
 ];
 
-const rawData = {
-  commits: {
-    hhffee: {
-      classesArray: data,
-    }
-  }
-};
-
 class CallVolumeView extends React.Component {
   constructor(props) {
     super(props);
     this.mapContextValueToView = this.mapContextValueToView.bind(this);
     this.handleItemChange = this.handleItemChange.bind(this);
-    rawData.commits[this.props.selectedCommit] = rawData.commits.hhffee;
     this.state = {
-      rawData: rawData,
+      rawData: [],
       selectedCommit: undefined,
     };
     console.log(props);

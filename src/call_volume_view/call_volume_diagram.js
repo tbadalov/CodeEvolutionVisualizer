@@ -122,7 +122,8 @@ class CallVolumeDiagram extends React.Component {
   componentDidUpdate(prevProps, prevState) {
     if (this.props.rawData !== prevProps.rawData || this.state.primitiveDiagramProps !== prevState.primitiveDiagramProps) {
       console.log(this.props.rawData);
-      const visualizationData = convertToVisualizationData(this.props.rawData, {
+      const rawData = this.props.rawData.filter(classRecord => classRecord.totalCallAmount > 0);
+      const visualizationData = convertToVisualizationData(rawData, {
         classToColorMapping: this.props.classToColorMapping,
       });
       console.log(visualizationData);
