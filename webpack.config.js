@@ -61,6 +61,14 @@ module.exports = (env, options) => {
           test: /\.css$/i,
           use: ["style-loader", "css-loader"],
         },
+        // IMAGES
+        {
+          test: /\.(jpe?g|png|gif)$/,
+          loader: 'file-loader',
+          options: {
+              name: 'images/[name].[ext]',
+          },
+        },
       ],
     },
     resolve: {
