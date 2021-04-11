@@ -10,6 +10,8 @@ const ReactDOM = require('react-dom');
 const diagramStyle = require('./css/diagram.css');
 const ColorContext = require('./contexts/color_context');
 const NavigationMenuItem = require('./navigation_menu_item');
+const BlenderUi = require('blender-ui');
+const splitStyle = require('blender-ui/dist/blender-ui.css');
 
 class App extends React.Component {
   constructor(props) {
@@ -20,6 +22,7 @@ class App extends React.Component {
     this.changeDiagram = this.changeDiagram.bind(this);
     this.goBack = this.goBack.bind(this);
     this.goForward = this.goForward.bind(this);
+    this.appRef = React.createRef();
     this.diagrams = {
       commitRangeView: CommitRangeView,
       classOverviewView: ClassOverviewView,
@@ -94,6 +97,13 @@ class App extends React.Component {
     }
   }
 
+  componentDidMount() {
+    this.mytree = new BlenderUi('#root', {
+      minSize: 50,
+      content: () => this.appRef.current,
+    });
+  }
+
   goBack() {
     this.setState({
       menuItems: [],
@@ -153,7 +163,7 @@ class App extends React.Component {
       />
     );
     return(
-      <div className="minu-container">
+      <div className="minu-container" ref={this.appRef}>
         <div className="box-1">
           <div class="select">
             <select name="slct" id="slct">
@@ -176,9 +186,11 @@ class App extends React.Component {
   }
 }
 
+const tempContainer = document.createElement('div');
+
 ReactDOM.render(
   <MemoryRouter>
     <Route component={App} />
   </MemoryRouter>,
-  document.getElementById('root')
+  tempContainer
 );
