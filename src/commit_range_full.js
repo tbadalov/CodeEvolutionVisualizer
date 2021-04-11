@@ -9,11 +9,11 @@ function loadData(url) {
           .then((result) => result.json());
 }
 
-function mapClassToClassFilterItem(commit, changedClass) {
+function mapClassToClassFilterItem(commit, changedClass, classToColorMapping) {
   const changedClassName = changedClass.className;
   return {
     label: changedClassName,
-    color: getRandomColor(),
+    color: classToColorMapping[changedClassName] || getRandomColor(),
     checked: true,
     payload: {
       className: changedClassName,
@@ -21,29 +21,29 @@ function mapClassToClassFilterItem(commit, changedClass) {
   };
 }
 
-function mapCommitToClassFilterItems(result, commit) {
+function mapCommitToClassFilterItems(result, commit, classToColorMapping) {
   for (let i = 0; i < commit.changedClasses.length; i++) {
     const changedClass = commit.changedClasses[i];
     const changedClassName = changedClass.className;
     if (!result[changedClassName]) {
-      result[changedClassName] = mapClassToClassFilterItem(commit, changedClass);
+      result[changedClassName] = mapClassToClassFilterItem(commit, changedClass, classToColorMapping);
     }
   }
 }
 
-function buildClassFilterItems(data) {
+function buildClassFilterItems(data, classToColorMapping) {
   const classNameItemMapping = {};
   for (let i = 0; i < data.commits.length; i++) {
     const commit = data.commits[i];
-    mapCommitToClassFilterItems(classNameItemMapping, commit);
+    mapCommitToClassFilterItems(classNameItemMapping, commit, classToColorMapping);
   }
   return classNameItemMapping;
 }
 
-function mapBranchNameToFilterItem(commit, branchName) {
+function mapBranchNameToFilterItem(commit, branchName, branchToColorMapping) {
   return {
     label: branchName,
-    color: getRandomColor(),
+    color: branchToColorMapping[branchName] || getRandomColor(),
     checked: true,
     payload: {
       branchName: branchName,
@@ -51,18 +51,18 @@ function mapBranchNameToFilterItem(commit, branchName) {
   };
 }
 
-function mapCommitToBranchFilterItem(result, commit) {
+function mapCommitToBranchFilterItem(result, commit, branchToColorMapping) {
   const { branchName } = commit;
   if (!result[branchName]) {
-    result[branchName] = mapBranchNameToFilterItem(commit, branchName);
+    result[branchName] = mapBranchNameToFilterItem(commit, branchName, branchToColorMapping);
   }
 }
 
-function buildBranchFilterItems(data) {
+function buildBranchFilterItems(data, branchToColorMapping) {
   const commitHashToItemMapping = {};
   for (let i = 0; i < data.commits.length; i++) {
     const commit = data.commits[i];
-    mapCommitToBranchFilterItem(commitHashToItemMapping, commit);
+    mapCommitToBranchFilterItem(commitHashToItemMapping, commit, branchToColorMapping);
   }
   return commitHashToItemMapping;
 }
@@ -110,12 +110,17 @@ class CommitRangeViewFull extends React.Component {
   
   onDataReady(data) {
     const items = [];
-    const classNameToClassFilterMapping = buildClassFilterItems(data);
-    const commitHashToBranchFilterMapping = buildBranchFilterItems(data);
+    const {
+      branchToColorMapping,
+      setBranchColor,
+      classToColorMapping,
+      changeClassColor,
+    } = this.context;
+    const classNameToClassFilterMapping = buildClassFilterItems(data, classToColorMapping);
+    const commitHashToBranchFilterMapping = buildBranchFilterItems(data, branchToColorMapping);
 
     const alpahebticallySortedItems = Object.values(classNameToClassFilterMapping)
       .sort((item1, item2) => item1.label.localeCompare(item2.label));
-    const { setBranchColor, changeClassColor } = this.context;
     alpahebticallySortedItems.forEach(item => changeClassColor(item.label, item.color));
 
     const alpahebticallySortedBranchFilterItems = Object.values(commitHashToBranchFilterMapping)

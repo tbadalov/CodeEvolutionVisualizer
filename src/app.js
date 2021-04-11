@@ -1,4 +1,4 @@
-const { MemoryRouter, Switch, Route, Redirect } = require('react-router');
+const { MemoryRouter, Switch, Route, Redirect, DefaultRoute } = require('react-router');
 
 const uiConfig = require('./ui_config');
 const CommitRangeView = require('./commit_range_full');
@@ -16,19 +16,16 @@ class App extends React.Component {
     super(props);
     this.changeClassColor = this.changeClassColor.bind(this);
     this.setBranchColor = this.setBranchColor.bind(this);
+    this.addMenuItem = this.addMenuItem.bind(this);
+    this.changeDiagram = this.changeDiagram.bind(this);
+    this.goBack = this.goBack.bind(this);
+    this.goForward = this.goForward.bind(this);
     this.diagrams = {
       commitRangeView: CommitRangeView,
       classOverviewView: ClassOverviewView,
       callVolumeView: CallVolumeView,
     }
     this.state = {
-      currentDiagram: 'commitRangeView',
-      data: {
-        diagramData: {
-          props: {},
-          changeDiagram: this.changeDiagram.bind(this),
-        },
-      },
       menuItems: [],
       colorContextValue: {
         classToColorMapping: {},
@@ -66,22 +63,10 @@ class App extends React.Component {
   }
 
   changeDiagram(diagramName, props) {
-    if (diagramName === 'commitRangeView') {
-      this.props.history.goBack();
-    }
-    const data = {...this.state.data};
-    data.diagramData.props = props;
     this.setState({
-      currentDiagram: diagramName,
-      data: {
-        ...this.state.data,
-        props: props,
-      },
       menuItems: [],
     });
-    this.setState({
-      redirectPath: '/about',
-    });
+    this.props.history.push(`/${diagramName}`, props);
   }
 
   addMenuItem(menuItem, priority) {
@@ -109,15 +94,64 @@ class App extends React.Component {
     }
   }
 
+  goBack() {
+    this.setState({
+      menuItems: [],
+    });
+    this.props.history.goBack();
+  }
+
+  goForward() {
+    this.setState({
+      menuItems: [],
+    });
+    this.props.history.goForward();
+  }
+
   render() {
     console.log(this.props);
+    window.his = this.props.history;
     if (this.state.redirectPath !== undefined) {
       return <Redirect push to={this.state.redirectPath} />;
     }
     const menuItems = [
-      <NavigationMenuItem />,
+      <NavigationMenuItem
+        onBackClick={this.goBack}
+        canGoBack={this.props.history.canGo(-1)}
+        onFowardClick={this.goForward}
+        canGoForward={this.props.history.canGo(1)}
+      />,
       ...this.state.menuItems,
     ];
+    const routes = Object.entries(this.diagrams)
+      .map(([diagramName, DiagramComponent, index]) => (
+        <Route key={`route-${index}`}
+          path={`/${diagramName}`}
+          exact
+          render={(props) => (
+            <DiagramComponent url={uiConfig[diagramName].apiUrl}
+              addMenuItem={this.addMenuItem}
+              changeDiagram={this.changeDiagram}
+              {...props}
+              {...props.location.state}
+            />
+          )}
+        />
+      ));
+    routes.push(
+      <Route key='default-route'
+        exact
+        path="/"
+        render={(props) => (
+          <CommitRangeView url={uiConfig.commitRangeView.apiUrl}
+            addMenuItem={this.addMenuItem}
+            changeDiagram={this.changeDiagram}
+            {...props}
+            {...props.location.state}
+          />
+        )}
+      />
+    );
     return(
       <div className="minu-container">
         <div className="box-1">
@@ -133,8 +167,7 @@ class App extends React.Component {
         <div className="box-2">
           <ColorContext.Provider value={this.state.colorContextValue}>
             <Switch>
-              <Route exact path="/" render={() => <CommitRangeView url={uiConfig[this.state.currentDiagram].apiUrl} addMenuItem={this.addMenuItem.bind(this)} changeDiagram={this.state.data.diagramData.changeDiagram} {...this.state.data.diagramData.props}/>} />
-              <Route path="/about" render={() => <ClassOverviewView url={uiConfig[this.state.currentDiagram].apiUrl} addMenuItem={this.addMenuItem.bind(this)} changeDiagram={this.state.data.diagramData.changeDiagram} {...this.state.data.diagramData.props}/>} />
+              { routes }
             </Switch>
           </ColorContext.Provider>
         </div>

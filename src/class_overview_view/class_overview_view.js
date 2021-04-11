@@ -70,9 +70,6 @@ class ClassOverviewView extends React.Component {
         <Item label='Collapse equal states' checked={this.state.collapseSameCommits} onItemChange={this.onCollapseItems} />
       </ItemList>
     );
-    setTimeout(() => {
-      this.props.changeDiagram('commitRangeView', {});
-    }, 5000);
     const { startCommit, endCommit } = this.props;
     const diagramDataLoader = new DiagramDataLoader();
     diagramDataLoader.load(
