@@ -1,3 +1,5 @@
+const { MemoryRouter, Switch, Route, Redirect } = require('react-router');
+
 const uiConfig = require('./ui_config');
 const CommitRangeView = require('./commit_range_full');
 const ClassOverviewView = require('./class_overview_view/class_overview_view');
@@ -63,10 +65,22 @@ class App extends React.Component {
   }
 
   changeDiagram(diagramName, props) {
-    this.state.currentDiagram = diagramName;
+    if (diagramName === 'commitRangeView') {
+      this.props.history.goBack();
+    }
     const data = {...this.state.data};
     data.diagramData.props = props;
-    this.setState({currentDiagram: diagramName, data: data, menuItems: []});
+    this.setState({
+      currentDiagram: diagramName,
+      data: {
+        ...this.state.data,
+        props: props,
+      },
+      menuItems: [],
+    });
+    this.setState({
+      redirectPath: '/about',
+    });
   }
 
   addMenuItem(menuItem, priority) {
@@ -86,8 +100,19 @@ class App extends React.Component {
     return replace;
   }
 
+  componentDidUpdate() {
+    if (this.state.redirectPath !== undefined) {
+      this.setState({
+        redirectPath: undefined,
+      });
+    }
+  }
+
   render() {
-    const Diagram = this.diagrams[this.state.currentDiagram];
+    console.log(this.props);
+    if (this.state.redirectPath !== undefined) {
+      return <Redirect push to={this.state.redirectPath} />;
+    }
     return(
       <div className="minu-container">
         <div className="box-1">
@@ -102,7 +127,10 @@ class App extends React.Component {
         </div>
         <div className="box-2">
           <ColorContext.Provider value={this.state.colorContextValue}>
-            <Diagram url={uiConfig[this.state.currentDiagram].apiUrl} addMenuItem={this.addMenuItem.bind(this)} changeDiagram={this.state.data.diagramData.changeDiagram} {...this.state.data.diagramData.props} />
+            <Switch>
+              <Route exact path="/" render={() => <CommitRangeView url={uiConfig[this.state.currentDiagram].apiUrl} addMenuItem={this.addMenuItem.bind(this)} changeDiagram={this.state.data.diagramData.changeDiagram} {...this.state.data.diagramData.props}/>} />
+              <Route path="/about" render={() => <ClassOverviewView url={uiConfig[this.state.currentDiagram].apiUrl} addMenuItem={this.addMenuItem.bind(this)} changeDiagram={this.state.data.diagramData.changeDiagram} {...this.state.data.diagramData.props}/>} />
+            </Switch>
           </ColorContext.Provider>
         </div>
       </div>
@@ -110,4 +138,9 @@ class App extends React.Component {
   }
 }
 
-ReactDOM.render(<App/>, document.getElementById('root'));
+ReactDOM.render(
+  <MemoryRouter>
+    <Route component={App} />
+  </MemoryRouter>,
+  document.getElementById('root')
+);
