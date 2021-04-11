@@ -72,6 +72,7 @@ class CallVolumeDiagram extends React.Component {
     this.onWheel = this.onWheel.bind(this);
     this.onSwitchButtonClicked = this.onSwitchButtonClicked.bind(this);
     this.onDraw = this.onDraw.bind(this);
+    this.classNameOrder = {};
     this.state = {
       primitiveDiagramProps: {
         stageProps: {
@@ -202,8 +203,26 @@ class CallVolumeDiagram extends React.Component {
       .map(classRecord => {
         classRecord.methods = classRecord.methods.sort((method1, method2) => method1.totalCallAmount - method2.totalCallAmount);
         return classRecord;
-      }).sort((classRecord1, classRecord2) => classRecord1.className.localeCompare(classRecord2.className));
-    return filteredRawData;
+      }).sort((classRecord1, classRecord2) => (classRecord1.totalCallAmount - classRecord2.totalCallAmount)
+        || (Math.max(...classRecord1.methods.map(method => method.totalCallAmount))) - Math.max(...classRecord2.methods.map(method => method.totalCallAmount)));
+
+    const relativelySortedRawData = filteredRawData
+      .filter(classRecord => this.classNameOrder[classRecord.className] !== undefined)
+      .sort((classRecord1, classRecord2) => this.classNameOrder[classRecord1.className] - this.classNameOrder[classRecord2.className]);
+
+    filteredRawData
+      .filter(classRecord => this.classNameOrder[classRecord.className] === undefined)
+      .forEach(classRecord => {
+        relativelySortedRawData.splice(relativelySortedRawData.length % 2 == 0 ? relativelySortedRawData.length/2 : relativelySortedRawData.length/2+1, 0, classRecord);
+      });
+
+    this.classNameOrder = relativelySortedRawData
+      .reduce((freshMapping, classRecord, index) => {
+        freshMapping[classRecord.className] = index;
+        return freshMapping;
+      }, {});
+
+    return relativelySortedRawData;
   }
 
   componentDidUpdate(prevProps, prevState) {
