@@ -9,6 +9,7 @@ const React = require('react');
 const ReactDOM = require('react-dom');
 const diagramStyle = require('./css/diagram.css');
 const ColorContext = require('./contexts/color_context');
+const NavigationMenuItem = require('./navigation_menu_item');
 
 class App extends React.Component {
   constructor(props) {
@@ -113,6 +114,10 @@ class App extends React.Component {
     if (this.state.redirectPath !== undefined) {
       return <Redirect push to={this.state.redirectPath} />;
     }
+    const menuItems = [
+      <NavigationMenuItem />,
+      ...this.state.menuItems,
+    ];
     return(
       <div className="minu-container">
         <div className="box-1">
@@ -123,7 +128,7 @@ class App extends React.Component {
               <option value="3">feature1</option>
             </select>
           </div>
-          <Menu items={this.state.menuItems} />
+          <Menu items={menuItems} />
         </div>
         <div className="box-2">
           <ColorContext.Provider value={this.state.colorContextValue}>

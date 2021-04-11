@@ -5,3 +5,7 @@
   background-color: #ccc;
   position: relative;
 }
+
+.menu-item {
+  margin-bottom: 20px;
+}
