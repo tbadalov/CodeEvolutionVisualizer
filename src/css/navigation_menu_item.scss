@@ -44,3 +44,12 @@
 .navigation-menu-item {
   display: flex;
 }
+
+.disabled {
+  pointer-events: none;
+  cursor: default;
+}
+
+.disabled .label {
+  color: #888;
+}
