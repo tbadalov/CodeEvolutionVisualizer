@@ -8,28 +8,28 @@ router.get('/', function(req, res, next) {
   const session = driver.session();
   const dataFromDb = [];
   const query = `
-  MATCH (last_commit:App)
-    WHERE last_commit.branch='master' OR last_commit.branch="master\\\\n"
+  MATCH (last_commit:App {name: "` + req.query.applicationName + `"})
+    WHERE last_commit.branch='master' OR last_commit.branch="master\\\\\\n"
   WITH last_commit
   ORDER BY last_commit.timestamp DESC
   LIMIT 1
-  MATCH (origin:App)
+  MATCH (origin:App {name: "` + req.query.applicationName + `"})
     WHERE origin.commit = '` + req.query.startCommit + `'
   WITH last_commit, origin
   LIMIT 1
-  MATCH (destination:App)
+  MATCH (destination:App {name: "` + req.query.applicationName + `"})
     WHERE destination.commit = '` + req.query.endCommit + `'
   WITH last_commit, origin, destination
   LIMIT 1
-  MATCH (intermediate_commit:App)
-    WHERE toInteger(intermediate_commit.timestamp) >= toInteger(origin.timestamp)
-      AND toInteger(intermediate_commit.timestamp) <= toInteger(destination.timestamp)
+  MATCH (intermediate_commit:App {name: "` + req.query.applicationName + `"})
+    WHERE toInteger(intermediate_commit.author_timestamp) >= toInteger(origin.author_timestamp)
+      AND toInteger(intermediate_commit.author_timestamp) <= toInteger(destination.author_timestamp)
       AND (intermediate_commit)-[:CHANGED_TO*0..]->(last_commit)
   WITH distinct intermediate_commit as app
   OPTIONAL MATCH (app)-[APP_OWNS_CLASS]->(c:Class)-[:CLASS_OWNS_METHOD]->(m:Method)
     WHERE c.name = '` + req.query.className +`'
   OPTIONAL MATCH (app)<-[:CHANGED_TO]-(previousApp:App)-[:APP_OWNS_CLASS]->(:Class)-[:CLASS_OWNS_METHOD]->(m)
-  OPTIONAL MATCH (mergedApp:App)
+  OPTIONAL MATCH (mergedApp:App {name: "` + req.query.applicationName + `"})
     WHERE (mergedApp)-[:CHANGED_TO]->(app)<-[:CHANGED_TO]-(:App)
       AND mergedApp.branch <> app.branch
   OPTIONAL MATCH (m)-[changed_to:CHANGED_TO]->(new_method:Method)
@@ -47,7 +47,7 @@ router.get('/', function(req, res, next) {
     collect(distinct called_method.name) as calls
   WITH app.commit as commitHash,
     app.branch as branchName,
-    app.timestamp as timestamp,
+    app.author_timestamp as timestamp,
     app.version_number as version,
     m.name as methodName,
     merged_branches,
@@ -90,22 +90,22 @@ router.get('/initial_data', (req, res, next) => {
     commits: [],
   };
   const query = `
-    MATCH (last_commit:App)
+    MATCH (last_commit:App {name: "` + req.query.applicationName + `"})
       WHERE last_commit.branch='master' OR last_commit.branch="master\\\\n"
     WITH last_commit
-    ORDER BY last_commit.timestamp DESC
+    ORDER BY last_commit.author_timestamp DESC
     LIMIT 1
-    MATCH (origin_commit:App)
+    MATCH (origin_commit:App {name: "` + req.query.applicationName + `"})
       WHERE origin_commit.commit = '` + req.query.startCommit + `'
     WITH last_commit, origin_commit
     LIMIT 1
-    MATCH (destination_commit:App)
+    MATCH (destination_commit:App {name: "` + req.query.applicationName + `"})
       WHERE destination_commit.commit = '` + req.query.endCommit + `'
     WITH last_commit, origin_commit, destination_commit
     LIMIT 1
-    MATCH (app:App)
-    WHERE toInteger(app.timestamp) >= toInteger(origin_commit.timestamp)
-      AND toInteger(app.timestamp) <= toInteger(destination_commit.timestamp)
+    MATCH (app:App {name: "` + req.query.applicationName + `"})
+    WHERE toInteger(app.author_timestamp) >= toInteger(origin_commit.author_timestamp)
+      AND toInteger(app.author_timestamp) <= toInteger(destination_commit.author_timestamp)
       AND (app)-[:CHANGED_TO*0..]->(last_commit)
     OPTIONAL MATCH (app)-[:APP_OWNS_CLASS]->(c:Class)
     RETURN collect(distinct c.name) as classNames, collect(distinct {branchName: app.branch, commitHash: app.commit}) as commits`;

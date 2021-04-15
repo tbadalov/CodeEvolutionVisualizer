@@ -8,23 +8,23 @@ router.get('/', function(req, res, next) {
   const session = driver.session();
   let dataFromDb = {};
   const query = `
-  MATCH (app:App)
-    WHERE app.branch='master' OR app.branch="master\\\\n"
+  MATCH (app:App {name: "` + req.query.applicationName + `"})
+    WHERE app.branch='master' OR app.branch="master\\\\\\n"
   WITH app as last_commit
-  ORDER BY app.timestamp DESC
+  ORDER BY app.author_timestamp DESC
   LIMIT 1
-  MATCH (app:App)
+  MATCH (app:App {name: "` + req.query.applicationName + `"})
     WHERE app.commit='` + req.query.commit + `'
   OPTIONAL MATCH (next_commit:App)<-[:CHANGED_TO]-(app)
     WHERE (next_commit)-[:CHANGED_TO*0..]->(last_commit)
   WITH app, next_commit
-  ORDER BY next_commit.timestamp ASC
+  ORDER BY next_commit.author_timestamp ASC
   LIMIT 1
   OPTIONAL MATCH (prev_commit:App)-[:CHANGED_TO]->(app)
   WITH app,
     prev_commit,
     next_commit
-  ORDER BY prev_commit.timestamp DESC
+  ORDER BY prev_commit.author_timestamp DESC
   LIMIT 1
   MATCH (app)-[:APP_OWNS_CLASS]->(class:Class)-[:CLASS_OWNS_METHOD]->(m:Method)
   OPTIONAL MATCH (caller_class:Class)-[:CLASS_OWNS_METHOD]->(caller:Method)-[:CALLS]->(m)

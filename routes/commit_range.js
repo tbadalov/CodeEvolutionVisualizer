@@ -1,38 +1,35 @@
 var neo4j = require('neo4j-driver');
 var express = require('express');
 var neo4jconfig = require('../neo4jconfig');
+const { application } = require('express');
 var router = express.Router();
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
   const driver = neo4j.driver(neo4jconfig.uri, neo4j.auth.basic(neo4jconfig.user, neo4jconfig.password));
   const session = driver.session();
-  let mainBranch;
-  let branches;
+  let mainApp;
+  let applications;
   session.run(`
     MATCH (app:App)
-    RETURN collect(distinct app.branch) as branches
+    RETURN collect(distinct app.name) as applications
   `).subscribe({
     onNext: record => {
-      branches = record.get("branches");
-      if (branches.includes('main')) {
-        mainBranch = 'main'
-      } else if (branches.includes('master')) {
-        mainBranch = 'master\\\n';
-      } else {
-        mainBranch = branches[0];
-      }
+      applications = record.get("applications");
+      mainApp = applications[1];
     },
     onCompleted: () => {
       const mainQuerySession = driver.session();
       const result = [];
+      const selectedApp = req.query.applicationName || mainApp;
       mainQuerySession.run(`
-      MATCH (last_commit:App)
-      WHERE last_commit.branch='master' OR last_commit.branch="master\\\n"
+      MATCH (last_commit:App {name: "` + selectedApp + `"})
+      WHERE last_commit.branch='master'
+        OR last_commit.branch="master\\\\\\n"
       WITH last_commit
-      ORDER BY toInteger(last_commit.timestamp) DESC
+      ORDER BY toInteger(last_commit.author_timestamp) DESC
       LIMIT 1
-      MATCH (app:App)
+      MATCH (app:App {name: "` + selectedApp + `"})
       WHERE (app)-[:CHANGED_TO*0..]->(last_commit)
       WITH distinct app
       CALL {
@@ -45,13 +42,12 @@ router.get('/', function(req, res, next) {
         ORDER BY className
         RETURN collect( { className: className, changedLinesCount: changedLinesCount } ) as changedClasses, sum(changedLinesCount) as totalChangedLinesCount
       }
-      RETURN app.commit as commitHash, app.time as time, app.author as author, app.message as message, app.version_number as versionNumber, app.branch as branchName, changedClasses, totalChangedLinesCount
-      ORDER BY toInteger(app.timestamp) ASC
+      RETURN app.commit as commitHash, app.author as author, app.message as message, app.version_number as versionNumber, app.branch as branchName, changedClasses, totalChangedLinesCount
+      ORDER BY toInteger(app.author_timestamp) ASC
       `).subscribe({
         onNext: record => {
           result.push({
             commitHash: record.get('commitHash'),
-            time: record.get('time'),
             author: record.get('author'),
             message: record.get('message'),
             versionNumber: record.get('versionNumber').low,
@@ -66,8 +62,8 @@ router.get('/', function(req, res, next) {
         onCompleted: () => {
           res.setHeader('Content-Type', 'application/json');
           res.end(JSON.stringify({
-            branches: branches,
-            selectedBranch: mainBranch,
+            applications: applications,
+            selectedApplication: mainApp,
             commits: result,
           }));
         }
