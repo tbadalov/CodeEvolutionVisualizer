@@ -17,7 +17,7 @@ function dragBoundary(pos) {
 
 function calculateSizeOfTheDiagram(visualData, classesArray) {
   if (visualData.length === 1) {
-    const width = visualData[0].pipes[0].find(pipe => pipe.type === 'rect').width;
+    const width = visualData[0].pipes.find(pipe => pipe.type === 'rect').width;
     return {
       totalWidth: width,
       leftWidth: width/2,
@@ -269,8 +269,8 @@ class CallVolumeDiagram extends React.Component {
     }
   }
 
-  positionCameraToCenterAtFirstLoad(rawData, visualizationData) {
-    const diagramSize = calculateSizeOfTheDiagram(visualizationData, rawData);
+  positionCameraToCenterAtFirstLoad(classesArray, visualizationData) {
+    const diagramSize = calculateSizeOfTheDiagram(visualizationData, classesArray);
     const newScale = diagramSize.totalWidth > diagramSize.totalHeight
       ? 0.7 * this.state.primitiveDiagramProps.stageProps.width / diagramSize.totalWidth
       : 0.7 * this.state.primitiveDiagramProps.stageProps.height / diagramSize.totalHeight;
@@ -286,7 +286,7 @@ class CallVolumeDiagram extends React.Component {
           },
         },
       });
-      shouldAdaptCamera = this.props.rawData.classes.length === 0;
+      shouldAdaptCamera = classesArray.length === 0;
     }
   }
 

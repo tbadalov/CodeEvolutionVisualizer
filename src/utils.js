@@ -3,7 +3,7 @@ export function loadData(url) {
           .then((result) => result.json());
 }
 
-export function buildGetHttpRequestUrl(url, params) {
+export function buildGetHttpRequestUrl(url, params = {}) {
   const keyValues = [];
   for (let paramName in params) {
     const paramValue = params[paramName];
