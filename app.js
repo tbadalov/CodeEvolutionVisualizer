@@ -13,6 +13,7 @@ var classOverviewRouter = require('./routes/class_overview');
 var commitRangeViewRouter = require('./routes/commit_range_view');
 var callVolumeViewRouter = require('./routes/call_volume_view');
 var classOverviewViewRouter = require('./routes/class_overview_view');
+var initialDataRouter = require('./routes/initial_data');
 
 var app = express();
 if (app.get('env') == 'development') {
@@ -43,6 +44,7 @@ app.use('/class_overview', classOverviewRouter);
 app.use('/commit_range_view', commitRangeViewRouter);
 app.use('/call_volume_view', callVolumeViewRouter);
 app.use('/class_overview_view', classOverviewViewRouter);
+app.use('/initial_data', initialDataRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
