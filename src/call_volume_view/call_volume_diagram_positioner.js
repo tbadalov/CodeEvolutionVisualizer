@@ -2,6 +2,10 @@ const circleMarginX = 6;
 const INITIAL_TRUNK_HEIGHT = 45;
 const FLOOR_MARGIN_VERTICAL = 2;
 const MINIMUM_CIRCLE_RADIUS = 1;
+const UP = -1;
+const DOWN = 1;
+const LEFT = -1;
+const RIGHT = 1;
 
 class CallVolumeDiagramPositioner {
   constructor(classesArray) {
@@ -25,7 +29,7 @@ class CallVolumeDiagramPositioner {
     if (this.classesArray.length % 2 == 1 && index == this.midIndex) {
       return 0;
     }
-    let result = index < this.midIndex ? this.positionBasedProperty(index, -1, 1) : this.positionBasedProperty(this.classesArray.length-index-1, -1, 1);
+    let result = index < this.midIndex ? this.positionBasedProperty(index, UP, DOWN) : this.positionBasedProperty(this.classesArray.length-index-1, UP, DOWN);
     return result;
   }
 
@@ -33,7 +37,7 @@ class CallVolumeDiagramPositioner {
     if (this.classesArray.length % 2 == 1 && index == this.midIndex) {
       return 0;
     }
-    let result = index < this.midIndex ? -1 : 1;
+    let result = index < this.midIndex ? LEFT : RIGHT;
     return result;
   }
 
