@@ -1,13 +1,9 @@
 const React = require('react');
 const CommitRangeView = require('./commit_range_view');
 const ColorContext = require('./contexts/color_context');
+const DiagramDataLoader = require('./diagram_data_loader');
 const Item = require('./item');
 const ItemList = require('./item_list');
-
-function loadData(url) {
-  return fetch(url)
-          .then((result) => result.json());
-}
 
 function mapClassToClassFilterItem(commit, changedClass, classToColorMapping) {
   const changedClassName = changedClass.className;
@@ -184,7 +180,19 @@ class CommitRangeViewFull extends React.Component {
         <Item label='Show other changes' checked={this.state.showAssetChanges} onItemChange={this.handleContentFilterClick} payload={{filterType: 'asset'}} />
       </ItemList>
     );
-    loadData(this.props.url)
+  }
+
+  componentDidUpdate(prevProps) {
+    if (this.props.applicationName !== prevProps.applicationName) {
+      console.log("update nedi");
+      const diagramLoader = new DiagramDataLoader();
+      console.log(this.props);
+      diagramLoader.load(
+        this.props.url,
+        {
+          applicationName: this.props.applicationName,
+        }
+      )
       .then(data => {
         //data.commits = data.commits.concat(data.commits).concat(data.commits).concat(data.commits);
         /*data.commits = data.commits.concat(data.commits).concat(data.commits).concat(data.commits);
@@ -199,6 +207,7 @@ class CommitRangeViewFull extends React.Component {
         this.onDataReady(data);
       })
       .catch(error => console.log(error));
+    }
   }
 
   render() {

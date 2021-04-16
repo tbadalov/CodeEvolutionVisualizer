@@ -249,6 +249,7 @@ class CallVolumeDiagram extends React.Component {
       const visualizationData = convertToVisualizationData(currentLayerData, {
         classToColorMapping: this.props.classToColorMapping,
       });
+      console.log(visualizationData);
       if (shouldAdaptCamera) {
         this.positionCameraToCenterAtFirstLoad(currentLayerData, visualizationData);
       }

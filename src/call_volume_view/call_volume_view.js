@@ -46,6 +46,7 @@ class CallVolumeView extends React.Component {
         this.props.url,
         {
             commit: this.state.selectedCommit,
+            applicationName: this.props.applicationName,
         }
     ).then(rawData => {
         this.setState({
