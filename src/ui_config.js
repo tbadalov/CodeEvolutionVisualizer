@@ -1,4 +1,7 @@
 module.exports = {
+  app: {
+    apiUrl: '/initial_data',
+  },
   commitRangeView: {
     apiUrl: '/commit_range_data',
   },

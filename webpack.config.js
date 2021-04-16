@@ -77,6 +77,7 @@ module.exports = (env, options) => {
         '/commit_range_data': 'http://localhost:3000',
         '/class_overview': 'http://localhost:3000',
         '/call_volume': 'http://localhost:3000',
+        '/initial_data': 'http://localhost:3000',
       }
     }
   };

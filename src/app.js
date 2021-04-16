@@ -10,6 +10,7 @@ const ReactDOM = require('react-dom');
 const diagramStyle = require('./css/diagram.css');
 const ColorContext = require('./contexts/color_context');
 const NavigationMenuItem = require('./navigation_menu_item');
+const DiagramDataLoader = require('./diagram_data_loader');
 
 class App extends React.Component {
   constructor(props) {
@@ -20,6 +21,7 @@ class App extends React.Component {
     this.changeDiagram = this.changeDiagram.bind(this);
     this.goBack = this.goBack.bind(this);
     this.goForward = this.goForward.bind(this);
+    this.onSelectedApp = this.onSelectedApp.bind(this);
     this.diagrams = {
       commitRangeView: CommitRangeView,
       classOverviewView: ClassOverviewView,
@@ -27,6 +29,10 @@ class App extends React.Component {
     }
     this.state = {
       menuItems: [],
+      rawData: {
+        applications: [],
+      },
+      selectedApplication: undefined,
       colorContextValue: {
         classToColorMapping: {},
         changeClassColor: this.changeClassColor,
@@ -34,6 +40,12 @@ class App extends React.Component {
         setBranchColor: this.setBranchColor,
       },
     }
+  }
+
+  onSelectedApp(e) {
+    this.setState({
+      selectedApplication: e.target.value,
+    });
   }
 
   setBranchColor(branchName, color) {
@@ -86,12 +98,23 @@ class App extends React.Component {
     return replace;
   }
 
-  componentDidUpdate() {
-    if (this.state.redirectPath !== undefined) {
-      this.setState({
-        redirectPath: undefined,
+  componentDidMount() {
+    const diagramDataLoader = new DiagramDataLoader();
+    diagramDataLoader
+      .load(uiConfig.app.apiUrl)
+      .then(initialData => {
+        console.log(initialData);
+        this.setState({
+          rawData: initialData,
+          selectedApplication: initialData.selectedApplication,
+        });
+        this.props.history.replace('/commitRangeView');
       });
-    }
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    console.log(prevState);
+    console.log(this.state);
   }
 
   goBack() {
@@ -111,10 +134,19 @@ class App extends React.Component {
   render() {
     console.log(this.props);
     window.his = this.props.history;
-    if (this.state.redirectPath !== undefined) {
-      return <Redirect push to={this.state.redirectPath} />;
-    }
     const menuItems = [
+      <div className="select menu-item">
+        <select id="slct"
+          name="slct"
+          value={this.state.selectedApplication}
+          onChange={this.onSelectedApp}
+        >
+          { this.state.rawData.applications.map((applicationName, index) => (
+              <option value={applicationName}>{applicationName}</option>
+            ))
+          }
+        </select>
+      </div>,
       <NavigationMenuItem
         onBackClick={this.goBack}
         canGoBack={this.props.history.canGo(-1)}
@@ -124,44 +156,30 @@ class App extends React.Component {
       ...this.state.menuItems,
     ];
     const routes = Object.entries(this.diagrams)
-      .map(([diagramName, DiagramComponent, index]) => (
-        <Route key={`route-${index}`}
-          path={`/${diagramName}`}
-          exact
-          render={(props) => (
-            <DiagramComponent url={uiConfig[diagramName].apiUrl}
-              addMenuItem={this.addMenuItem}
-              changeDiagram={this.changeDiagram}
-              {...props}
-              {...props.location.state}
-            />
-          )}
-        />
-      ));
-    routes.push(
-      <Route key='default-route'
-        exact
-        path="/"
-        render={(props) => (
-          <CommitRangeView url={uiConfig.commitRangeView.apiUrl}
-            addMenuItem={this.addMenuItem}
-            changeDiagram={this.changeDiagram}
-            {...props}
-            {...props.location.state}
+      .map(([diagramName, DiagramComponent, index]) => {
+        const path = [ `/${diagramName}`];
+        if (diagramName === 'commitRangeView') {
+          path.push('/');
+        }
+        return (
+          <Route key={`route-${index}`}
+            path={path}
+            exact
+            render={(props) => (
+              <DiagramComponent url={uiConfig[diagramName].apiUrl}
+                addMenuItem={this.addMenuItem}
+                changeDiagram={this.changeDiagram}
+                applicationName={this.state.selectedApplication}
+                {...props}
+                {...props.location.state}
+              />
+            )}
           />
-        )}
-      />
-    );
+        );
+      });
     return(
       <div className="minu-container">
         <div className="box-1">
-          <div class="select">
-            <select name="slct" id="slct">
-              <option value="1" selected="selected">master</option>
-              <option value="2">dev</option>
-              <option value="3">feature1</option>
-            </select>
-          </div>
           <Menu items={menuItems} />
         </div>
         <div className="box-2">
