@@ -72,6 +72,3 @@ test('assigns correct horizontal direction for pipes of even amount', () => {
     expect(horizontalDirection).toBe(expectedHorizontalDirection);
   });
 });
-
-
-
