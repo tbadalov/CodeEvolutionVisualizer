@@ -6,7 +6,7 @@ const TooltipCommitRangeItem = require('./tooltip_commit_range_item');
 const CommitDetailTooltipItem = require('./commit_detail_tooltip_item');
 const MouseSelectionArea = require('../mouse_selection_area');
 const GeneralDiagram = require('../general_diagram');
-const CommitRangeViewAxis = require('./commit_range_view_axis');
+const CommitRangeViewAxis = require('./chart_axis');
 
 const BAR_WIDTH = 30;
 const BAR_PADDING = 2;
