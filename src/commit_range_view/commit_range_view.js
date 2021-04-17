@@ -207,7 +207,6 @@ class CommitRangeView extends React.Component {
         isActive: false,
       },
       chartLayerProps: {
-        x: constants.PADDING,
         scaleX: 1.0,
         scaleY: 1.0,
       },
@@ -226,10 +225,6 @@ class CommitRangeView extends React.Component {
     } else {
       this.setState({
         scrollLeft: scrollLeft,
-        chartLayerProps: {
-          ...this.state.chartLayerProps,
-          x: PADDING - scrollLeft,
-        },
       });
     }
   }

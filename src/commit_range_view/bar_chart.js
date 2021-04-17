@@ -21,6 +21,8 @@ const defaultStageProps = {
 function BarChart(props) {
   const colorContext = useContext(ColorContext);
   const [primitiveDiagramProps, setPrimitiveDiagramProps] = useState(defaultStageProps);
+  const [chartLayerProps, setChartLayerProps] = useState({x: constants.PADDING});
+  const [diagramContainerLeftOffset, setDiagramContainerLeftOffset] = useState(0);
   useEffect(() => {
     setPrimitiveDiagramProps({
       ...primitiveDiagramProps,
@@ -39,7 +41,20 @@ function BarChart(props) {
   console.log(visualData);
   const onDraw = () => draw(visualData, {
     ...props,
+    chartLayerProps: {
+      ...props.chartLayerProps,
+      ...chartLayerProps,
+    }
   });
+
+  function onScroll(e) {
+    props.onContainerScroll(e);
+    setDiagramContainerLeftOffset(e.target.scrollLeft);
+    setChartLayerProps({
+      ...chartLayerProps,
+      x: constants.PADDING - e.target.scrollLeft,
+    });
+  }
 
   return(
     <GeneralDiagram {...props}
@@ -51,7 +66,9 @@ function BarChart(props) {
       primitiveDiagramProps={primitiveDiagramProps}
       scrollContainerRef={props.scrollContainerRef}
       largeContainerRef={props.largeContainerRef}
-      onContainerScroll={props.onContainerScroll}
+      onContainerScroll={onScroll}
+      scrollLeft={diagramContainerLeftOffset}
+      cursorStyle='auto'
       onDraw={onDraw}>
     </GeneralDiagram>
   );
