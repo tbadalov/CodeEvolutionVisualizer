@@ -1,0 +1,14 @@
+const BAR_WIDTH = 30;
+const BAR_PADDING = 2;
+const BAR_LAYER_LEFT_MARGIN = 40;
+const Y_AXIS_WIDTH = 100;
+const Y_AXIS_LINE_WIDTH = 6;
+const LABEL_HEIGHT = 40;
+const BAR_BOTTOM_MARGIN = LABEL_HEIGHT + 5;
+const PADDING = 250;
+
+module.exports = {
+  Y_AXIS_WIDTH,
+  BAR_BOTTOM_MARGIN,
+  PADDING,
+};
