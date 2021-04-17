@@ -210,9 +210,6 @@ class CommitRangeView extends React.Component {
         scaleX: 1.0,
         scaleY: 1.0,
       },
-      axisLayerProps: {
-        x: constants.PADDING,
-      },
     };
   }
 
