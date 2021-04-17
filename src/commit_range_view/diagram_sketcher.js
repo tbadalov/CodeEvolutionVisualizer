@@ -1,3 +1,6 @@
+const React = require('react');
+const ReactKonva = require('react-konva');
+
 function drawStack(stack, params) {
   const rectProps = {
     ...stack,

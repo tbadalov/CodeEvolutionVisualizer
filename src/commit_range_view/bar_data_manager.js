@@ -1,4 +1,5 @@
 const CommitDataManager = require('./commit_data_manager');
+const { largestCommitSize } = require('./util');
 
 const BAR_WIDTH = 30;
 const BAR_PADDING = 2;
@@ -16,7 +17,7 @@ class BarDataManager {
     this.commitDataManager = new CommitDataManager(rawData);
     this.classToColorMapping = classToColorMapping;
     this.containerReference = containerReference;
-    this.largestCommitSize = this.commitDataManager.getRawCommits().reduce((max, commit) => Math.max(max, commit.totalChangedLinesCount), 0);
+    this.largestCommitSize = largestCommitSize(this.commitDataManager.getRawCommits());
     this.zoomValueY = 1.0;
     this.zoomValueX = 1.0;
     this.showSrc = true;
@@ -82,73 +83,7 @@ class BarDataManager {
   barsFromRange(xStart, xEnd) {
     const startBarIndex = Math.floor(Math.max(0, (xStart - BAR_LAYER_LEFT_MARGIN)) / (BAR_PADDING + BAR_WIDTH));
     const commits = this.dataFromRange(xStart, xEnd);
-    const heightPerLine = this.calculateStageHeight() / (this.largestCommitSize + Math.ceil(EMPTY_SPACE_TOP_PERCENTAGE / 100.0 * this.largestCommitSize));
-    const bars = [];
-    for (let index = 0; index < commits.length; index++) {
-      const commit = commits[index];
-      const barY = this.calculateStageHeight()-BAR_BOTTOM_MARGIN;
-      const barX = BAR_LAYER_LEFT_MARGIN + (index+startBarIndex) * (BAR_PADDING + BAR_WIDTH);
-      const barWidth = BAR_WIDTH;
-
-      const stack = [];
-      let currentStackHeight = 0;
-      for (let j = 0; j < commit.changedClasses.length; j++) {
-        const changedClass = commit.changedClasses[j];
-
-        const stackX = barX;
-        const stackY = barY - currentStackHeight;
-        const stackHeight = this.commitDataManager.isClassDisabled(changedClass.className) ? 0 : changedClass.changedLinesCount * heightPerLine;
-        const stackWidth = barWidth;
-        const stackColor = this.classToColorMapping[changedClass.className];
-        const payload = {
-          changedLinesCount: changedClass.changedLinesCount,
-          changedLinesCountPercentage: changedClass.changedLinesCount / commit.totalChangedLinesCount * 100.0,
-          changedClassName: changedClass.className,
-          commitHash: commit.commitHash,
-        };
-        stack.push({
-          x: stackX,
-          y: stackY,
-          height: stackHeight,
-          width: stackWidth,
-          fill: stackColor,
-          scaleY: -1,
-          payload: payload,
-        });
-        currentStackHeight += stackHeight;
-      }
-
-      const barHeight = currentStackHeight * heightPerLine;
-      const labelPayload = {
-        commitDetails: {
-          commitMessage: commit.message,
-          commitAuthor: commit.author,
-          commitTime: commit.time,
-          commitBranchName: commit.branchName,
-        },
-        commitHash: commit.commitHash,
-        stacks: stack.map(stackData => stackData.payload),
-      };
-      const label = {
-        text: commit.commitHash.substr(0, Math.min(commit.commitHash.length, 7)),
-        rotation: -45,
-        x: barX-15,
-        y: barY + 35,
-        payload: labelPayload,
-      }
-
-      bars.push({
-        x: barX,
-        y: barY,
-        height: barHeight,
-        width: barWidth,
-        label: label,
-        stack: stack,
-      });
-    }
-    return {
-      bars: bars,
-    };
+    this.largestCommitSize = largestCommitSize(commits);
   }
 
   dataFromRange(xStart, xEnd) {

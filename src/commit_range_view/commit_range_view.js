@@ -7,6 +7,9 @@ const CommitDetailTooltipItem = require('./commit_detail_tooltip_item');
 const MouseSelectionArea = require('../mouse_selection_area');
 const GeneralDiagram = require('../general_diagram');
 const CommitRangeViewAxis = require('./chart_axis');
+const BarChart = require('./bar_chart');
+const constants = require('./constants');
+const { largestCommitSize } = require('./util');
 
 const BAR_WIDTH = 30;
 const BAR_PADDING = 2;
@@ -243,7 +246,9 @@ class CommitRangeView extends React.Component {
     this.props.onDiagramChange(...args);
   }
 
-  clickCommit(commit, changedClassNames) {
+  clickCommit(e, labelPayload) {
+    const commit = labelPayload.commitHash;
+    const changedClassNames = labelPayload.stacks.map(stackPayload => stackPayload.changedClassName);
     this.changeDiagram(
       'callVolumeView',
       {
@@ -405,30 +410,42 @@ class CommitRangeView extends React.Component {
     this.barDataManager.showAssetChanges(this.props.showAssetChanges);
     this.barDataManager.enableAll();
     Object.keys(this.props.disabledClasses).forEach(className => this.barDataManager.disable(className));
+    const dx = this.state.scrollLeft;
+    const commits = this.scrollContainerRef.current ? this.barDataManager.dataFromRange(-constants.PADDING, (dx+this.scrollContainerRef.current.clientWidth+constants.PADDING)/this.state.chartLayerProps.scaleX) : [];
     return(
-      <div ref={this.rootContainerRef} style={{width: '100%', height: '100%'}}>
+      <div ref={this.rootContainerRef}
+        style={{width: '100%', height: '100%'}}
+        onMouseMove={this.onScrollContainerMouseMove}
+        onMouseDown={this.onScrollContainerMouseDown}
+      >
         <CommitRangeViewAxis
           maxValue={this.barDataManager.largestCommitSize} />
-        <GeneralDiagram {...this.state}
-          rootStyle={{
-            position: 'absolute',
-            left: Y_AXIS_WIDTH + 'px',
-            width: this.rootContainerRef.current ? this.rootContainerRef.current.clientWidth - Y_AXIS_WIDTH : undefined,
-          }}
+        <BarChart
+          width={this.rootContainerRef.current ? this.rootContainerRef.current.clientWidth - constants.Y_AXIS_WIDTH : undefined }
+          height={this.rootContainerRef.current ? this.rootContainerRef.current.clientHeight : undefined }
+          stackMouseEnterEventListener={mouseEnterStack.bind(this)}
+          stackMouseMoveEventListener={mouseMoveStack.bind(this)}
+          stackMouseLeaveEventListener={mouseLeaveStack.bind(this)}
+          onLabelMousEnter={labelMouseEnter.bind(this)}
+          onLabelMouseLeave={labelMouseLeave.bind(this)}
+          onLabelClick={this.clickCommit}
+          strokedStackCommitHash={this.state.strokedStackCommit}
+          strokedStackClassName={this.state.strokedStackClassName}
+          strokedStackBorderColor={this.state.strokedStackBorderColor}
+          chartLayerProps={this.state.chartLayerProps}
+          onContainerScroll={this.onContainerScroll}
+          isClassDisabled={this.props.disabledClasses}
           scrollContainerRef={this.scrollContainerRef}
           largeContainerRef={this.largeContainerRef}
-          onContainerScroll={this.onContainerScroll}
-          onContainerMouseMove={this.onScrollContainerMouseMove}
-          onContainerMouseDown={this.onScrollContainerMouseDown}
-          onDraw={this.convertDataToPrimitiveShapes}>
-          <Tooltip
-            visible={this.state.tooltipVisible}
-            left={this.state.tooltipLeft}
-            top={this.state.tooltipTop}
-            title={this.state.tooltipTitle}
-            items={this.state.tooltipItems} />
-          <MouseSelectionArea {...this.state.mouseSelectionAreaProps}/>
-        </GeneralDiagram>
+          commits={commits}
+        />
+        <Tooltip
+          visible={this.state.tooltipVisible}
+          left={this.state.tooltipLeft}
+          top={this.state.tooltipTop}
+          title={this.state.tooltipTitle}
+          items={this.state.tooltipItems} />
+        <MouseSelectionArea {...this.state.mouseSelectionAreaProps}/>
       </div>
     );
   }

@@ -1,4 +1,5 @@
 const React = require('react');
+const GeneralDiagram = require('../general_diagram');
 const { convertToVisualData } = require('./data_converter');
 const constants = require('./constants');
 const ColorContext = require('../contexts/color_context');
@@ -29,7 +30,7 @@ function BarChart(props) {
     }
   }, [props.width, props.height]);
   const visualData = convertToVisualData(props.commits, {
-    maxHeight: scrollContainerRef.current ? scrollContainerRef.current.clientHeight - constants.BAR_BOTTOM_MARGIN : 0,
+    maxHeight: primitiveDiagramProps.stageProps.height - constants.BAR_BOTTOM_MARGIN,
     classToColorMapping: colorContext.classToColorMapping,
     isClassDisabled: props.isClassDisabled,
   });
@@ -45,8 +46,8 @@ function BarChart(props) {
         width: props.width,
       }}
       primitiveDiagramProps={primitiveDiagramProps}
-      scrollContainerRef={scrollContainerRef}
-      largeContainerRef={largeContainerRef}
+      scrollContainerRef={props.scrollContainerRef}
+      largeContainerRef={props.largeContainerRef}
       onContainerScroll={props.onContainerScroll}
       onDraw={onDraw}>
     </GeneralDiagram>

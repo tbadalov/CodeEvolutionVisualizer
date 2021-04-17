@@ -1,3 +1,4 @@
+const constants = require('./constants');
 const { largestCommitSize } = require('./util');
 
 export function convertToVisualData(commits, params) {
@@ -7,13 +8,13 @@ export function convertToVisualData(commits, params) {
     classToColorMapping,
   } = params;
   const maxLines = largestCommitSize(commits);
-  const heightPerLine = maxHeight / (maxLines + Math.ceil(EMPTY_SPACE_TOP_PERCENTAGE / 100.0 * maxLines));
+  const heightPerLine = maxHeight / (maxLines + Math.ceil(constants.EMPTY_SPACE_TOP_PERCENTAGE / 100.0 * maxLines));
   const bars = [];
   for (let index = 0; index < commits.length; index++) {
     const commit = commits[index];
-    const barY = maxHeight-BAR_BOTTOM_MARGIN;
-    const barX = BAR_LAYER_LEFT_MARGIN + (index+startBarIndex) * (BAR_PADDING + BAR_WIDTH);
-    const barWidth = BAR_WIDTH;
+    const barY = maxHeight-constants.BAR_BOTTOM_MARGIN;
+    const barX = constants.BAR_LAYER_LEFT_MARGIN + (index) * (constants.BAR_PADDING + constants.BAR_WIDTH);
+    const barWidth = constants.BAR_WIDTH;
 
     const stack = [];
     let currentStackHeight = 0;
