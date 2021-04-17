@@ -232,6 +232,7 @@ class CommitRangeView extends React.Component {
     this.scrollContainerRef = React.createRef();
     this.largeContainerRef = React.createRef();
     this.selectionRectangleRef = React.createRef();
+    this.rootContainerRef = React.createRef();
     this.barDataManager = new BarDataManager(this.props.data, this.props.classToColorMapping, this.largeContainerRef);
     this.clickCommit = this.clickCommit.bind(this);
     this.refreshDiagram = this.refreshDiagram.bind(this);
@@ -469,13 +470,14 @@ class CommitRangeView extends React.Component {
     this.barDataManager.enableAll();
     Object.keys(this.props.disabledClasses).forEach(className => this.barDataManager.disable(className));
     return(
-      <React.Fragment>
+      <div ref={this.rootContainerRef} style={{width: '100%', height: '100%'}}>
         <CommitRangeViewAxis
           maxValue={this.barDataManager.largestCommitSize} />
         <GeneralDiagram {...this.state}
           rootStyle={{
             position: 'absolute',
             left: Y_AXIS_WIDTH + 'px',
+            width: this.rootContainerRef.current ? this.rootContainerRef.current.clientWidth - Y_AXIS_WIDTH : undefined,
           }}
           scrollContainerRef={this.scrollContainerRef}
           largeContainerRef={this.largeContainerRef}
@@ -491,7 +493,7 @@ class CommitRangeView extends React.Component {
             items={this.state.tooltipItems} />
           <MouseSelectionArea {...this.state.mouseSelectionAreaProps}/>
         </GeneralDiagram>
-      </React.Fragment>
+      </div>
     );
   }
 }
