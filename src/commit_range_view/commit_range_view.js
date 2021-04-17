@@ -171,31 +171,6 @@ function drawBar(bar, onLabelClick, stackMouseEnterEventListener, stackMouseMove
   )
 }
 
-function drawAxis(axis, height) {
-  const yAxisBackgroundColoringRectProps = {
-    x: 0,
-    y: 0,
-    width: Y_AXIS_WIDTH,
-    height: height,
-    fill: '#F0F0F0',
-  };
-
-  return (
-    <ReactKonva.Group>
-      <ReactKonva.Rect {...yAxisBackgroundColoringRectProps} />
-      <ReactKonva.Rect {...axis.line} />
-      { axis.segments.map((segment, index) => <ReactKonva.Rect {...segment} key={index} />) }
-      {
-        axis.segments.map(segment => ({
-          text: segment.label,
-          x: segment.x-20,
-          y: segment.y-6,
-        })).map((segment, index) => <ReactKonva.Text {...segment} key={'text'+index} />)
-      }
-    </ReactKonva.Group>
-  )
-}
-
 function onKeyDownEventListener(e) {
   let scaleBy = 1.0;
   switch(e.key) {
