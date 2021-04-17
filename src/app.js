@@ -1,7 +1,7 @@
 const { MemoryRouter, Switch, Route, Redirect, DefaultRoute } = require('react-router');
 
 const uiConfig = require('./ui_config');
-const CommitRangeView = require('./commit_range_full');
+const CommitRangeView = require('./commit_range_view/commit_range_full');
 const ClassOverviewView = require('./class_overview_view/class_overview_view');
 const CallVolumeView = require('./call_volume_view/call_volume_view');
 const Menu = require('./menu');

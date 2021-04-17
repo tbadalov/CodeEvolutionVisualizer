@@ -1,8 +1,8 @@
 const { useEffect, useState } = require('react');
-const GeneralDiagram = require('./general_diagram');
+const GeneralDiagram = require('../general_diagram');
 const ReactKonva = require('react-konva');
 const React = require('react');
-const { usePrimitiveDiagramProps } = require('./common');
+const { usePrimitiveDiagramProps } = require('../common');
 
 const BAR_WIDTH = 30;
 const BAR_PADDING = 2;

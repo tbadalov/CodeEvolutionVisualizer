@@ -1,5 +1,4 @@
 const React = require('react');
-const CommitRangeView = require('./commit_range_view');
 const colorfulCheckboxStyle = require('./css/colorful_checkbox.css');
 
 function uuidv4() {

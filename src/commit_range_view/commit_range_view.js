@@ -1,12 +1,11 @@
 const React = require('react');
 const ReactKonva = require('react-konva');
 const BarDataManager = require('./bar_data_manager');
-const Tooltip = require('./tooltip');
+const Tooltip = require('../tooltip');
 const TooltipCommitRangeItem = require('./tooltip_commit_range_item');
 const CommitDetailTooltipItem = require('./commit_detail_tooltip_item');
-const MouseSelectionArea = require('./mouse_selection_area');
-const PrimitiveDiagram = require('./primitive_diagram');
-const GeneralDiagram = require('./general_diagram');
+const MouseSelectionArea = require('../mouse_selection_area');
+const GeneralDiagram = require('../general_diagram');
 const CommitRangeViewAxis = require('./commit_range_view_axis');
 
 const BAR_WIDTH = 30;

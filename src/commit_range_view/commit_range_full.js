@@ -1,9 +1,9 @@
 const React = require('react');
 const CommitRangeView = require('./commit_range_view');
-const ColorContext = require('./contexts/color_context');
-const DiagramDataLoader = require('./diagram_data_loader');
-const Item = require('./item');
-const ItemList = require('./item_list');
+const ColorContext = require('../contexts/color_context');
+const DiagramDataLoader = require('../diagram_data_loader');
+const Item = require('../item');
+const ItemList = require('../item_list');
 
 function mapClassToClassFilterItem(commit, changedClass, classToColorMapping) {
   const changedClassName = changedClass.className;
