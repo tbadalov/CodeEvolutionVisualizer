@@ -28,32 +28,7 @@ let currentX;
 let currentY;
 let tooltipTimeout;
 
-function drawStack(stack, onMouseEnter, onMouseMove, onMouseLeave) {
-  const rectProps = {
-    ...stack,
-    onMouseEnter,
-    onMouseMove,
-    onMouseLeave,
-  };
 
-  return <ReactKonva.Rect {...rectProps} />;
-}
-
-function drawLabel(label, onLabelClick, onLabelMouseEnter, onLabelMouseLeave) {
-  const textProps = {
-    text: label.text,
-    x: label.x,
-    y: label.y,
-    rotation: label.rotation,
-    onMouseEnter: onLabelMouseEnter,
-    onMouseLeave: onLabelMouseLeave,
-    onClick: function (e) {
-      console.log(e);
-      onLabelClick(label.payload.commitHash, label.payload.stacks.map(stackPayload => stackPayload.changedClassName));
-    },
-  };
-  return <ReactKonva.Text {...textProps} />
-}
 
 function mouseEnterStack(event, payload) {
   restartTooltipTimer.call(this, payload, event.evt.pageX, event.evt.pageY);
@@ -147,30 +122,6 @@ function mouseMoveStack(event, payload) {
   restartTooltipTimer.call(this, payload, event.evt.pageX, event.evt.pageY);
 }
 
-function drawBar(bar, onLabelClick, stackMouseEnterEventListener, stackMouseMoveEventListener, stackMouseLeaveEventListener) {
-  const reactKonvaStacks = [];
-  for (let i = 0; i < bar.stack.length; i++) {
-    const stack = bar.stack[i];
-    if (stack.payload.commitHash === this.state.strokedStackCommit && stack.payload.changedClassName === this.state.strokedStackClassName) {
-      stack.stroke = this.state.strokedStackBorderColor;
-    }
-    const drawnStack = drawStack(
-      stack,
-      (e) => stackMouseEnterEventListener(e, stack.payload),
-      (e) => stackMouseMoveEventListener(e, stack.payload),
-      stackMouseLeaveEventListener
-    );
-    reactKonvaStacks.push(drawnStack);
-  }
-  const reactKonvaText = drawLabel(bar.label, onLabelClick, labelMouseEnter.call(this, bar.label.payload), labelMouseLeave.bind(this));
-  return (
-    <ReactKonva.Group>
-      { reactKonvaStacks }
-      { reactKonvaText }
-    </ReactKonva.Group>
-  )
-}
-
 function onKeyDownEventListener(e) {
   let scaleBy = 1.0;
   switch(e.key) {
@@ -206,21 +157,6 @@ function scaleChartLayer(scaleBy) {
   this.refreshDiagram();
 }
 
-
-function draw(visualData) {
-  const chartLayerElements = [];
-  const stackMouseEnterEventListener = mouseEnterStack.bind(this);
-  const stackMouseMoveEventListener = mouseMoveStack.bind(this);
-  const stackMouseLeaveEventListener = mouseLeaveStack.bind(this, unstrokeStack.bind(this));
-  visualData.bars.forEach((bar, index) => {
-    chartLayerElements.push(drawBar.call(this, bar, this.clickCommit, stackMouseEnterEventListener, stackMouseMoveEventListener, stackMouseLeaveEventListener));
-  });
-  return [
-    <ReactKonva.Layer {...this.state.chartLayerProps}>
-      { chartLayerElements }
-    </ReactKonva.Layer>,
-  ];
-}
 
 function disableTooltipTimer() {
   clearTimeout(tooltipTimeout);
