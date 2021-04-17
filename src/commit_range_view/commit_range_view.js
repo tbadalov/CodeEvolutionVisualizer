@@ -196,7 +196,7 @@ class CommitRangeView extends React.Component {
         stageProps: {
           width: 0,
           height: 0,
-          x: -PADDING,
+          x: -constants.PADDING,
           onWheel: this.onStageWheelEventListener,
         },
       },
@@ -207,12 +207,12 @@ class CommitRangeView extends React.Component {
         isActive: false,
       },
       chartLayerProps: {
-        x: PADDING,
+        x: constants.PADDING,
         scaleX: 1.0,
         scaleY: 1.0,
       },
       axisLayerProps: {
-        x: PADDING,
+        x: constants.PADDING,
       },
     };
   }
@@ -374,6 +374,7 @@ class CommitRangeView extends React.Component {
     console.log("mounting....")
     document.addEventListener('keydown', this.onKeyDownEventListener);
     document.addEventListener('mouseup', this.onMouseUp);
+    this.forceUpdate();
   }
 
   componentWillUnmount() {
@@ -382,26 +383,11 @@ class CommitRangeView extends React.Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    if (this.props.data === prevProps.data && this.props.disabledClasses === prevProps.disabledClasses && this.state.primitiveDiagramProps.stageProps.width === prevState.primitiveDiagramProps.stageProps.width && this.state.largeContainerHeight === prevState.largeContainerHeight) {
-      return;
-    }
     console.log(this.props);
     const stageWidth = this.barDataManager.calculateStageWidth();
     const canvasWidth = stageWidth;
     this.largeContainerRef.current.style.width = canvasWidth + 'px';
-    /*//height should be assigned after width because of appearing scrollbar
-    const canvasHeight = this.scrollContainerRef.current.clientHeight; // todo: should I use this or calculateStageHeight()?
-    this.largeContainerRef.current.style.height = canvasHeight + 'px';*/
-    this.setState({
-      primitiveDiagramProps: {
-        ...this.state.primitiveDiagramProps,
-        stageProps: {
-          ...this.state.primitiveDiagramProps.stageProps,
-          width: canvasWidth,
-          height: this.barDataManager.calculateStageHeight(),
-        },
-      },
-    });
+
   }
 
   render() {
@@ -421,8 +407,8 @@ class CommitRangeView extends React.Component {
         <CommitRangeViewAxis
           maxValue={this.barDataManager.largestCommitSize} />
         <BarChart
-          width={this.rootContainerRef.current ? this.rootContainerRef.current.clientWidth - constants.Y_AXIS_WIDTH : undefined }
-          height={this.rootContainerRef.current ? this.rootContainerRef.current.clientHeight : undefined }
+          width={this.rootContainerRef.current ? this.rootContainerRef.current.clientWidth - constants.Y_AXIS_WIDTH : 0 }
+          height={this.rootContainerRef.current ? this.rootContainerRef.current.clientHeight : 0 }
           stackMouseEnterEventListener={mouseEnterStack.bind(this)}
           stackMouseMoveEventListener={mouseMoveStack.bind(this)}
           stackMouseLeaveEventListener={mouseLeaveStack.bind(this)}

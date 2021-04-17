@@ -16,4 +16,5 @@ module.exports = {
   BAR_LAYER_LEFT_MARGIN,
   BAR_WIDTH,
   BAR_PADDING,
+  LABEL_HEIGHT,
 };

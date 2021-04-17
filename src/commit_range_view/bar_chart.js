@@ -3,7 +3,7 @@ const GeneralDiagram = require('../general_diagram');
 const { convertToVisualData } = require('./data_converter');
 const constants = require('./constants');
 const ColorContext = require('../contexts/color_context');
-const { useContext, useEffect } = require('react');
+const { useContext, useEffect, useState } = require('react');
 const { draw } = require('./diagram_sketcher');
 const { usePrimitiveDiagramProps } = require('../common');
 
@@ -20,20 +20,23 @@ const defaultStageProps = {
 
 function BarChart(props) {
   const colorContext = useContext(ColorContext);
-  const  [primitiveDiagramProps, setStageHeight, setStageWidth, setPrimitiveDiagramProps] = usePrimitiveDiagramProps(defaultStageProps);
+  const [primitiveDiagramProps, setPrimitiveDiagramProps] = useState(defaultStageProps);
   useEffect(() => {
-    if (props.width) {
-      setStageWidth(props.width - constants.Y_AXIS_WIDTH);
-    }
-    if (props.height) {
-      setStageHeight(props.height);
-    }
+    setPrimitiveDiagramProps({
+      ...primitiveDiagramProps,
+      stageProps: {
+        ...primitiveDiagramProps.stageProps,
+        width: props.width,
+        height: props.height,
+      }
+    })
   }, [props.width, props.height]);
   const visualData = convertToVisualData(props.commits, {
     maxHeight: primitiveDiagramProps.stageProps.height - constants.BAR_BOTTOM_MARGIN,
     classToColorMapping: colorContext.classToColorMapping,
     isClassDisabled: props.isClassDisabled,
   });
+  console.log(visualData);
   const onDraw = () => draw(visualData, {
     ...props,
   });
@@ -54,4 +57,4 @@ function BarChart(props) {
   );
 }
 
-module.exports = React.memo(BarChart);
+module.exports = BarChart;

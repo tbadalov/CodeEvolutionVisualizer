@@ -1,7 +1,7 @@
 const { useState } = require('react');
 
 export function usePrimitiveDiagramProps(defaultProps) {
-  const [primitiveDiagramProps, setPrimitiveDiagramProps] = useState(defaultProps);
+  var [primitiveDiagramProps, setPrimitiveDiagramProps] = useState(defaultProps);
   const setStageHeight = (stageHeight) => setPrimitiveDiagramProps({
     ...primitiveDiagramProps,
     stageProps: {
