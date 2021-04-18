@@ -22,11 +22,6 @@ let currentX;
 let currentY;
 let tooltipTimeout;
 
-function mouseEnterStack(event, payload) {
-  restartTooltipTimer.call(this, payload, event.evt.pageX, event.evt.pageY);
-  strokeStack.call(this, payload);
-}
-
 function strokeStack(payload) {
   this.setState({
     strokedStackCommit: payload.commitHash,
@@ -52,10 +47,25 @@ function labelMouseEnter(event, labelData) {
   this.setState({
     cursorStyle: 'pointer',
   });
+  const tooltipItems = Object.keys(labelData.commitDetails)
+    .map((commitDetail, index) => <CommitDetailTooltipItem
+        key={index}
+        detailName={commitDetail}
+        detailValue={labelData.commitDetails[commitDetail]}
+      />)
+    .concat(
+      labelData.stacks.map((stackPayload, index) => <TooltipCommitRangeItem
+        key={index + Object.keys(labelData.commitDetails).length}
+        markerColor={this.props.classToColorMapping[stackPayload.changedClassName]}
+        className={stackPayload.changedClassName}
+        amount={`${stackPayload.changedLinesCount} line${stackPayload.changedLinesCount > 1 ? 's were' : ' was'} changed (${stackPayload.changedLinesCountPercentage.toFixed(2)}%)`}
+      />
+    ));
   this.showTooltip({
     pageX: event.evt.pageX,
     pageY: event.evt.pageY,
-    labelData,
+    tooltipTitle: labelData.commitHash,
+    tooltipItems,
   });
 }
 
@@ -69,30 +79,6 @@ function mouseLeaveStack(unstrokeStack, event) {
   }
 }
 
-function restartTooltipTimer(payload, mousePositionPageX, mousePositionPageY) {
-  this.disableTooltipTimer();
-  tooltipTimeout = setTimeout(() => {
-    this.setState({
-      tooltipLeft: mousePositionPageX + 5,
-      tooltipTop: mousePositionPageY - 16,
-      tooltipVisible: true,
-      tooltipTitle: payload.commitHash,
-      tooltipItems: [
-        <TooltipCommitRangeItem
-          key='1'
-          markerColor={this.props.classToColorMapping[payload.changedClassName]}
-          className={payload.changedClassName}
-          amount={`${payload.changedLinesCount} line${payload.changedLinesCount > 1 ? 's were' : ' was'} changed (${payload.changedLinesCountPercentage.toFixed(2)}%)`}
-        />
-      ]
-    });
-  }, 700);
-}
-
-function mouseMoveStack(event, payload) {
-  restartTooltipTimer.call(this, payload, event.evt.pageX, event.evt.pageY);
-}
-
 class CommitRangeView extends React.Component {
   constructor(props) {
     super(props);
@@ -104,6 +90,8 @@ class CommitRangeView extends React.Component {
     this.onScrollContainerMouseMove = this.onScrollContainerMouseMove.bind(this);
     this.onContainerScroll = this.onContainerScroll.bind(this);
     this.onScrollContainerMouseDown = this.onScrollContainerMouseDown.bind(this);
+    this.mouseMoveStack = this.mouseMoveStack.bind(this);
+    this.mouseEnterStack = this.mouseEnterStack.bind(this)
     this.disableTooltipTimer = () => {};
     this.showTooltip = this.showTooltip.bind(this);
     this.onMouseUp = this.onMouseUp.bind(this);
@@ -111,6 +99,8 @@ class CommitRangeView extends React.Component {
       tooltipVisible: false,
       tooltipLeft: 0,
       tooltipTop: 0,
+      tooltipItems: [],
+      tooltipTitle: "",
       strokedStackCommit: undefined,
       strokedStackClassName: undefined,
       strokedStackBorderColor: '#000000',
@@ -126,28 +116,44 @@ class CommitRangeView extends React.Component {
     };
   }
 
+  mouseEnterStack(event, payload) {
+    const tooltipItems = [
+      <TooltipCommitRangeItem
+        key='1'
+        markerColor={this.props.classToColorMapping[payload.changedClassName]}
+        className={payload.changedClassName}
+        amount={`${payload.changedLinesCount} line${payload.changedLinesCount > 1 ? 's were' : ' was'} changed (${payload.changedLinesCountPercentage.toFixed(2)}%)`}
+      />
+    ];
+    this.showTooltip({
+      pageX: event.evt.pageX,
+      pageY: event.evt.pageY,
+      tooltipTitle: payload.commitHash,
+      tooltipItems,
+    });
+    strokeStack.call(this, payload);
+  }
+
+  restartTooltipTimer(mousePositionPageX, mousePositionPageY) {
+    this.showTooltip({
+      pageX: mousePositionPageX,
+      pageY: mousePositionPageY,
+    });
+  }
+
+  mouseMoveStack(event, payload) {
+    this.restartTooltipTimer(event.evt.pageX, event.evt.pageY);
+  }
+
   showTooltip(params) {
     this.disableTooltipTimer();
     const {
       pageX,
       pageY,
-      labelData
     } = params;
-    const tooltipTitle = labelData.commitHash;
-    const tooltipItems = Object.keys(labelData.commitDetails)
-    .map((commitDetail, index) => <CommitDetailTooltipItem
-        key={index}
-        detailName={commitDetail}
-        detailValue={labelData.commitDetails[commitDetail]}
-      />)
-      .concat(
-        labelData.stacks.map((stackPayload, index) => <TooltipCommitRangeItem
-          key={index + Object.keys(labelData.commitDetails).length}
-          markerColor={this.props.classToColorMapping[stackPayload.changedClassName]}
-          className={stackPayload.changedClassName}
-          amount={`${stackPayload.changedLinesCount} line${stackPayload.changedLinesCount > 1 ? 's were' : ' was'} changed (${stackPayload.changedLinesCountPercentage.toFixed(2)}%)`}
-        />
-      ));
+
+    const tooltipTitle = params.tooltipTitle || this.state.tooltipTitle;
+    const tooltipItems = params.tooltipItems || this.state.tooltipItems;
     const dummyContainer = document.createElement('div');
     document.body.appendChild(dummyContainer);
     ReactDOM.render(
@@ -159,10 +165,11 @@ class CommitRangeView extends React.Component {
       />,
       dummyContainer
     );
-    const tooltipWidth = dummyContainer.firstChild.clientWidth;
+    const tooltipWidth = dummyContainer.firstChild.offsetWidth;
+    const tooltipHeight = dummyContainer.firstChild.offsetHeight;
     dummyContainer.remove();
     const tooltipLeft = pageX + tooltipWidth <= window.innerWidth ? pageX : pageX - tooltipWidth;
-    const tooltipTop = pageY - (Object.keys(labelData.commitDetails).length + labelData.stacks.length + 1) * 25 - 25;
+    const tooltipTop = pageY - tooltipHeight >= 0 ? pageY - tooltipHeight - constants.LABEL_HEIGHT : pageY + constants.LABEL_HEIGHT;
     const tooltipTimeout = setTimeout(() => {
       this.setState({
         tooltipLeft,
@@ -343,8 +350,8 @@ class CommitRangeView extends React.Component {
         <BarChart
           width={this.rootContainerRef.current ? this.rootContainerRef.current.clientWidth - constants.Y_AXIS_WIDTH : 0 }
           height={this.rootContainerRef.current ? this.rootContainerRef.current.clientHeight : 0 }
-          stackMouseEnterEventListener={mouseEnterStack.bind(this)}
-          stackMouseMoveEventListener={mouseMoveStack.bind(this)}
+          stackMouseEnterEventListener={this.mouseEnterStack}
+          stackMouseMoveEventListener={this.mouseMoveStack}
           stackMouseLeaveEventListener={mouseLeaveStack.bind(this, unstrokeStack.bind(this))}
           onLabelMouseEnter={labelMouseEnter.bind(this)}
           onLabelMouseLeave={labelMouseLeave.bind(this)}
