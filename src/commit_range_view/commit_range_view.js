@@ -176,16 +176,11 @@ class CommitRangeView extends React.Component {
   }
 
   onContainerScroll(scrollEvent) {
-    const scrollContainer = scrollEvent.target;
-    const scrollLeft = scrollContainer.scrollLeft;
-    // we always want to re-render when scrolling
-    if (this.state.tooltipVisible) {
-      this.hideTooltip();
-    } else {
-      this.setState({
-        scrollLeft: scrollLeft,
-      });
-    }
+    requestAnimationFrame(() => {
+      if (this.state.tooltipVisible) {
+        this.hideTooltip();
+      }
+    });
   }
 
   convertDataToPrimitiveShapes() {
