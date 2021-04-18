@@ -151,10 +151,9 @@ class CommitRangeView extends React.Component {
   constructor(props) {
     super(props);
     this.scrollContainerRef = React.createRef();
-    this.largeContainerRef = React.createRef();
     this.selectionRectangleRef = React.createRef();
     this.rootContainerRef = React.createRef();
-    this.barDataManager = new BarDataManager(this.props.data, this.props.classToColorMapping, this.largeContainerRef);
+    this.barDataManager = new BarDataManager(this.props.data, this.props.classToColorMapping);
     this.clickCommit = this.clickCommit.bind(this);
     this.refreshDiagram = this.refreshDiagram.bind(this);
     this.onScrollContainerMouseMove = this.onScrollContainerMouseMove.bind(this);
@@ -356,11 +355,6 @@ class CommitRangeView extends React.Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    console.log(this.props);
-    const stageWidth = this.barDataManager.calculateStageWidth();
-    const canvasWidth = stageWidth;
-    this.largeContainerRef.current.style.width = canvasWidth + 'px';
-
   }
 
   render() {
@@ -399,7 +393,6 @@ class CommitRangeView extends React.Component {
           onContainerScroll={this.onContainerScroll}
           isClassDisabled={this.props.disabledClasses}
           scrollContainerRef={this.scrollContainerRef}
-          largeContainerRef={this.largeContainerRef}
           commits={commits}
         />
         <Tooltip

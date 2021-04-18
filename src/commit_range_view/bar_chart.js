@@ -9,7 +9,7 @@ const ColorContext = require('../contexts/color_context');
 const { useContext, useEffect, useState } = require('react');
 const { draw } = require('./diagram_sketcher');
 const { usePrimitiveDiagramProps } = require('../common');
-const { calculateLargestCommitSize, dataFromRange } = require('./util');
+const { calculateLargestCommitSize, dataFromRange, calculateStageWidth } = require('./util');
 
 /*const scrollContainerRef = React.createRef();
 const largeContainerRef = React.createRef();*/
@@ -27,6 +27,7 @@ const defaultChartLayerProps = {
 }
 
 function BarChart(props) {
+  const largeContainerRef = React.createRef();
   const colorContext = useContext(ColorContext);
   const [primitiveDiagramProps, setPrimitiveDiagramProps] = useState(defaultStageProps);
   const [chartLayerProps, setChartLayerProps] = useState(defaultChartLayerProps);
@@ -36,6 +37,11 @@ function BarChart(props) {
       scaleX,
     });
   };
+  useEffect(() => {
+    if (props.onZoom) {
+      props.onZoom(chartLayerProps.scaleX);
+    }
+  }, [chartLayerProps.scaleX]);
   const [diagramContainerLeftOffset, setDiagramContainerLeftOffset] = useState(0);
   useEffect(() => {
     setPrimitiveDiagramProps({
@@ -47,6 +53,10 @@ function BarChart(props) {
       }
     })
   }, [props.width, props.height]);
+  useEffect(() => {
+    largeContainerRef.current.style.width = calculateStageWidth(props.commits) + 'px';
+  }, [props.commits]);
+
   const visibleCommits = dataFromRange(props.commits, {
     startX: diagramContainerLeftOffset,
     endX: diagramContainerLeftOffset+primitiveDiagramProps.stageProps.width,
@@ -97,7 +107,7 @@ function BarChart(props) {
       }}
       primitiveDiagramProps={primitiveDiagramProps}
       scrollContainerRef={props.scrollContainerRef}
-      largeContainerRef={props.largeContainerRef}
+      largeContainerRef={largeContainerRef}
       onContainerScroll={onScroll}
       scrollLeft={diagramContainerLeftOffset}
       onWheel={onStageWheelEventListener}
