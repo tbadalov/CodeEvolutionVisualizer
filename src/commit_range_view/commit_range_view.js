@@ -125,21 +125,6 @@ function mouseMoveStack(event, payload) {
   restartTooltipTimer.call(this, payload, event.evt.pageX, event.evt.pageY);
 }
 
-function onKeyDownEventListener(e) {
-  let scaleBy = 1.0;
-  switch(e.key) {
-    case '-':
-      scaleBy = 1.0 / SCALE_BY;
-      break;
-    case '+':
-      scaleBy = SCALE_BY;
-      break;
-    default:
-      return;
-  }
-  scaleChartLayer.call(this, scaleBy);
-}
-
 
 
 
@@ -160,7 +145,6 @@ class CommitRangeView extends React.Component {
     this.onContainerScroll = this.onContainerScroll.bind(this);
     this.convertDataToPrimitiveShapes = this.convertDataToPrimitiveShapes.bind(this);
     this.onScrollContainerMouseDown = this.onScrollContainerMouseDown.bind(this);
-    this.onKeyDownEventListener = onKeyDownEventListener.bind(this);
     this.onMouseUp = this.onMouseUp.bind(this);
     this.state = {
       tooltipVisible: false,
@@ -344,14 +328,12 @@ class CommitRangeView extends React.Component {
 
   componentDidMount() {
     console.log("mounting....")
-    document.addEventListener('keydown', this.onKeyDownEventListener);
     document.addEventListener('mouseup', this.onMouseUp);
     this.forceUpdate();
   }
 
   componentWillUnmount() {
     document.removeEventListener('mouseup', this.onMouseUp);
-    document.removeEventListener('keydown', this.onKeyDownEventListener);
   }
 
   componentDidUpdate(prevProps, prevState) {

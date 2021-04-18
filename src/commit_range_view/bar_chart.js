@@ -31,12 +31,15 @@ function BarChart(props) {
   const colorContext = useContext(ColorContext);
   const [primitiveDiagramProps, setPrimitiveDiagramProps] = useState(defaultStageProps);
   const [chartLayerProps, setChartLayerProps] = useState(defaultChartLayerProps);
-  const setScaleX = (scaleX) => {
-    setChartLayerProps({
-      ...chartLayerProps,
-      scaleX,
-    });
-  };
+  const scale = scaleChartLayer.bind(null, {
+    chartLayerProps,
+    setScaleX: (scaleX) => {
+      setChartLayerProps({
+        ...chartLayerProps,
+        scaleX,
+      });
+    },
+  });
   useEffect(() => {
     largeContainerRef.current.style.width = (calculateStageWidth(props.commits) * chartLayerProps.scaleX) + 'px';
   }, [chartLayerProps.scaleX]);
@@ -90,11 +93,29 @@ function BarChart(props) {
       return;
     }
     const scaleBy = e.evt.deltaY > 0 ? SCALE_BY : 1.0 / SCALE_BY;
-    scaleChartLayer(scaleBy, {
-      chartLayerProps,
-      setScaleX,
-    });
+    scale(scaleBy);
   }
+
+  function onKeyDownEventListener(e) {
+    let scaleBy = 1.0;
+    switch(e.key) {
+      case '-':
+        scaleBy = 1.0 / SCALE_BY;
+        break;
+      case '+':
+        scaleBy = SCALE_BY;
+        break;
+      default:
+        return;
+    }
+    scale(scaleBy);
+  }
+  useEffect(() => {
+    document.addEventListener('keydown', onKeyDownEventListener);
+    return function cleanup() {
+      document.removeEventListener('keydown', onKeyDownEventListener);
+    };
+  })
 
   return(
     <GeneralDiagram {...props}
@@ -115,7 +136,7 @@ function BarChart(props) {
   );
 }
 
-function scaleChartLayer(scaleBy, params) {
+function scaleChartLayer(params, scaleBy) {
   const oldScale = params.chartLayerProps.scaleX;
   const newScale = oldScale * scaleBy;
   params.setScaleX(newScale);
