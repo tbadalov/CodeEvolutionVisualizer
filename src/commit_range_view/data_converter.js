@@ -1,19 +1,34 @@
 const constants = require('./constants');
-const { largestCommitSize } = require('./util');
 
-export function convertToVisualData(commits, params) {
+export function convertToVisualData(params) {
   const {
+    commits,
     maxHeight,
     isClassDisabled,
     classToColorMapping,
+    largestCommitSize,
+    scrollLeft,
   } = params;
-  const maxLines = largestCommitSize(commits);
+  const maxLines = largestCommitSize;
   const heightPerLine = maxHeight / (maxLines + Math.ceil(constants.EMPTY_SPACE_TOP_PERCENTAGE / 100.0 * maxLines));
   const bars = [];
-  for (let index = 0; index < commits.length; index++) {
-    const commit = commits[index];
+  const m = constants.BAR_LAYER_LEFT_MARGIN,
+        s = scrollLeft,
+        p = constants.BAR_PADDING,
+        w = constants.BAR_WIDTH;
+  for (let i = 0; i < commits.length; i++) {
+    const commit = commits[i];
     const barY = maxHeight-constants.BAR_BOTTOM_MARGIN;
-    const barX = constants.BAR_LAYER_LEFT_MARGIN + (index) * (constants.BAR_PADDING + constants.BAR_WIDTH);
+    // m - margin, s - scroll position, p - bar padding, w - bar width
+    const initialOffset = m - s; // margin is getting shrinked down while we scroll to the right
+    const relativePositionWithinBarAndItsPadding = (s-m) % (w+p);
+    const offsetWhileLeftmostBarIsVisible = -relativePositionWithinBarAndItsPadding;
+    const offsetWhileLeftmostBarIsOutOfScreen = relativePositionWithinBarAndItsPadding - w;
+    const regularOffset = relativePositionWithinBarAndItsPadding < w ? offsetWhileLeftmostBarIsVisible : offsetWhileLeftmostBarIsOutOfScreen;
+    const offset = s < m ? initialOffset : regularOffset;
+    // barX = i * (p+w) + (s < m ? m-s : ((s-m) % (w+p) < w ? -(s-m) % (w+p) : (s-m) % (w+p) - w));
+    const barX = i * (p+w) + offset;
+
     const barWidth = constants.BAR_WIDTH;
 
     const stack = [];

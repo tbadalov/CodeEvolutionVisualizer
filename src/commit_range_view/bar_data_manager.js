@@ -1,5 +1,5 @@
 const CommitDataManager = require('./commit_data_manager');
-const { largestCommitSize } = require('./util');
+const { calculateLargestCommitSize } = require('./util');
 
 const BAR_WIDTH = 30;
 const BAR_PADDING = 2;
@@ -17,7 +17,7 @@ class BarDataManager {
     this.commitDataManager = new CommitDataManager(rawData);
     this.classToColorMapping = classToColorMapping;
     this.containerReference = containerReference;
-    this.largestCommitSize = largestCommitSize(this.commitDataManager.getRawCommits());
+    this.largestCommitSize = calculateLargestCommitSize(this.commitDataManager.getRawCommits());
     this.zoomValueY = 1.0;
     this.zoomValueX = 1.0;
     this.showSrc = true;
@@ -80,10 +80,13 @@ class BarDataManager {
     };
   }
 
-  barsFromRange(xStart, xEnd) {
+  barsFromRange(xStart, xEnd, params = {}) {
+    const isClassDisabled = params.isClassDisabled || {};
     const startBarIndex = Math.floor(Math.max(0, (xStart - BAR_LAYER_LEFT_MARGIN)) / (BAR_PADDING + BAR_WIDTH));
     const commits = this.dataFromRange(xStart, xEnd);
-    this.largestCommitSize = largestCommitSize(commits);
+    this.largestCommitSize = calculateLargestCommitSize(props.commits, {
+      isClassDisabled: isClassDisabled,
+    });
   }
 
   dataFromRange(xStart, xEnd) {
@@ -91,6 +94,12 @@ class BarDataManager {
     const endBarIndex = Math.ceil(Math.max(0, (xEnd - BAR_LAYER_LEFT_MARGIN)) / (BAR_PADDING + BAR_WIDTH));
     const commits = this.commitDataManager.getRawCommits();
     return commits.slice(startBarIndex, endBarIndex+1)
+      .filter(commit => (this.showSrc && commit.totalChangedLinesCount > 0) || (this.showAssets && commit.totalChangedLinesCount === 0));
+  }
+
+  filteredData() {
+    const commits = this.commitDataManager.getRawCommits();
+    return commits
       .filter(commit => (this.showSrc && commit.totalChangedLinesCount > 0) || (this.showAssets && commit.totalChangedLinesCount === 0));
   }
 

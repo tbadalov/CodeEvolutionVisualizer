@@ -6,6 +6,7 @@ const ColorContext = require('../contexts/color_context');
 const { useContext, useEffect, useState } = require('react');
 const { draw } = require('./diagram_sketcher');
 const { usePrimitiveDiagramProps } = require('../common');
+const { calculateLargestCommitSize, dataFromRange } = require('./util');
 
 /*const scrollContainerRef = React.createRef();
 const largeContainerRef = React.createRef();*/
@@ -14,14 +15,13 @@ const defaultStageProps = {
   stageProps: {
     width: 0,
     height: 0,
-    x: -constants.PADDING,
   },
 };
 
 function BarChart(props) {
   const colorContext = useContext(ColorContext);
   const [primitiveDiagramProps, setPrimitiveDiagramProps] = useState(defaultStageProps);
-  const [chartLayerProps, setChartLayerProps] = useState({x: constants.PADDING});
+  const [chartLayerProps, setChartLayerProps] = useState({});
   const [diagramContainerLeftOffset, setDiagramContainerLeftOffset] = useState(0);
   useEffect(() => {
     setPrimitiveDiagramProps({
@@ -33,10 +33,18 @@ function BarChart(props) {
       }
     })
   }, [props.width, props.height]);
-  const visualData = convertToVisualData(props.commits, {
+  const visibleCommits = dataFromRange(props.commits, {
+    startX: diagramContainerLeftOffset,
+    endX: diagramContainerLeftOffset+primitiveDiagramProps.stageProps.width,
+  });
+
+  const visualData = convertToVisualData({
+    commits: visibleCommits,
+    largestCommitSize: props.maxValue,
     maxHeight: primitiveDiagramProps.stageProps.height - constants.BAR_BOTTOM_MARGIN,
     classToColorMapping: colorContext.classToColorMapping,
     isClassDisabled: props.isClassDisabled,
+    scrollLeft: diagramContainerLeftOffset,
   });
   console.log(visualData);
   const onDraw = () => draw(visualData, {
@@ -52,7 +60,6 @@ function BarChart(props) {
     setDiagramContainerLeftOffset(e.target.scrollLeft);
     setChartLayerProps({
       ...chartLayerProps,
-      x: constants.PADDING - e.target.scrollLeft,
     });
   }
 

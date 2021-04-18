@@ -9,7 +9,7 @@ const GeneralDiagram = require('../general_diagram');
 const CommitRangeViewAxis = require('./chart_axis');
 const BarChart = require('./bar_chart');
 const constants = require('./constants');
-const { largestCommitSize } = require('./util');
+const { largestCommitSize, calculateLargestCommitSize } = require('./util');
 
 const BAR_WIDTH = 30;
 const BAR_PADDING = 2;
@@ -196,7 +196,6 @@ class CommitRangeView extends React.Component {
         stageProps: {
           width: 0,
           height: 0,
-          x: -constants.PADDING,
           onWheel: this.onStageWheelEventListener,
         },
       },
@@ -331,7 +330,9 @@ class CommitRangeView extends React.Component {
   refreshDiagram() {
     const dx = this.state.scrollLeft;
     const dy = 0;
-    const visualData = this.barDataManager.barsFromRange(dx-PADDING, (dx+this.scrollContainerRef.current.clientWidth+PADDING)/this.state.chartLayerProps.scaleX);
+    const visualData = this.barDataManager.barsFromRange(dx, (dx+this.scrollContainerRef.current.clientWidth)/this.state.chartLayerProps.scaleX, {
+      isClassDisabled: this.props.isClassDisabled,
+    });
     return draw.call(this, { bars: visualData.bars });
   }
 
@@ -348,7 +349,7 @@ class CommitRangeView extends React.Component {
       scrollInterval = null;
       isSelecting = false;
       isAutoScrolling = false;
-      const rawSubData = this.barDataManager.dataFromRange(Math.min(selectionStartX, currentX)-Y_AXIS_WIDTH-BAR_LAYER_LEFT_MARGIN, Math.max(selectionStartX, currentX)-Y_AXIS_WIDTH-BAR_LAYER_LEFT_MARGIN);
+      const rawSubData = this.barDataManager.dataFromRange(Math.min(selectionStartX, currentX)-constants.BAR_LAYER_LEFT_MARGIN, Math.max(selectionStartX, currentX)-constants.BAR_LAYER_LEFT_MARGIN);
       const commitHashes = rawSubData.map(commit => commit.commitHash);
       console.log(commitHashes);
       console.log("first:" + commitHashes[0]);
@@ -389,7 +390,10 @@ class CommitRangeView extends React.Component {
     this.barDataManager.enableAll();
     Object.keys(this.props.disabledClasses).forEach(className => this.barDataManager.disable(className));
     const dx = this.state.scrollLeft;
-    const commits = this.scrollContainerRef.current ? this.barDataManager.dataFromRange(-constants.PADDING, (dx+this.scrollContainerRef.current.clientWidth+constants.PADDING)/this.state.chartLayerProps.scaleX) : [];
+    const commits = this.scrollContainerRef.current ? this.barDataManager.filteredData() : [];
+    const largestCommitSize = calculateLargestCommitSize(commits, {
+      isClassDisabled: this.props.disabledClasses,
+    });
     return(
       <div ref={this.rootContainerRef}
         style={{width: '100%', height: '100%'}}
@@ -397,7 +401,7 @@ class CommitRangeView extends React.Component {
         onMouseDown={this.onScrollContainerMouseDown}
       >
         <CommitRangeViewAxis
-          maxValue={this.barDataManager.largestCommitSize} />
+          maxValue={largestCommitSize} />
         <BarChart
           width={this.rootContainerRef.current ? this.rootContainerRef.current.clientWidth - constants.Y_AXIS_WIDTH : 0 }
           height={this.rootContainerRef.current ? this.rootContainerRef.current.clientHeight : 0 }
@@ -410,6 +414,7 @@ class CommitRangeView extends React.Component {
           strokedStackCommitHash={this.state.strokedStackCommit}
           strokedStackClassName={this.state.strokedStackClassName}
           strokedStackBorderColor={this.state.strokedStackBorderColor}
+          maxValue={largestCommitSize}
           chartLayerProps={this.state.chartLayerProps}
           onContainerScroll={this.onContainerScroll}
           isClassDisabled={this.props.disabledClasses}
