@@ -337,7 +337,7 @@ class CommitRangeView extends React.Component {
     this.barDataManager.enableAll();
     Object.keys(this.props.disabledClasses).forEach(className => this.barDataManager.disable(className));
     const dx = this.state.scrollLeft;
-    const commits = this.scrollContainerRef.current ? this.barDataManager.filteredData() : [];
+    const commits = this.scrollContainerRef.current ? this.barDataManager.filteredData({isClassDisabled: this.props.disabledClasses}) : [];
     const largestCommitSize = calculateLargestCommitSize(commits, {
       isClassDisabled: this.props.disabledClasses,
     });

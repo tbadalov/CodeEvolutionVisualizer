@@ -97,10 +97,11 @@ class BarDataManager {
       .filter(commit => (this.showSrc && commit.totalChangedLinesCount > 0) || (this.showAssets && commit.totalChangedLinesCount === 0));
   }
 
-  filteredData() {
+  filteredData(params) {
     const commits = this.commitDataManager.getRawCommits();
     return commits
-      .filter(commit => (this.showSrc && commit.totalChangedLinesCount > 0) || (this.showAssets && commit.totalChangedLinesCount === 0));
+      .filter(commit => (this.showSrc && commit.totalChangedLinesCount > 0) || (this.showAssets && commit.totalChangedLinesCount === 0))
+      .filter(commit => commit.changedClasses.length === 0 || commit.changedClasses.some(changedClass => !params.isClassDisabled[changedClass.className]));
   }
 
   updateUnderlyingData(data, classToColorMapping) {
