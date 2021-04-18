@@ -1,4 +1,5 @@
 const React = require('react');
+const ReactDOM = require('react-dom');
 const ReactKonva = require('react-konva');
 const BarDataManager = require('./bar_data_manager');
 const Tooltip = require('../tooltip');
@@ -20,8 +21,6 @@ let scrollInterval;
 let currentX;
 let currentY;
 let tooltipTimeout;
-
-
 
 function mouseEnterStack(event, payload) {
   restartTooltipTimer.call(this, payload, event.evt.pageX, event.evt.pageY);
@@ -53,35 +52,17 @@ function labelMouseEnter(event, labelData) {
   this.setState({
     cursorStyle: 'pointer',
   });
-  disableTooltipTimer();
-  tooltipTimeout = setTimeout(() => {
-    this.setState({
-      tooltipLeft: event.evt.pageX - 10,
-      tooltipTop: event.evt.pageY - (Object.keys(labelData.commitDetails).length + labelData.stacks.length + 1) * 25 - 25,
-      tooltipVisible: true,
-      tooltipTitle: labelData.commitHash,
-      tooltipItems: Object.keys(labelData.commitDetails)
-        .map((commitDetail, index) => <CommitDetailTooltipItem
-          key={index}
-          detailName={commitDetail}
-          detailValue={labelData.commitDetails[commitDetail]}
-        />)
-        .concat(
-          labelData.stacks.map((stackPayload, index) => <TooltipCommitRangeItem
-            key={index + Object.keys(labelData.commitDetails).length}
-            markerColor={this.props.classToColorMapping[stackPayload.changedClassName]}
-            className={stackPayload.changedClassName}
-            amount={`${stackPayload.changedLinesCount} line${stackPayload.changedLinesCount > 1 ? 's were' : ' was'} changed (${stackPayload.changedLinesCountPercentage.toFixed(2)}%)`}
-          />)
-        ),
-    });
-  }, 700);
+  this.showTooltip({
+    pageX: event.evt.pageX,
+    pageY: event.evt.pageY,
+    labelData,
+  });
 }
 
 function mouseLeaveStack(unstrokeStack, event) {
   if (Math.abs(this.state.tooltipLeft - (event.evt.pageX)) > 4) { // mouse out of tooltip
     unstrokeStack();
-    disableTooltipTimer();
+    this.disableTooltipTimer();
     this.setState({
       tooltipVisible: false,
     });
@@ -89,7 +70,7 @@ function mouseLeaveStack(unstrokeStack, event) {
 }
 
 function restartTooltipTimer(payload, mousePositionPageX, mousePositionPageY) {
-  disableTooltipTimer();
+  this.disableTooltipTimer();
   tooltipTimeout = setTimeout(() => {
     this.setState({
       tooltipLeft: mousePositionPageX + 5,
@@ -112,10 +93,6 @@ function mouseMoveStack(event, payload) {
   restartTooltipTimer.call(this, payload, event.evt.pageX, event.evt.pageY);
 }
 
-function disableTooltipTimer() {
-  clearTimeout(tooltipTimeout);
-}
-
 class CommitRangeView extends React.Component {
   constructor(props) {
     super(props);
@@ -127,6 +104,8 @@ class CommitRangeView extends React.Component {
     this.onScrollContainerMouseMove = this.onScrollContainerMouseMove.bind(this);
     this.onContainerScroll = this.onContainerScroll.bind(this);
     this.onScrollContainerMouseDown = this.onScrollContainerMouseDown.bind(this);
+    this.disableTooltipTimer = () => {};
+    this.showTooltip = this.showTooltip.bind(this);
     this.onMouseUp = this.onMouseUp.bind(this);
     this.state = {
       tooltipVisible: false,
@@ -147,6 +126,60 @@ class CommitRangeView extends React.Component {
     };
   }
 
+  showTooltip(params) {
+    this.disableTooltipTimer();
+    const {
+      pageX,
+      pageY,
+      labelData
+    } = params;
+    const tooltipTitle = labelData.commitHash;
+    const tooltipItems = Object.keys(labelData.commitDetails)
+    .map((commitDetail, index) => <CommitDetailTooltipItem
+        key={index}
+        detailName={commitDetail}
+        detailValue={labelData.commitDetails[commitDetail]}
+      />)
+      .concat(
+        labelData.stacks.map((stackPayload, index) => <TooltipCommitRangeItem
+          key={index + Object.keys(labelData.commitDetails).length}
+          markerColor={this.props.classToColorMapping[stackPayload.changedClassName]}
+          className={stackPayload.changedClassName}
+          amount={`${stackPayload.changedLinesCount} line${stackPayload.changedLinesCount > 1 ? 's were' : ' was'} changed (${stackPayload.changedLinesCountPercentage.toFixed(2)}%)`}
+        />
+      ));
+    const dummyContainer = document.createElement('div');
+    document.body.appendChild(dummyContainer);
+    ReactDOM.render(
+      <Tooltip visible
+        left={-9999}
+        top={-9999}
+        title={tooltipTitle}
+        items={tooltipItems}
+      />,
+      dummyContainer
+    );
+    const tooltipWidth = dummyContainer.firstChild.clientWidth;
+    dummyContainer.remove();
+    const tooltipLeft = pageX + tooltipWidth <= window.innerWidth ? pageX : pageX - tooltipWidth;
+    const tooltipTop = pageY - (Object.keys(labelData.commitDetails).length + labelData.stacks.length + 1) * 25 - 25;
+    const tooltipTimeout = setTimeout(() => {
+      this.setState({
+        tooltipLeft,
+        tooltipTop,
+        tooltipTitle,
+        tooltipItems,
+        tooltipVisible: true,
+      });
+    }, 700);
+
+    this.disableTooltipTimer = () => {
+      clearTimeout(tooltipTimeout);
+      this.disableTooltipTimer = () => {};
+    }
+    return this.disableTooltipTimer;
+  }
+
   onContainerScroll(scrollEvent) {
     requestAnimationFrame(() => {
       if (this.state.tooltipVisible) {
@@ -156,7 +189,7 @@ class CommitRangeView extends React.Component {
   }
 
   changeDiagram(...args) {
-    disableTooltipTimer();
+    this.disableTooltipTimer();
     this.props.onDiagramChange(...args);
   }
 
@@ -243,7 +276,7 @@ class CommitRangeView extends React.Component {
   }
 
   hideTooltip() {
-    disableTooltipTimer();
+    this.disableTooltipTimer();
     this.setState({
       cursorStyle: 'auto',
       tooltipVisible: false,
