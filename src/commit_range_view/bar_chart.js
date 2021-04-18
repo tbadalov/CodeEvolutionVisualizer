@@ -2,6 +2,9 @@ const React = require('react');
 const GeneralDiagram = require('../general_diagram');
 const { convertToVisualData } = require('./data_converter');
 const constants = require('./constants');
+const {
+  SCALE_BY
+} = constants;
 const ColorContext = require('../contexts/color_context');
 const { useContext, useEffect, useState } = require('react');
 const { draw } = require('./diagram_sketcher');
@@ -18,10 +21,21 @@ const defaultStageProps = {
   },
 };
 
+const defaultChartLayerProps = {
+  scaleX: 1.0,
+  scaleY: 1.0,
+}
+
 function BarChart(props) {
   const colorContext = useContext(ColorContext);
   const [primitiveDiagramProps, setPrimitiveDiagramProps] = useState(defaultStageProps);
-  const [chartLayerProps, setChartLayerProps] = useState({});
+  const [chartLayerProps, setChartLayerProps] = useState(defaultChartLayerProps);
+  const setScaleX = (scaleX) => {
+    setChartLayerProps({
+      ...chartLayerProps,
+      scaleX,
+    });
+  };
   const [diagramContainerLeftOffset, setDiagramContainerLeftOffset] = useState(0);
   useEffect(() => {
     setPrimitiveDiagramProps({
@@ -63,6 +77,17 @@ function BarChart(props) {
     });
   }
 
+  function onStageWheelEventListener(e) {
+    if (e.evt.deltaX !== 0 || e.evt.deltaY === 0) {
+      return;
+    }
+    const scaleBy = e.evt.deltaY > 0 ? SCALE_BY : 1.0 / SCALE_BY;
+    scaleChartLayer(scaleBy, {
+      chartLayerProps,
+      setScaleX,
+    });
+  }
+
   return(
     <GeneralDiagram {...props}
       rootStyle={{
@@ -75,10 +100,17 @@ function BarChart(props) {
       largeContainerRef={props.largeContainerRef}
       onContainerScroll={onScroll}
       scrollLeft={diagramContainerLeftOffset}
+      onWheel={onStageWheelEventListener}
       cursorStyle='auto'
       onDraw={onDraw}>
     </GeneralDiagram>
   );
+}
+
+function scaleChartLayer(scaleBy, params) {
+  const oldScale = params.chartLayerProps.scaleX;
+  const newScale = oldScale * scaleBy;
+  params.setScaleX(newScale);
 }
 
 module.exports = BarChart;

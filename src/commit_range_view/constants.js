@@ -7,6 +7,7 @@ const LABEL_HEIGHT = 25;
 const BAR_BOTTOM_MARGIN = LABEL_HEIGHT + 5;
 const PADDING = 250;
 const EMPTY_SPACE_TOP_PERCENTAGE = 10;
+const SCALE_BY = 1.03;
 
 module.exports = {
   Y_AXIS_WIDTH,
@@ -17,4 +18,5 @@ module.exports = {
   BAR_WIDTH,
   BAR_PADDING,
   LABEL_HEIGHT,
+  SCALE_BY,
 };

@@ -140,25 +140,7 @@ function onKeyDownEventListener(e) {
   scaleChartLayer.call(this, scaleBy);
 }
 
-function onStageWheelEventListener(e) {
-  if (e.evt.deltaX !== 0 || e.evt.deltaY === 0) {
-    return;
-  }
-  const scaleBy = e.evt.deltaY > 0 ? SCALE_BY : 1.0 / SCALE_BY;
-  scaleChartLayer.call(this, scaleBy);
-}
 
-function scaleChartLayer(scaleBy) {
-  var oldScale = this.state.chartLayerProps.scaleX;
-  var newScale = oldScale * scaleBy;
-  this.setState({
-    chartLayerProps: {
-      ...this.state.chartLayerProps,
-      scaleX: newScale,
-    },
-  });
-  this.refreshDiagram();
-}
 
 
 function disableTooltipTimer() {
@@ -176,7 +158,6 @@ class CommitRangeView extends React.Component {
     this.clickCommit = this.clickCommit.bind(this);
     this.refreshDiagram = this.refreshDiagram.bind(this);
     this.onScrollContainerMouseMove = this.onScrollContainerMouseMove.bind(this);
-    this.onStageWheelEventListener = onStageWheelEventListener.bind(this);
     this.onContainerScroll = this.onContainerScroll.bind(this);
     this.convertDataToPrimitiveShapes = this.convertDataToPrimitiveShapes.bind(this);
     this.onScrollContainerMouseDown = this.onScrollContainerMouseDown.bind(this);
@@ -196,7 +177,6 @@ class CommitRangeView extends React.Component {
         stageProps: {
           width: 0,
           height: 0,
-          onWheel: this.onStageWheelEventListener,
         },
       },
       mouseSelectionAreaProps: {
