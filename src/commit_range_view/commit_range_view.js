@@ -170,12 +170,14 @@ class CommitRangeView extends React.Component {
     dummyContainer.remove();
     const tooltipLeft = pageX + tooltipWidth <= window.innerWidth ? pageX : pageX - tooltipWidth;
     const tooltipTop = pageY - tooltipHeight >= 0 ? pageY - tooltipHeight - constants.LABEL_HEIGHT : pageY + constants.LABEL_HEIGHT;
+    this.setState({
+      tooltipLeft,
+      tooltipTop,
+      tooltipTitle,
+      tooltipItems,
+    });
     const tooltipTimeout = setTimeout(() => {
       this.setState({
-        tooltipLeft,
-        tooltipTop,
-        tooltipTitle,
-        tooltipItems,
         tooltipVisible: true,
       });
     }, 700);
