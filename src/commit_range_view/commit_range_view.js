@@ -49,36 +49,33 @@ function labelMouseLeave() {
   })
 }
 
-function labelMouseEnter(labelData) {
-  return (function(event) {
+function labelMouseEnter(event, labelData) {
+  this.setState({
+    cursorStyle: 'pointer',
+  });
+  disableTooltipTimer();
+  tooltipTimeout = setTimeout(() => {
     this.setState({
-      cursorStyle: 'pointer',
-    });
-    disableTooltipTimer();
-    tooltipTimeout = setTimeout(() => {
-      console.log(labelData);
-      this.setState({
-        tooltipLeft: event.evt.pageX - 10,
-        tooltipTop: event.evt.pageY - (Object.keys(labelData.commitDetails).length + labelData.stacks.length + 1) * 25 - 25,
-        tooltipVisible: true,
-        tooltipTitle: labelData.commitHash,
-        tooltipItems: Object.keys(labelData.commitDetails)
-          .map((commitDetail, index) => <CommitDetailTooltipItem
-            key={index}
-            detailName={commitDetail}
-            detailValue={labelData.commitDetails[commitDetail]}
+      tooltipLeft: event.evt.pageX - 10,
+      tooltipTop: event.evt.pageY - (Object.keys(labelData.commitDetails).length + labelData.stacks.length + 1) * 25 - 25,
+      tooltipVisible: true,
+      tooltipTitle: labelData.commitHash,
+      tooltipItems: Object.keys(labelData.commitDetails)
+        .map((commitDetail, index) => <CommitDetailTooltipItem
+          key={index}
+          detailName={commitDetail}
+          detailValue={labelData.commitDetails[commitDetail]}
+        />)
+        .concat(
+          labelData.stacks.map((stackPayload, index) => <TooltipCommitRangeItem
+            key={index + Object.keys(labelData.commitDetails).length}
+            markerColor={this.props.classToColorMapping[stackPayload.changedClassName]}
+            className={stackPayload.changedClassName}
+            amount={`${stackPayload.changedLinesCount} line${stackPayload.changedLinesCount > 1 ? 's were' : ' was'} changed (${stackPayload.changedLinesCountPercentage.toFixed(2)}%)`}
           />)
-          .concat(
-            labelData.stacks.map((stackPayload, index) => <TooltipCommitRangeItem
-              key={index + Object.keys(labelData.commitDetails).length}
-              markerColor={this.props.classToColorMapping[stackPayload.changedClassName]}
-              className={stackPayload.changedClassName}
-              amount={`${stackPayload.changedLinesCount} line${stackPayload.changedLinesCount > 1 ? 's were' : ' was'} changed (${stackPayload.changedLinesCountPercentage.toFixed(2)}%)`}
-            />)
-          ),
-      });
-    }, 700);
-  }).bind(this);
+        ),
+    });
+  }, 700);
 }
 
 function mouseLeaveStack(unstrokeStack, event) {
@@ -141,21 +138,11 @@ class CommitRangeView extends React.Component {
       cursorStyle: 'auto',
       scrollLeft: 0,
       largeContainerHeight: 0,
-      primitiveDiagramProps: {
-        stageProps: {
-          width: 0,
-          height: 0,
-        },
-      },
       mouseSelectionAreaProps: {
         x: 0,
         y: 0,
         width: 0,
         isActive: false,
-      },
-      chartLayerProps: {
-        scaleX: 1.0,
-        scaleY: 1.0,
       },
     };
   }
@@ -291,9 +278,7 @@ class CommitRangeView extends React.Component {
   }
 
   componentDidMount() {
-    console.log("mounting....")
     document.addEventListener('mouseup', this.onMouseUp);
-    this.forceUpdate();
   }
 
   componentWillUnmount() {
@@ -327,18 +312,18 @@ class CommitRangeView extends React.Component {
           height={this.rootContainerRef.current ? this.rootContainerRef.current.clientHeight : 0 }
           stackMouseEnterEventListener={mouseEnterStack.bind(this)}
           stackMouseMoveEventListener={mouseMoveStack.bind(this)}
-          stackMouseLeaveEventListener={mouseLeaveStack.bind(this)}
-          onLabelMousEnter={labelMouseEnter.bind(this)}
+          stackMouseLeaveEventListener={mouseLeaveStack.bind(this, unstrokeStack.bind(this))}
+          onLabelMouseEnter={labelMouseEnter.bind(this)}
           onLabelMouseLeave={labelMouseLeave.bind(this)}
           onLabelClick={this.clickCommit}
           strokedStackCommitHash={this.state.strokedStackCommit}
           strokedStackClassName={this.state.strokedStackClassName}
           strokedStackBorderColor={this.state.strokedStackBorderColor}
           maxValue={largestCommitSize}
-          chartLayerProps={this.state.chartLayerProps}
           onContainerScroll={this.onContainerScroll}
           isClassDisabled={this.props.disabledClasses}
           scrollContainerRef={this.scrollContainerRef}
+          cursorStyle={this.state.cursorStyle}
           commits={commits}
         />
         <Tooltip

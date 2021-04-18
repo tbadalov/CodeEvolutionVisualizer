@@ -42,7 +42,7 @@ function drawBar(bar, params) {
     });
   });
   const reactKonvaText = drawLabel(bar.label, {
-    onLabelMouseEnter: (e) => params.onLabelMousEnter(e, bar.label.payload),
+    onLabelMouseEnter: (e) => params.onLabelMouseEnter(e, bar.label.payload),
     onLabelMouseLeave: (e) => params.onLabelMouseLeave(e, bar.label.payload),
     onLabelClick: (e) => params.onLabelClick(e, bar.label.payload),
   });

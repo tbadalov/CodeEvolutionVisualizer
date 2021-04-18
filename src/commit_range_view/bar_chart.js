@@ -133,7 +133,6 @@ function BarChart(props) {
       onContainerScroll={onScroll}
       scrollLeft={diagramContainerLeftOffset}
       onWheel={onStageWheelEventListener}
-      cursorStyle='auto'
       onDraw={onDraw}>
     </GeneralDiagram>
   );
