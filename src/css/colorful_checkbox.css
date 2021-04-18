@@ -15,7 +15,7 @@
   margin-right: 10px;
 }
 
-.colorful-checkbox-checked > input[type="checkbox"]:checked + label:after {
+.colorful-checkbox > input[type="checkbox"]:checked + label:after {
   position: relative;
   top: -4px;
   left: 2px;
