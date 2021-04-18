@@ -9,18 +9,8 @@ const GeneralDiagram = require('../general_diagram');
 const CommitRangeViewAxis = require('./chart_axis');
 const BarChart = require('./bar_chart');
 const constants = require('./constants');
-const { largestCommitSize, calculateLargestCommitSize } = require('./util');
+const { calculateLargestCommitSize } = require('./util');
 
-const BAR_WIDTH = 30;
-const BAR_PADDING = 2;
-const SCALE_BY = 1.03;
-const BAR_LAYER_LEFT_MARGIN = 40;
-const Y_AXIS_WIDTH = 100;
-const Y_AXIS_LINE_WIDTH = 6;
-const LABEL_HEIGHT = 40;
-const BAR_BOTTOM_MARGIN = LABEL_HEIGHT + 5;
-const PADDING = 250;
-const EMPTY_SPACE_TOP_PERCENTAGE = 10;
 let isMouseDown = false;
 let isSelecting = false;
 let isAutoScrolling = false;
@@ -125,9 +115,6 @@ function mouseMoveStack(event, payload) {
   restartTooltipTimer.call(this, payload, event.evt.pageX, event.evt.pageY);
 }
 
-
-
-
 function disableTooltipTimer() {
   clearTimeout(tooltipTimeout);
 }
@@ -140,10 +127,8 @@ class CommitRangeView extends React.Component {
     this.rootContainerRef = React.createRef();
     this.barDataManager = new BarDataManager(this.props.data, this.props.classToColorMapping);
     this.clickCommit = this.clickCommit.bind(this);
-    this.refreshDiagram = this.refreshDiagram.bind(this);
     this.onScrollContainerMouseMove = this.onScrollContainerMouseMove.bind(this);
     this.onContainerScroll = this.onContainerScroll.bind(this);
-    this.convertDataToPrimitiveShapes = this.convertDataToPrimitiveShapes.bind(this);
     this.onScrollContainerMouseDown = this.onScrollContainerMouseDown.bind(this);
     this.onMouseUp = this.onMouseUp.bind(this);
     this.state = {
@@ -181,13 +166,6 @@ class CommitRangeView extends React.Component {
         this.hideTooltip();
       }
     });
-  }
-
-  convertDataToPrimitiveShapes() {
-    if (this.scrollContainerRef.current) {
-      return this.refreshDiagram();
-    }
-    return null;
   }
 
   changeDiagram(...args) {
@@ -283,15 +261,6 @@ class CommitRangeView extends React.Component {
       cursorStyle: 'auto',
       tooltipVisible: false,
     });
-  }
-
-  refreshDiagram() {
-    const dx = this.state.scrollLeft;
-    const dy = 0;
-    const visualData = this.barDataManager.barsFromRange(dx, (dx+this.scrollContainerRef.current.clientWidth)/this.state.chartLayerProps.scaleX, {
-      isClassDisabled: this.props.isClassDisabled,
-    });
-    return draw.call(this, { bars: visualData.bars });
   }
 
   onMouseUp(e) {
