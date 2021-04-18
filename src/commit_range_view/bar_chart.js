@@ -40,9 +40,14 @@ function BarChart(props) {
       });
     },
   });
-  useEffect(() => {
-    largeContainerRef.current.style.width = (calculateStageWidth(props.commits) * chartLayerProps.scaleX) + 'px';
-  }, [chartLayerProps.scaleX]);
+
+  (function adaptWidth() {
+    const scaledStageWidth = calculateStageWidth(props.commits) * chartLayerProps.scaleX;
+    useEffect(() => {
+      largeContainerRef.current.style.width = scaledStageWidth + 'px'
+    }, [chartLayerProps.scaleX, props.commits]);
+  })();
+
   const [diagramContainerLeftOffset, setDiagramContainerLeftOffset] = useState(0);
   useEffect(() => {
     setPrimitiveDiagramProps({
@@ -54,9 +59,6 @@ function BarChart(props) {
       }
     })
   }, [props.width, props.height]);
-  useEffect(() => {
-    largeContainerRef.current.style.width = (calculateStageWidth(props.commits) * chartLayerProps.scaleX) + 'px';
-  }, [props.commits]);
 
   const visibleCommits = dataFromRange(props.commits, {
     startX: diagramContainerLeftOffset / chartLayerProps.scaleX,
@@ -110,6 +112,7 @@ function BarChart(props) {
     }
     scale(scaleBy);
   }
+
   useEffect(() => {
     document.addEventListener('keydown', onKeyDownEventListener);
     return function cleanup() {
