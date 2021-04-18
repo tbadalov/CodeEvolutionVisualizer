@@ -38,9 +38,7 @@ function BarChart(props) {
     });
   };
   useEffect(() => {
-    if (props.onZoom) {
-      props.onZoom(chartLayerProps.scaleX);
-    }
+    largeContainerRef.current.style.width = (calculateStageWidth(props.commits) * chartLayerProps.scaleX) + 'px';
   }, [chartLayerProps.scaleX]);
   const [diagramContainerLeftOffset, setDiagramContainerLeftOffset] = useState(0);
   useEffect(() => {
@@ -54,12 +52,12 @@ function BarChart(props) {
     })
   }, [props.width, props.height]);
   useEffect(() => {
-    largeContainerRef.current.style.width = calculateStageWidth(props.commits) + 'px';
+    largeContainerRef.current.style.width = (calculateStageWidth(props.commits) * chartLayerProps.scaleX) + 'px';
   }, [props.commits]);
 
   const visibleCommits = dataFromRange(props.commits, {
-    startX: diagramContainerLeftOffset,
-    endX: diagramContainerLeftOffset+primitiveDiagramProps.stageProps.width,
+    startX: diagramContainerLeftOffset / chartLayerProps.scaleX,
+    endX: (diagramContainerLeftOffset+primitiveDiagramProps.stageProps.width) / chartLayerProps.scaleX,
   });
 
   const visualData = convertToVisualData({
@@ -68,7 +66,7 @@ function BarChart(props) {
     maxHeight: primitiveDiagramProps.stageProps.height - constants.BAR_BOTTOM_MARGIN,
     classToColorMapping: colorContext.classToColorMapping,
     isClassDisabled: props.isClassDisabled,
-    scrollLeft: diagramContainerLeftOffset,
+    scrollLeft: diagramContainerLeftOffset / chartLayerProps.scaleX,
   });
   console.log(visualData);
   const onDraw = () => draw(visualData, {
