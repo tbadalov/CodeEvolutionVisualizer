@@ -30,27 +30,36 @@ function drawLabel(label, params) {
   return <ReactKonva.Text {...textProps} />
 }
 
-function drawBar(bar, params) {
-  const reactKonvaStacks = bar.stack.map(stack => {
-    if (stack.payload.commitHash === params.strokedStackCommitHash && stack.payload.changedClassName === params.strokedStackClassName) {
-      stack.stroke = params.strokedStackBorderColor;
-    }
-    return drawStack(stack, {
-      onMouseEnter: (e) => params.stackMouseEnterEventListener(e, stack.payload),
-      onMouseMove: (e) => params.stackMouseMoveEventListener(e, stack.payload),
-      onMouseLeave: (e) => params.stackMouseLeaveEventListener(e, stack.payload),
-    });
-  });
-  const reactKonvaText = drawLabel(bar.label, {
-    onLabelMouseEnter: (e) => params.onLabelMouseEnter(e, bar.label.payload),
-    onLabelMouseLeave: (e) => params.onLabelMouseLeave(e, bar.label.payload),
-    onLabelClick: (e) => params.onLabelClick(e, bar.label.payload),
-  });
+function labelEvents(labelPayload, drawParams) {
+  if (drawParams.isSelecting) {
+    return {};
+  }
+  return {
+    onLabelMouseEnter: (e) => drawParams.onLabelMouseEnter(e, labelPayload),
+    onLabelMouseLeave: (e) => drawParams.onLabelMouseLeave(e, labelPayload),
+    onLabelClick: (e) => drawParams.onLabelClick(e, labelPayload),
+  };
+}
+
+function stackEvents(stackPayload, drawParams) {
+  if (drawParams.isSelecting) {
+    return {};
+  }
+  return {
+    onMouseEnter: (e) => drawParams.stackMouseEnterEventListener(e, stackPayload),
+    onMouseMove: (e) => drawParams.stackMouseMoveEventListener(e, stackPayload),
+    onMouseLeave: (e) => drawParams.stackMouseLeaveEventListener(e, stackPayload),
+  };
+}
+
+function drawBar(bar, drawParams) {
+  const reactKonvaStacks = bar.stack.map(stack => drawStack(stack, stackEvents(stack.payload, drawParams)));
+  const reactKonvaCommitHashLabel = drawLabel(bar.label, labelEvents(bar.label.payload, drawParams));
 
   return (
     <ReactKonva.Group>
       { reactKonvaStacks }
-      { reactKonvaText }
+      { reactKonvaCommitHashLabel }
     </ReactKonva.Group>
   )
 }

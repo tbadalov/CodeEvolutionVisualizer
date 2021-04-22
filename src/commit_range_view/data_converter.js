@@ -47,7 +47,8 @@ export function convertToVisualData(params) {
         changedClassName: changedClass.className,
         commitHash: commit.commitHash,
       };
-      stack.push({
+      const strokeColor = commit.commitHash === params.strokedStackCommitHash && changedClass.className === params.strokedStackClassName ? params.strokedStackBorderColor : undefined;
+      const stackData = {
         x: stackX,
         y: stackY,
         height: stackHeight,
@@ -55,7 +56,9 @@ export function convertToVisualData(params) {
         fill: stackColor,
         scaleY: -1,
         payload: payload,
-      });
+        stroke: strokeColor,
+      };
+      stack.push(stackData);
       currentStackHeight += stackHeight;
     }
 

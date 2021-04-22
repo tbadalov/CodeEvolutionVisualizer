@@ -72,6 +72,9 @@ function BarChart(props) {
     classToColorMapping: colorContext.classToColorMapping,
     isClassDisabled: props.isClassDisabled,
     scrollLeft: diagramContainerLeftOffset / chartLayerProps.scaleX,
+    strokedStackCommitHash: props.strokedStackCommitHash,
+    strokedStackClassName: props.strokedStackClassName,
+    strokedStackBorderColor: props.strokedStackBorderColor,
   });
   console.log(visualData);
   const onDraw = () => draw(visualData, {

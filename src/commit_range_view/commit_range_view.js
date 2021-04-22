@@ -366,6 +366,7 @@ class CommitRangeView extends React.Component {
           isClassDisabled={this.props.disabledClasses}
           scrollContainerRef={this.scrollContainerRef}
           cursorStyle={this.state.cursorStyle}
+          isSelecting={isSelecting}
           commits={commits}
         >
           <Tooltip
