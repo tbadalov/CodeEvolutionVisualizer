@@ -367,14 +367,15 @@ class CommitRangeView extends React.Component {
           scrollContainerRef={this.scrollContainerRef}
           cursorStyle={this.state.cursorStyle}
           commits={commits}
-        />
-        <Tooltip
-          visible={this.state.tooltipVisible}
-          left={this.state.tooltipLeft}
-          top={this.state.tooltipTop}
-          title={this.state.tooltipTitle}
-          items={this.state.tooltipItems} />
-        <MouseSelectionArea {...this.state.mouseSelectionAreaProps}/>
+        >
+          <Tooltip
+            visible={this.state.tooltipVisible}
+            left={this.state.tooltipLeft}
+            top={this.state.tooltipTop}
+            title={this.state.tooltipTitle}
+            items={this.state.tooltipItems} />
+          <MouseSelectionArea {...this.state.mouseSelectionAreaProps}/>
+        </BarChart>
       </div>
     );
   }

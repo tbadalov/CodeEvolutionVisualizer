@@ -134,6 +134,7 @@ function BarChart(props) {
       scrollLeft={diagramContainerLeftOffset}
       onWheel={onStageWheelEventListener}
       onDraw={onDraw}>
+      { props.children }
     </GeneralDiagram>
   );
 }
