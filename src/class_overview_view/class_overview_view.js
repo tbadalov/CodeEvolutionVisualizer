@@ -70,13 +70,14 @@ class ClassOverviewView extends React.Component {
         <Item label='Collapse equal states' checked={this.state.collapseSameCommits} onItemChange={this.onCollapseItems} />
       </ItemList>
     );
-    const { startCommit, endCommit } = this.props;
+    const { applicationName, startCommit, endCommit } = this.props;
     const diagramDataLoader = new DiagramDataLoader();
     diagramDataLoader.load(
       `${this.props.url}/initial_data`,
       {
         startCommit,
         endCommit,
+        applicationName,
       }
     ).then(initialData => {
       const classFilterItems = initialData.classNames.map((className, index) => ({
@@ -122,6 +123,7 @@ class ClassOverviewView extends React.Component {
           className: this.state.selectedClassName,
           startCommit: this.props.startCommit,
           endCommit: this.props.endCommit,
+          applicationName: this.props.applicationName,
         }
       ).then(rawData => {
         console.log(rawData);

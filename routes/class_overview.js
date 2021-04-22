@@ -91,7 +91,7 @@ router.get('/initial_data', (req, res, next) => {
   };
   const query = `
     MATCH (last_commit:App {name: "` + req.query.applicationName + `"})
-      WHERE last_commit.branch='master' OR last_commit.branch="master\\\\n"
+      WHERE last_commit.branch='master' OR last_commit.branch="master\\\\\\n"
     WITH last_commit
     ORDER BY last_commit.author_timestamp DESC
     LIMIT 1
@@ -109,6 +109,7 @@ router.get('/initial_data', (req, res, next) => {
       AND (app)-[:CHANGED_TO*0..]->(last_commit)
     OPTIONAL MATCH (app)-[:APP_OWNS_CLASS]->(c:Class)
     RETURN collect(distinct c.name) as classNames, collect(distinct {branchName: app.branch, commitHash: app.commit}) as commits`;
+  console.log(query);
   session.run(query).subscribe({
     onNext: record => {
       dataFromDb = {
