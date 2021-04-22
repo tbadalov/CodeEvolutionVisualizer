@@ -48,6 +48,23 @@ function BarChart(props) {
     }, [chartLayerProps.scaleX, props.commits]);
   })();
 
+  useEffect(() => {
+    if (props.selectFromX !== undefined && props.selectToX !== undefined) {
+      const selectedCommitHashes = dataFromRange(props.commits, {
+        startX: props.selectFromX / chartLayerProps.scaleX,
+        endX: props.selectToX / chartLayerProps.scaleX,
+      }).map(selectedCommit => selectedCommit.commitHash);
+      props.changeDiagram(
+        'classOverviewView',
+        {
+          startCommit: selectedCommitHashes[0],
+          endCommit: selectedCommitHashes[selectedCommitHashes.length-1],
+          applicationName: props.applicationName,
+        }
+      );
+    }
+  }, [props.selectFromX, props.selectToX])
+
   const [diagramContainerLeftOffset, setDiagramContainerLeftOffset] = useState(0);
   useEffect(() => {
     setPrimitiveDiagramProps({
@@ -86,7 +103,9 @@ function BarChart(props) {
   });
 
   function onScroll(e) {
-    props.onContainerScroll(e);
+    if (props.onContainerScroll) {
+      props.onContainerScroll(e);
+    }
     setDiagramContainerLeftOffset(e.target.scrollLeft);
     setChartLayerProps({
       ...chartLayerProps,

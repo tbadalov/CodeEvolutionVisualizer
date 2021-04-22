@@ -8,6 +8,8 @@ const BAR_BOTTOM_MARGIN = LABEL_HEIGHT + 5;
 const PADDING = 250;
 const EMPTY_SPACE_TOP_PERCENTAGE = 10;
 const SCALE_BY = 1.03;
+const SCROLL_AREA_WIDTH = 30;
+const MAX_SCROLL_SPEED = 30; // pixels per interval
 
 module.exports = {
   Y_AXIS_WIDTH,
@@ -19,4 +21,6 @@ module.exports = {
   BAR_PADDING,
   LABEL_HEIGHT,
   SCALE_BY,
+  SCROLL_AREA_WIDTH,
+  MAX_SCROLL_SPEED,
 };

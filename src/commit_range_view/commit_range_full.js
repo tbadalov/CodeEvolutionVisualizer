@@ -96,10 +96,12 @@ class CommitRangeViewFull extends React.Component {
       <CommitRangeView
         data={this.state.data}
         disabledClasses={this.state.disabledClasses}
+        applicationName={this.props.applicationName}
         classToColorMapping={classToColorMapping}
         branchToColorMapping={branchToColorMapping}
         showSourceCodeChanges={this.state.showSourceCodeChanges}
         showAssetChanges={this.state.showAssetChanges}
+        offsetLeft={this.props.offsetLeft}
         onDiagramChange={this.props.changeDiagram} />
     );
   }

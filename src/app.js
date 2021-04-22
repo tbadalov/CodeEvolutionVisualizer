@@ -22,6 +22,7 @@ class App extends React.Component {
     this.goBack = this.goBack.bind(this);
     this.goForward = this.goForward.bind(this);
     this.onSelectedApp = this.onSelectedApp.bind(this);
+    this.sceneContainerRef = React.createRef();
     this.diagrams = {
       commitRangeView: CommitRangeView,
       classOverviewView: ClassOverviewView,
@@ -170,6 +171,7 @@ class App extends React.Component {
                 addMenuItem={this.addMenuItem}
                 changeDiagram={this.changeDiagram}
                 applicationName={this.state.selectedApplication}
+                offsetLeft={this.sceneContainerRef.current ? this.sceneContainerRef.current.offsetLeft : 0}
                 {...props}
                 {...props.location.state}
               />
@@ -182,7 +184,9 @@ class App extends React.Component {
         <div className="box-1">
           <Menu items={menuItems} />
         </div>
-        <div className="box-2">
+        <div className="box-2"
+          ref={this.sceneContainerRef}
+        >
           <ColorContext.Provider value={this.state.colorContextValue}>
             <Switch>
               { routes }

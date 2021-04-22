@@ -10,6 +10,10 @@ const GeneralDiagram = require('../general_diagram');
 const CommitRangeViewAxis = require('./chart_axis');
 const BarChart = require('./bar_chart');
 const constants = require('./constants');
+const {
+  SCROLL_AREA_WIDTH,
+  MAX_SCROLL_SPEED,
+} = constants;
 const { calculateLargestCommitSize } = require('./util');
 
 let isMouseDown = false;
@@ -91,7 +95,8 @@ class CommitRangeView extends React.Component {
     this.onContainerScroll = this.onContainerScroll.bind(this);
     this.onScrollContainerMouseDown = this.onScrollContainerMouseDown.bind(this);
     this.mouseMoveStack = this.mouseMoveStack.bind(this);
-    this.mouseEnterStack = this.mouseEnterStack.bind(this)
+    this.mouseEnterStack = this.mouseEnterStack.bind(this);
+    this.changeDiagram = this.changeDiagram.bind(this);
     this.disableTooltipTimer = () => {};
     this.showTooltip = this.showTooltip.bind(this);
     this.onMouseUp = this.onMouseUp.bind(this);
@@ -113,6 +118,13 @@ class CommitRangeView extends React.Component {
         width: 0,
         isActive: false,
       },
+    };
+  }
+
+  mousePosition(mouseEvent) {
+    return {
+      x: mouseEvent.pageX - this.props.offsetLeft - constants.Y_AXIS_WIDTH + this.scrollContainerRef.current.scrollLeft,
+      y: mouseEvent.pageY,
     };
   }
 
@@ -220,8 +232,7 @@ class CommitRangeView extends React.Component {
     }
   }
 
-  adjustMouseSelectionAreaSize(scrollContainerOffsetLeft, scrollContainerScrollLeft, mousePositionPageX) {
-    currentX = mousePositionPageX - scrollContainerOffsetLeft + scrollContainerScrollLeft;
+  adjustMouseSelectionAreaSize(currentX) {
     const selectionRectangleLeftX = Math.min(selectionStartX, currentX);
     const selectionWidth = Math.max(selectionStartX, currentX) - selectionRectangleLeftX;
     this.setState({
@@ -235,53 +246,52 @@ class CommitRangeView extends React.Component {
   }
 
   onScrollContainerMouseMove(mouseMoveEvent) {
-    this.ensureTooltipCloses(mouseMoveEvent.pageX, mouseMoveEvent.pageY);
-    const scrollContainer = mouseMoveEvent.target;
-    const { offsetLeft, scrollLeft, clientWidth } = scrollContainer;
     if (!isMouseDown) {
       return;
     }
+    this.ensureTooltipCloses(mouseMoveEvent.pageX, mouseMoveEvent.pageY);
     isSelecting = true;
-    mouseMoveEvent.preventDefault();
-    this.adjustMouseSelectionAreaSize(offsetLeft, scrollLeft, mouseMoveEvent.pageX);
-    let scrollDelta = 0;
-    let viewportPositionX = currentX - scrollLeft;
-    const SCROLL_AREA_WIDTH = 30;
-    const MAX_SCROLL_SPEED = 30; // pixels per interval
-    if (viewportPositionX > clientWidth - SCROLL_AREA_WIDTH) {
-      scrollDelta = (Math.min(viewportPositionX, clientWidth) - (clientWidth - SCROLL_AREA_WIDTH)) / SCROLL_AREA_WIDTH * MAX_SCROLL_SPEED;
-      isAutoScrolling = true;
-    } else if (viewportPositionX < SCROLL_AREA_WIDTH) {
-      scrollDelta = (Math.max(0, viewportPositionX) - SCROLL_AREA_WIDTH) / SCROLL_AREA_WIDTH * MAX_SCROLL_SPEED;
-      isAutoScrolling = true;
-    }
-    currentX += scrollDelta;
-    scrollContainer.scrollBy(scrollDelta, 0);
-    if (isAutoScrolling && !scrollInterval) {
-      scrollInterval = setInterval(() => {
-        let scrollDelta = 0;
-        let viewportPositionX = currentX - scrollContainer.scrollLeft;
-        console.log("viewPortPositionX = " + viewportPositionX);
-        console.log("scroll width=" + scrollContainer.clientWidth);
-        console.log("scroll left = " + scrollContainer.scrollLeft);
-        if (viewportPositionX > scrollContainer.clientWidth - SCROLL_AREA_WIDTH) {
-          console.log((Math.min(viewportPositionX, scrollContainer.clientWidth) - (scrollContainer.clientWidth - SCROLL_AREA_WIDTH)));
-          scrollDelta = (Math.min(viewportPositionX, scrollContainer.clientWidth) - (scrollContainer.clientWidth - SCROLL_AREA_WIDTH)) / SCROLL_AREA_WIDTH * MAX_SCROLL_SPEED;
-        } else if (viewportPositionX < SCROLL_AREA_WIDTH) {
-          scrollDelta = (Math.max(0, viewportPositionX) - SCROLL_AREA_WIDTH) / SCROLL_AREA_WIDTH * MAX_SCROLL_SPEED;
-        }
-        currentX += scrollDelta;
-        console.log("scrollDelta=" + scrollDelta);
-        scrollContainer.scrollBy(scrollDelta, 0);
-      }, 10);
+    currentX = this.mousePosition(mouseMoveEvent).x;
+    let viewportPositionX = currentX - this.scrollContainerRef.current.scrollLeft;
+    isAutoScrolling = (viewportPositionX > this.scrollContainerRef.current.clientWidth - SCROLL_AREA_WIDTH) || (viewportPositionX < SCROLL_AREA_WIDTH && selectionStartX + this.scrollContainerRef.current.scrollLeft >= SCROLL_AREA_WIDTH);
+    this.adjustMouseSelectionAreaSize(currentX);
+  }
+
+  setAutoScroll() {
+    scrollInterval = setInterval(() => {
+      let scrollDelta = 0;
+      const scrollContainer = this.scrollContainerRef.current;
+      let viewportPositionX = currentX - this.scrollContainerRef.current.scrollLeft;
+      if (viewportPositionX > scrollContainer.clientWidth - SCROLL_AREA_WIDTH) {
+        scrollDelta = (Math.min(viewportPositionX, scrollContainer.clientWidth) - (scrollContainer.clientWidth - SCROLL_AREA_WIDTH)) / SCROLL_AREA_WIDTH * MAX_SCROLL_SPEED;
+      } else if (viewportPositionX < SCROLL_AREA_WIDTH) {
+        scrollDelta = (Math.max(0, viewportPositionX) - SCROLL_AREA_WIDTH) / SCROLL_AREA_WIDTH * MAX_SCROLL_SPEED;
+      }
+      if (currentX+scrollDelta > this.scrollContainerRef.current.scrollWidth) {
+        scrollDelta = 0;
+      }
+      currentX += scrollDelta;
+      scrollContainer.scrollBy(scrollDelta, 0);
+      this.adjustMouseSelectionAreaSize(currentX);
+    }, 10);
+  }
+
+  componentDidUpdate() {
+    if (isAutoScrolling) {
+      if (!scrollInterval) {
+        this.setAutoScroll();
+      }
+    } else {
+      clearInterval(scrollInterval);
+      scrollInterval = null;
     }
   }
 
   onScrollContainerMouseDown(mouseDownEvent) {
-    const { offsetLeft, offsetTop, scrollTop } = mouseDownEvent.target;
     isMouseDown = true;
-    selectionStartX = mouseDownEvent.pageX - offsetLeft + this.state.scrollLeft;
-    selectionStartY = mouseDownEvent.pageY - offsetTop + scrollTop;
+    const {x, y} = this.mousePosition(mouseDownEvent);
+    selectionStartX = x;
+    selectionStartY = y;
   }
 
   hideTooltip() {
@@ -301,21 +311,16 @@ class CommitRangeView extends React.Component {
           isActive: false,
         },
       });
-      clearInterval(scrollInterval);
-      scrollInterval = null;
       isSelecting = false;
       isAutoScrolling = false;
-      const rawSubData = this.barDataManager.dataFromRange(Math.min(selectionStartX, currentX)-constants.BAR_LAYER_LEFT_MARGIN, Math.max(selectionStartX, currentX)-constants.BAR_LAYER_LEFT_MARGIN);
-      const commitHashes = rawSubData.map(commit => commit.commitHash);
-      console.log(commitHashes);
-      console.log("first:" + commitHashes[0]);
-      this.changeDiagram(
-        'classOverviewView',
-        {
-          startCommit: commitHashes[0],
-          endCommit: commitHashes[commitHashes.length-1],
-        }
-      );
+      const selectFromX = Math.min(selectionStartX, currentX);
+      const selectToX = Math.max(selectionStartX, currentX);
+      if (selectToX > constants.BAR_LAYER_LEFT_MARGIN ) {
+        this.setState({
+          selectFromX,
+          selectToX,
+        });
+      }
     }
   }
 
@@ -327,16 +332,12 @@ class CommitRangeView extends React.Component {
     document.removeEventListener('mouseup', this.onMouseUp);
   }
 
-  componentDidUpdate(prevProps, prevState) {
-  }
-
   render() {
     this.barDataManager.updateUnderlyingData(this.props.data, this.props.classToColorMapping);
     this.barDataManager.showSourceCodeChanges(this.props.showSourceCodeChanges);
     this.barDataManager.showAssetChanges(this.props.showAssetChanges);
     this.barDataManager.enableAll();
     Object.keys(this.props.disabledClasses).forEach(className => this.barDataManager.disable(className));
-    const dx = this.state.scrollLeft;
     const commits = this.scrollContainerRef.current ? this.barDataManager.filteredData({isClassDisabled: this.props.disabledClasses}) : [];
     const largestCommitSize = calculateLargestCommitSize(commits, {
       isClassDisabled: this.props.disabledClasses,
@@ -366,7 +367,11 @@ class CommitRangeView extends React.Component {
           isClassDisabled={this.props.disabledClasses}
           scrollContainerRef={this.scrollContainerRef}
           cursorStyle={this.state.cursorStyle}
+          selectFromX={this.state.selectFromX}
+          selectToX={this.state.selectToX}
           isSelecting={isSelecting}
+          changeDiagram={this.changeDiagram}
+          applicationName={this.props.applicationName}
           commits={commits}
         >
           <Tooltip
