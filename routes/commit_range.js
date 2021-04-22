@@ -37,7 +37,12 @@ router.get('/', function(req, res, next) {
         MATCH (app)-[:APP_OWNS_CLASS]->(c:Class)
         WHERE NOT (app)<-[:CHANGED_TO]-(:App)-[:APP_OWNS_CLASS]->(c)
         OPTIONAL MATCH (:Class)-[class_changed_rel:CLASS_CHANGED_TO]->(c)
-        WITH app, c.name as className, sum(class_changed_rel.added_lines+class_changed_rel.changed_lines+class_changed_rel.deleted_lines) as changedLinesCount
+        WITH app,
+          c.name as className,
+          CASE
+            WHEN class_changed_rel IS NULL THEN c.number_of_lines
+            ELSE sum(class_changed_rel.added_lines+class_changed_rel.changed_lines+class_changed_rel.deleted_lines)
+          END as changedLinesCount
         WITH className, changedLinesCount
         ORDER BY className
         RETURN collect( { className: className, changedLinesCount: changedLinesCount } ) as changedClasses, sum(changedLinesCount) as totalChangedLinesCount
