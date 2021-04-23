@@ -57,8 +57,7 @@ function BarChart(props) {
       props.changeDiagram(
         'classOverviewView',
         {
-          startCommit: selectedCommitHashes[0],
-          endCommit: selectedCommitHashes[selectedCommitHashes.length-1],
+          selectedCommitHashes,
           applicationName: props.applicationName,
         }
       );

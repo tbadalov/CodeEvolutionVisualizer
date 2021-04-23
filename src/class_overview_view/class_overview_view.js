@@ -75,9 +75,8 @@ class ClassOverviewView extends React.Component {
     diagramDataLoader.load(
       `${this.props.url}/initial_data`,
       {
-        startCommit,
-        endCommit,
         applicationName,
+        selectedCommitHashes: this.props.selectedCommitHashes,
       }
     ).then(initialData => {
       const classFilterItems = initialData.classNames.map((className, index) => ({
@@ -121,8 +120,7 @@ class ClassOverviewView extends React.Component {
         this.props.url,
         {
           className: this.state.selectedClassName,
-          startCommit: this.props.startCommit,
-          endCommit: this.props.endCommit,
+          selectedCommitHashes: this.props.selectedCommitHashes,
           applicationName: this.props.applicationName,
         }
       ).then(rawData => {
