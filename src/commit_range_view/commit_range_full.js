@@ -121,9 +121,12 @@ class CommitRangeViewFull extends React.Component {
       .sort((item1, item2) => item1.label.localeCompare(item2.label));
     alpahebticallySortedItems.forEach(item => changeClassColor(item.label, item.color));
 
-    const alpahebticallySortedBranchFilterItems = Object.values(commitHashToBranchFilterMapping)
+    let alpahebticallySortedBranchFilterItems = Object.values(commitHashToBranchFilterMapping)
     .sort((item1, item2) => item1.label.localeCompare(item2.label));
-    alpahebticallySortedBranchFilterItems.forEach(item => setBranchColor(item.label, item.color));
+    alpahebticallySortedBranchFilterItems.forEach(item => {
+      setBranchColor(item.label, item.color);
+      item.color = undefined;
+    });
 
     this.setState({ data });
     this.setState({
