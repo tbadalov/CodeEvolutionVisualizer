@@ -3,11 +3,21 @@ const ColorfulCheckbox = require('./colorful_checkbox');
 const checkboxItemStyle = require('./css/checkbox_item.css');
 
 function CheckboxItem(props) {
+  const classNames = [
+    'checkbox-item',
+  ];
+  if (props.noCheckbox) {
+    classNames.push('no-checkbox');
+  }
   return (
-    <li className='checkbox-item'>
-      <ColorfulCheckbox {...props} onChange={() => props.onItemChange({ index: props.index, payload: props.payload})} />
+    <div className={classNames.join(' ')}>
+      {
+        props.noCheckbox
+          ? null
+          : <ColorfulCheckbox {...props} onChange={() => props.onItemChange({ index: props.index, payload: props.payload})} />
+      }
       <p>{props.label}</p>
-    </li>
+    </div>
   );
 }
 

@@ -2,5 +2,5 @@
   display: grid;
   grid-template-columns: min-content auto;
   column-gap: 0.5em;
-  align-items: baseline;
+  align-items: center;
 }

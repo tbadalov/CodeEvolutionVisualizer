@@ -23,7 +23,11 @@ class ItemList extends React.Component {
   }
 
   buildCheckboxButtons(items) {
-    return items.map((item, index) => <CheckboxItem key={index} index={index} {...item} onItemChange={this.props.onItemChange} />);
+    return items.map((item, index) => (
+      <li>
+        <CheckboxItem key={index} index={index} {...item} onItemChange={this.props.onItemChange} />
+      </li>
+    ));
   }
 
   mapRadioButtonValueToItemData(value) {
@@ -56,9 +60,7 @@ class ItemList extends React.Component {
     return(
       <div className="item-list menu-item">
         <div className='item-list-header'>
-          <input type='checkbox'/>
-          { this.props.title ? <p className='item-list-title'>{this.props.title}</p> : null }
-          <div>X</div>
+          <CheckboxItem label={this.props.title} />
         </div>
         { response }
       </div>
