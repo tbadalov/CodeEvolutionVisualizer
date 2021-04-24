@@ -128,7 +128,7 @@ class CommitRangeViewFull extends React.Component {
       isRadio: filterType === 'radio',
       collapsed: isCollapsed,
       onBulkChange: (clickedItem) => {
-        this.toggleAll(filterListProps.items, clickedItem.checkboxStatus === 'checked');
+        this.toggleAll(filterListProps.items, clickedItem.checkboxState === 'checked');
         this.resetFilters(filterListProps.items, enableFilter, disableFilter);
         updateItems(filterListProps);
       },

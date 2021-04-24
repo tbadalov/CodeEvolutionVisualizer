@@ -48,6 +48,7 @@ function AccordionItem(props) {
         <CheckboxItem label={props.title}
           noCheckbox={!props.withCheckbox}
           checked={props.checked}
+          onItemChange={props.onBulkChange}
           indeterminate={props.indeterminate} />
       </div>
       <div className='accordion-body'

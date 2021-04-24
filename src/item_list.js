@@ -65,6 +65,7 @@ class ItemList extends React.Component {
           withCheckbox={!this.props.isRadio && this.props.withCheckbox}
           checked={rawItems.every(item => item.checked)}
           indeterminate={rawItems.some(item => item.checked) && rawItems.some(item => !item.checked)}
+          onBulkChange={this.props.onBulkChange}
           collapsed={this.props.collapsed}>
           { response }
         </AccordionItem>
