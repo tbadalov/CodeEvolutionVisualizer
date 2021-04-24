@@ -3,6 +3,7 @@ const ColorfulCheckbox = require('./colorful_checkbox');
 const { RadioGroup, RadioButton } = require('react-radio-buttons');
 const itemListStyle = require('./css/item_list.css');
 const CheckboxItem = require('./checkbox_item');
+const AccordionItem = require('./control_elements/accordion_item');
 
 class ItemList extends React.Component {
   constructor(props) {
@@ -59,10 +60,9 @@ class ItemList extends React.Component {
     }
     return(
       <div className="item-list menu-item">
-        <div className='item-list-header'>
-          <CheckboxItem label={this.props.title} />
-        </div>
-        { response }
+        <AccordionItem title={this.props.title} withCheckbox collapsed>
+          { response }
+        </AccordionItem>
       </div>
     );
   }

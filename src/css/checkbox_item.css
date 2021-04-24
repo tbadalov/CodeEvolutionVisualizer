@@ -4,3 +4,11 @@
   column-gap: 0.5em;
   align-items: center;
 }
+
+.checkbox-item.no-checkbox {
+  grid-template-columns: auto;
+}
+
+.checkbox-item p {
+  font-size: 1.2em;
+}

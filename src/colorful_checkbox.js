@@ -31,6 +31,7 @@ function ColorfulCheckbox(props) {
   } else if (checkedState === 'indeterminate') {
     classNames.push('colorful-checkbox-indeterminate');
   }
+
   return(
     <div className={classNames.join(' ')}
       style={{border: '5px solid ' + (props.color || '#000')}}

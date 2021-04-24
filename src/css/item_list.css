@@ -9,7 +9,7 @@ body, html {
 }
 
 .item-list {
-  width: 100%;
+  width: auto;
   position: relative;
   display: flex;
   flex-direction: column;
@@ -17,36 +17,16 @@ body, html {
 }
 
 .item-list ul {
-  width: 100%;
-  height: auto;
   list-style: none;
+  padding: 10px;
 }
 
 .real-list li {
   width: calc(100% - 10px);
   height: 20px;
-  margin: 5px 0;
-  padding: 5px;
+  margin-bottom: 5px;
 }
 
 .real-list li:hover {
   background-color: #eee;
-}
-
-.item-list-header {
-  grid-template-columns: auto 20px;
-  display: grid;
-  background-color: #2c3e50;
-  color: #fff;
-  border-radius: 6px 6px 0px 0px;
-  padding: 5px;
-}
-
-.item-list-header::after {
-  content: '+';
-}
-
-.item-list-header:hover {
-  cursor: pointer;
-  background-color: #426ef0;
 }
