@@ -55,7 +55,11 @@ class ItemList extends React.Component {
     }
     return(
       <div className="item-list menu-item">
-        { this.props.title ? <p className='item-list-title'>{this.props.title}</p> : null }
+        <div className='item-list-header'>
+          <input type='checkbox'/>
+          { this.props.title ? <p className='item-list-title'>{this.props.title}</p> : null }
+          <div>X</div>
+        </div>
         { response }
       </div>
     );

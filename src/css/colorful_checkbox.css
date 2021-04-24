@@ -1,37 +1,26 @@
-.colorful-checkbox p {
-  line-height: 20px;
-  font-size: 20px;
-  display: inline;
-}
-
-.colorful-checkbox > input[type="checkbox"] + label {
-  display: inline-block;
-  width: 14px;
-  height: 14px;
-  /*border: 2px solid #bcbcbc;*/
+.colorful-checkbox {
+  width: 0.8em;
+  height: 0.8em;
   border-radius: 2px;
+}
+
+.colorful-checkbox:hover {
   cursor: pointer;
-  line-height: 20px;
-  margin-right: 10px;
 }
 
-.colorful-checkbox > input[type="checkbox"]:checked + label:after {
+.colorful-checkbox::after {
   position: relative;
-  top: -4px;
-  left: 2px;
+  left: 0;
+  top: 0;
+  line-height: 0.8em;
+}
+
+.colorful-checkbox-checked::after {
   content: '\2714';
-  line-height: 20px;
 }
 
-.colorful-checkbox-indeterminate > input[type="checkbox"]:checked + label:after {
-  position: relative;
-  top: -4px;
-  left: 2px;
+.colorful-checkbox-indeterminate::after {
   content: '\2012';
-  line-height: 20px;
   font-weight: 1000;
-}
-
-.colorful-checkbox > input[type="checkbox"] {
-  display: none;
+  left: 1px;
 }
