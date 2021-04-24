@@ -1,5 +1,6 @@
 const { useState, useRef } = require('react');
 const React = require('react');
+const AnimateHeight = require('react-animate-height').default;
 const CheckboxItem = require('../checkbox_item');
 const accordionStyle = require('./css/accordion.css');
 
@@ -14,7 +15,6 @@ function didEventStartFromCheckbox(mouseEvent) {
 }
 
 function AccordionItem(props) {
-  const [accordionBodyHeight, setAccordionBodyHeight] = useState(0);
   const [collapsed, setCollapsed] = useState(props.collapsed || false);
   const classNames = [
     'accordion',
@@ -33,13 +33,6 @@ function AccordionItem(props) {
     }
   }
 
-  function setAccordionBodyHeightForAnimation(accordionBody) {
-    if (!collapsed) {
-      const newHeight = accordionBody ? accordionBody.firstChild.clientHeight : 0;
-      setAccordionBodyHeight(newHeight);
-    }
-  }
-
   return(
     <div className={classNames.join(' ')}>
       <div className='accordion-header'
@@ -51,11 +44,12 @@ function AccordionItem(props) {
           onItemChange={props.onBulkChange}
           indeterminate={props.indeterminate} />
       </div>
-      <div className='accordion-body'
-        style={{height: accordionBodyHeight + 'px'}}
-        ref={setAccordionBodyHeightForAnimation}>
+      <AnimateHeight
+        duration={400}
+        height={collapsed ? 0 : 'auto'}
+      >
         { props.children }
-      </div>
+      </AnimateHeight>
     </div>
   );
 }

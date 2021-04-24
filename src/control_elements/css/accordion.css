@@ -27,16 +27,3 @@
 .accordion-header .colorful-checkbox:hover {
   box-shadow: 0 0 20px 10px #fff;
 }
-
-.accordion-body {
-  overflow: hidden;
-}
-
-.accordion-collapsed .accordion-body {
-  height: 0px;
-  transition: all 0.4s ease-out;
-}
-
-.accordion-body {
-  transition: all 0.4s ease-out;
-}
