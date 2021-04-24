@@ -2,7 +2,7 @@ const React = require('react');
 const ColorfulCheckbox = require('./colorful_checkbox');
 const { RadioGroup, RadioButton } = require('react-radio-buttons');
 const itemListStyle = require('./css/item_list.css');
-const Item = require('./item');
+const CheckboxItem = require('./checkbox_item');
 
 class ItemList extends React.Component {
   constructor(props) {
@@ -23,7 +23,7 @@ class ItemList extends React.Component {
   }
 
   buildCheckboxButtons(items) {
-    return items.map((item, index) => <Item key={index} index={index} {...item} onItemChange={this.props.onItemChange} />);
+    return items.map((item, index) => <CheckboxItem key={index} index={index} {...item} onItemChange={this.props.onItemChange} />);
   }
 
   mapRadioButtonValueToItemData(value) {

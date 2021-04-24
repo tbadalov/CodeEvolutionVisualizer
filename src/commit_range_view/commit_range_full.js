@@ -2,7 +2,7 @@ const React = require('react');
 const CommitRangeView = require('./commit_range_view');
 const ColorContext = require('../contexts/color_context');
 const DiagramDataLoader = require('../diagram_data_loader');
-const Item = require('../item');
+const CheckboxItem = require('../checkbox_item');
 const ItemList = require('../item_list');
 
 function mapClassToClassFilterItem(commit, changedClass, classToColorMapping) {
@@ -181,8 +181,8 @@ class CommitRangeViewFull extends React.Component {
   componentDidMount() {
     this.props.addMenuItem(
       <ItemList title='Content filter'>
-        <Item label='Show source code changes' checked={this.state.showSourceCodeChanges} onItemChange={this.handleContentFilterClick} payload={{filterType: 'src'}} />
-        <Item label='Show other changes' checked={this.state.showAssetChanges} onItemChange={this.handleContentFilterClick} payload={{filterType: 'asset'}} />
+        <CheckboxItem label='Show source code changes' checked={this.state.showSourceCodeChanges} onItemChange={this.handleContentFilterClick} payload={{filterType: 'src'}} />
+        <CheckboxItem label='Show other changes' checked={this.state.showAssetChanges} onItemChange={this.handleContentFilterClick} payload={{filterType: 'asset'}} />
       </ItemList>
     );
   }

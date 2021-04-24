@@ -2,7 +2,7 @@ const React = require('react');
 const ClassOverviewDiagram = require('./class_overview_diagram');
 const DiagramDataLoader = require('../diagram_data_loader');
 const DataConverter = require('./data_converter');
-const Item = require('../item');
+const CheckboxItem = require('../checkbox_item');
 const ItemList = require('../item_list');
 const ColorContext = require('../contexts/color_context');
 const { extractUniqueValues } = require('../utils');
@@ -67,7 +67,7 @@ class ClassOverviewView extends React.Component {
   componentDidMount() {
     this.updateContentFilter = this.props.addMenuItem(
       <ItemList title='Content filter'>
-        <Item label='Collapse equal states' checked={this.state.collapseSameCommits} onItemChange={this.onCollapseItems} />
+        <CheckboxItem label='Collapse equal states' checked={this.state.collapseSameCommits} onItemChange={this.onCollapseItems} />
       </ItemList>
     );
     const { applicationName, startCommit, endCommit } = this.props;
@@ -141,7 +141,7 @@ class ClassOverviewView extends React.Component {
     if (this.state.collapseSameCommits !== prevState.collapseSameCommits) {
       this.updateContentFilter(
         <ItemList title='Content filter'>
-          <Item label='Collapse equal states' checked={this.state.collapseSameCommits} onItemChange={this.onCollapseItems} />
+          <CheckboxItem label='Collapse equal states' checked={this.state.collapseSameCommits} onItemChange={this.onCollapseItems} />
         </ItemList>
       );
     }

@@ -1,13 +1,14 @@
 const React = require('react');
 const ColorfulCheckbox = require('./colorful_checkbox');
-const { RadioButton } = require('react-radio-buttons');
+const checkboxItemStyle = require('./css/checkbox_item.css');
 
-function Item(props) {
+function CheckboxItem(props) {
   return (
-    <li>
+    <li className='checkbox-item'>
       <ColorfulCheckbox {...props} onChange={() => props.onItemChange({ index: props.index, payload: props.payload})} />
+      <p>{props.label}</p>
     </li>
   );
 }
 
-module.exports = Item;
+module.exports = CheckboxItem;
