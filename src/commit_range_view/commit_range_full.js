@@ -4,6 +4,7 @@ const ColorContext = require('../contexts/color_context');
 const DiagramDataLoader = require('../diagram_data_loader');
 const CheckboxItem = require('../checkbox_item');
 const ItemList = require('../item_list');
+const DataAdapter = require('../data_adapter');
 
 function mapClassToClassFilterItem(commit, changedClass, classToColorMapping) {
   const changedClassName = changedClass.className;
@@ -33,7 +34,7 @@ function buildClassFilterItems(data, classToColorMapping) {
     const commit = data.commits[i];
     mapCommitToClassFilterItems(classNameItemMapping, commit, classToColorMapping);
   }
-  return classNameItemMapping;
+  return Object.values(classNameItemMapping);
 }
 
 function mapBranchNameToFilterItem(commit, branchName, branchToColorMapping) {
@@ -79,12 +80,11 @@ class CommitRangeViewFull extends React.Component {
     this.handleContentFilterClick = this.handleContentFilterClick.bind(this);
     this.handleClassFilterClick = this.handleClassFilterClick.bind(this);
     this.handleBranchFilterClick = this.handleBranchFilterClick.bind(this);
+    this.commitsDataAdapter = new DataAdapter([]);
     this.state = {
       items: [],
-      branchFilterItems: [],
       showSourceCodeChanges: true,
       showAssetChanges: true,
-      disabledClasses: {},
       data: {
         commits: [],
       },
@@ -94,8 +94,8 @@ class CommitRangeViewFull extends React.Component {
   mapContextValueToView({ branchToColorMapping, classToColorMapping }) {
     return (
       <CommitRangeView
-        data={this.state.data}
-        disabledClasses={this.state.disabledClasses}
+        data={{commits: this.commitsDataAdapter.getFilteredData()}}
+        disabledClasses={this.context.disabledClasses}
         applicationName={this.props.applicationName}
         classToColorMapping={classToColorMapping}
         branchToColorMapping={branchToColorMapping}
@@ -105,6 +105,50 @@ class CommitRangeViewFull extends React.Component {
         onDiagramChange={this.props.changeDiagram} />
     );
   }
+
+  resetFilters(filterItems, enableFilter, disableFilter) {
+    filterItems.forEach((filterItem) => filterItem.checked ? enableFilter(filterItem.payload) : disableFilter(filterItem.payload));
+  }
+
+  toggleAll(filterItems, status) {
+    return filterItems.forEach((filterItem) => filterItem.checked = status);
+  }
+
+  toggle(filterItems, index) {
+    const clickedFilterItem = filterItems[index];
+    clickedFilterItem.checked = !clickedFilterItem.checked;
+  }
+
+  createFilter(filterId, filterTitle, filterType, isCollapsed, filterItems, filterPredicate, enableFilter, disableFilter) {
+    this.commitsDataAdapter.addFilter(filterId, filterPredicate);
+    let filterListProps = {
+      items: filterItems,
+      title: filterTitle,
+      withCheckbox: filterType === 'checkbox',
+      isRadio: filterType === 'radio',
+      collapsed: isCollapsed,
+      onBulkChange: (clickedItem) => {
+        this.toggleAll(filterListProps.items, clickedItem.checkboxStatus === 'checked');
+        this.resetFilters(filterListProps.items, enableFilter, disableFilter);
+        updateItems(filterListProps);
+      },
+      onItemChange: (clickedItem) => {
+        this.toggle(filterListProps.items, clickedItem.index);
+        this.resetFilters(filterListProps.items, enableFilter, disableFilter);
+        updateItems(filterListProps);
+      },
+    };
+    this.resetFilters(filterListProps.items, enableFilter, disableFilter);
+    const updateFilterFunc = this.props.addMenuItem(<ItemList {...filterListProps}/>);
+    function updateItems(updatedFilterListProps) {
+      filterListProps = {
+        ...filterListProps,
+        ...updatedFilterListProps,
+      };
+      updateFilterFunc(<ItemList {...filterListProps}/>);
+    }
+    return updateItems;
+  }
   
   onDataReady(data) {
     const items = [];
@@ -113,33 +157,43 @@ class CommitRangeViewFull extends React.Component {
       setBranchColor,
       classToColorMapping,
       changeClassColor,
+      disableClass,
+      enableClass,
+      isClassDisabled
     } = this.context;
-    const classNameToClassFilterMapping = buildClassFilterItems(data, classToColorMapping);
+    this.commitsDataAdapter = new DataAdapter(data.commits);
+    const classFilterItems = buildClassFilterItems(data, classToColorMapping)
+      .sort((item1, item2) => item1.label.localeCompare(item2.label));
+      classFilterItems.forEach(item => changeClassColor(item.label, item.color));
+    
+    this.createFilter(
+      'classFilter',
+      'Class Filter',
+      'checkbox',
+      false,
+      classFilterItems,
+      (commit) => commit.changedClasses.length === 0 || commit.changedClasses.some(changedClass => !isClassDisabled(changedClass.className)),
+      (payload) => enableClass(payload.className),
+      (payload) => disableClass(payload.className),
+    );
     const commitHashToBranchFilterMapping = buildBranchFilterItems(data, branchToColorMapping);
 
-    const alpahebticallySortedItems = Object.values(classNameToClassFilterMapping)
-      .sort((item1, item2) => item1.label.localeCompare(item2.label));
-    alpahebticallySortedItems.forEach(item => changeClassColor(item.label, item.color));
-
-    let alpahebticallySortedBranchFilterItems = Object.values(commitHashToBranchFilterMapping)
+    /*let alpahebticallySortedBranchFilterItems = Object.values(commitHashToBranchFilterMapping)
     .sort((item1, item2) => item1.label.localeCompare(item2.label));
     alpahebticallySortedBranchFilterItems.forEach(item => {
       setBranchColor(item.label, item.color);
       item.color = undefined;
-    });
+    });*/
 
     this.setState({ data });
     this.setState({
-      items: alpahebticallySortedItems,
-      branchFilterItems: alpahebticallySortedBranchFilterItems,
+      //items: alpahebticallySortedItems,
+      //branchFilterItems: alpahebticallySortedBranchFilterItems,
     });
 
-    this.props.addMenuItem(
-      <ItemList items={this.state.items} title='Class filter' onItemChange={this.handleClassFilterClick} />
-    );
-    this.props.addMenuItem(
+    /*this.props.addMenuItem(
       <ItemList items={this.state.branchFilterItems} title='Branch filter' onItemChange={this.handleBranchFilterClick} />
-    );
+    );*/
   }
 
   handleContentFilterClick(clickedItem) {
@@ -181,8 +235,8 @@ class CommitRangeViewFull extends React.Component {
   componentDidMount() {
     this.props.addMenuItem(
       <ItemList title='Content filter'>
-        <CheckboxItem label='Show source code changes' checked={this.state.showSourceCodeChanges} onItemChange={this.handleContentFilterClick} payload={{filterType: 'src'}} />
-        <CheckboxItem label='Show other changes' checked={this.state.showAssetChanges} onItemChange={this.handleContentFilterClick} payload={{filterType: 'asset'}} />
+        <CheckboxItem label='Show commits with source code changes' checked={this.state.showSourceCodeChanges} onItemChange={this.handleContentFilterClick} payload={{filterType: 'src'}} />
+        <CheckboxItem label='Show commits with other changes' checked={this.state.showAssetChanges} onItemChange={this.handleContentFilterClick} payload={{filterType: 'asset'}} />
       </ItemList>
     );
   }

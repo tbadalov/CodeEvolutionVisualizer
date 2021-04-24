@@ -22,7 +22,11 @@ class App extends React.Component {
     this.goBack = this.goBack.bind(this);
     this.goForward = this.goForward.bind(this);
     this.onSelectedApp = this.onSelectedApp.bind(this);
+    this.enableClass = this.enableClass.bind(this);
+    this.disableClass = this.disableClass.bind(this);
+    this.isClassDisabled = this.isClassDisabled.bind(this);
     this.sceneContainerRef = React.createRef();
+    this.refresh = () => this.forceUpdate();
     this.diagrams = {
       commitRangeView: CommitRangeView,
       classOverviewView: ClassOverviewView,
@@ -39,8 +43,46 @@ class App extends React.Component {
         changeClassColor: this.changeClassColor,
         branchToColorMapping: {},
         setBranchColor: this.setBranchColor,
+        disabledClasses: {},
+        isClassDisabled: this.isClassDisabled,
+        enableClass: this.enableClass,
+        disableClass: this.disableClass,
       },
-    }
+    };
+  }
+
+  disableClass(className) {
+    this.setState((prevState) => ({
+      ...prevState,
+      colorContextValue: {
+        ...prevState.colorContextValue,
+        disabledClasses: {
+          ...prevState.colorContextValue.disabledClasses,
+          [className]: true,
+        },
+      },
+    }));
+  }
+
+  enableClass(className) {
+    this.setState((prevState) => {
+      const disabledClasses = {
+        ...prevState.colorContextValue.disabledClasses,
+      };
+      delete disabledClasses[className];
+      return {
+        ...prevState,
+        colorContextValue: {
+          ...prevState.colorContextValue,
+          disabledClasses,
+        },
+      };
+    });
+  }
+
+  isClassDisabled(className) {
+    const result = Boolean(this.state.colorContextValue.disabledClasses[className]);
+    return result;
   }
 
   onSelectedApp(e) {
@@ -111,11 +153,14 @@ class App extends React.Component {
         });
         this.props.history.replace('/commitRangeView');
       });
+    window.addEventListener('resize', this.refresh);
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('resize', this.refresh);
   }
 
   componentDidUpdate(prevProps, prevState) {
-    console.log(prevState);
-    console.log(this.state);
   }
 
   goBack() {

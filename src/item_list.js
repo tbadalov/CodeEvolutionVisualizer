@@ -58,9 +58,14 @@ class ItemList extends React.Component {
         </ul>
       )
     }
+    const rawItems = this.props.items || [];
     return(
       <div className="item-list menu-item">
-        <AccordionItem title={this.props.title} withCheckbox collapsed>
+        <AccordionItem title={this.props.title}
+          withCheckbox={!this.props.isRadio && this.props.withCheckbox}
+          checked={rawItems.every(item => item.checked)}
+          indeterminate={rawItems.some(item => item.checked) && rawItems.some(item => !item.checked)}
+          collapsed={this.props.collapsed}>
           { response }
         </AccordionItem>
       </div>

@@ -14,7 +14,15 @@ function CheckboxItem(props) {
       {
         props.noCheckbox
           ? null
-          : <ColorfulCheckbox {...props} onChange={() => props.onItemChange({ index: props.index, payload: props.payload})} />
+          : <ColorfulCheckbox {...props}
+              onChange={
+                (checkboxState) => props.onItemChange({
+                  checkboxState,
+                  index: props.index,
+                  payload: props.payload,
+                })
+              }
+            />
       }
       <p>{props.label}</p>
     </div>

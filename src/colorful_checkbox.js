@@ -1,5 +1,5 @@
 const React = require('react');
-const { useState } = require('react');
+const { useState, useEffect } = require('react');
 const colorfulCheckboxStyle = require('./css/colorful_checkbox.css');
 
 function propsToState(props) {
@@ -25,6 +25,9 @@ function nextState(currentState) {
 
 function ColorfulCheckbox(props) {
   const [checkedState, setCheckedState] = useState(propsToState(props));
+  useEffect(() => {
+    setCheckedState(propsToState(props));
+  }, [props.checked, props.indeterminate]);
   const classNames = ['colorful-checkbox'];
   if (checkedState === 'checked') {
     classNames.push('colorful-checkbox-checked');
@@ -32,10 +35,18 @@ function ColorfulCheckbox(props) {
     classNames.push('colorful-checkbox-indeterminate');
   }
 
+  function onClick() {
+    const newState = nextState(checkedState);
+    setCheckedState(newState);
+    if (props.onChange) {
+      props.onChange(newState);
+    }
+  }
+
   return(
     <div className={classNames.join(' ')}
       style={{border: '5px solid ' + (props.color || '#000')}}
-      onClick={() => setCheckedState(nextState(checkedState))} />
+      onClick={onClick} />
   );
 }
 

@@ -46,7 +46,9 @@ function AccordionItem(props) {
         onClick={onClick}
         onMouseDown={preventTextSelectionOnDoubleClick}>
         <CheckboxItem label={props.title}
-          noCheckbox={!props.withCheckbox} />
+          noCheckbox={!props.withCheckbox}
+          checked={props.checked}
+          indeterminate={props.indeterminate} />
       </div>
       <div className='accordion-body'
         style={{height: accordionBodyHeight + 'px'}}
