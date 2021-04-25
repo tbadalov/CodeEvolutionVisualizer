@@ -199,7 +199,6 @@ class CallVolumeDiagram extends React.Component {
 
   filterRawData(originalRawData={}) {
     const filteredRawData = (originalRawData.classes || [])
-      .filter(classRecord => classRecord.totalCallAmount > 0)
       .map(classRecord => {
         classRecord.methods = classRecord.methods.sort((method1, method2) => method1.totalCallAmount - method2.totalCallAmount);
         return classRecord;

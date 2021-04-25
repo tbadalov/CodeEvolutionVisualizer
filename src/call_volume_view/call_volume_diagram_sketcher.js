@@ -1,14 +1,13 @@
 const React = require('react');
 const ReactKonva = require('react-konva');
 const CallVolumeDiagramPositioner = require('./call_volume_diagram_positioner');
+const EMPTY_CLASS_STROKE_WIDTH = 0.2;
 
 const marginTop = 0;
-export function convertToVisualizationData(
-  classesArray,
-  {
+export function convertToVisualizationData(classesArray, params) {
+  const {
     classToColorMapping,
-  }
-) {
+  } = params;
   if (classesArray.length == 0) {
     return [];
   }
@@ -37,7 +36,7 @@ export function convertToVisualizationData(
     let branchStartingPositionX = diagramPositioner.branchStartX(i);
     for ( let m = 0; m < methods.length; m++ ) {
       const method = methods[m];
-      leaves.push({
+      const leaf = {
         data: {
           name: method.methodName,
         },
@@ -51,8 +50,21 @@ export function convertToVisualizationData(
           fill: branchData.color,
           ...diagramPositioner.nodePosition(i, m),
         },
-
-      });
+      };
+      if (Number(method.totalCallAmount) === 0) {
+        const emptyMethodStrokeWidth = diagramPositioner.nodeRadius(i, m) - diagramPositioner.nodeInnerRadius(i, m);
+        leaf.stemFillerForEmptyMethod = {
+          type: 'rect',
+          fill: '#f0f0f0',
+          startX: diagramPositioner.directionX(i) !== 0 ? leaf.stem.startX + leaf.stem.scaleX * emptyMethodStrokeWidth : leaf.stem.startX,
+          startY: diagramPositioner.directionY(i) !== 0 ? leaf.stem.startY : leaf.stem.startY + emptyMethodStrokeWidth,
+          width: diagramPositioner.directionX(i) !== 0 ? leaf.stem.width - 2 * emptyMethodStrokeWidth : leaf.stem.width + emptyMethodStrokeWidth,
+          height: diagramPositioner.directionY(i) !== 0 ? leaf.stem.height + emptyMethodStrokeWidth : leaf.stem.height - 2 * emptyMethodStrokeWidth,
+          scaleX: leaf.stem.scaleX,
+          scaleY: leaf.stem.scaleY,
+        };
+      }
+      leaves.push(leaf);
     }
     if (diagramPositioner.directionY(i) == 0) {
       pipes.push({
@@ -161,10 +173,24 @@ function drawBranches(branches) {
         scaleX: leave.stem.scaleX,
         scaleY: leave.stem.scaleY,
       };
+
+      const stemFillerForEmptyMethod = {};
+      if (leave.stemFillerForEmptyMethod) {
+        Object.assign(stemFillerForEmptyMethod, {
+          x: leave.stemFillerForEmptyMethod.startX,
+          y: leave.stemFillerForEmptyMethod.startY,
+          width: leave.stemFillerForEmptyMethod.width,
+          height: leave.stemFillerForEmptyMethod.height,
+          fill: leave.stemFillerForEmptyMethod.fill,
+          scaleX: leave.stemFillerForEmptyMethod.scaleX,
+          scaleY: leave.stemFillerForEmptyMethod.scaleY,
+        });
+      }
       return (
         <ReactKonva.Group key={`leaf-${index}-of-branch-${i}`}>
           <ReactKonva.Rect {...leaveProps} />
           <ReactKonva.Arc {...leave.node} />
+          { leave.stemFillerForEmptyMethod ? <ReactKonva.Rect {...stemFillerForEmptyMethod} /> : null }
         </ReactKonva.Group>
       );
     });

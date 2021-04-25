@@ -2,6 +2,7 @@ const circleMarginX = 6;
 const INITIAL_TRUNK_HEIGHT = 45;
 const FLOOR_MARGIN_VERTICAL = 2;
 const MINIMUM_CIRCLE_RADIUS = 1;
+const EMPTY_PIPE_STROKE_WIDTH = 0.2;
 const UP = -1;
 const DOWN = 1;
 const LEFT = -1;
@@ -41,8 +42,12 @@ class CallVolumeDiagramPositioner {
     return result;
   }
 
+  emptyPipeWidth() {
+    return 1 - 2 * EMPTY_PIPE_STROKE_WIDTH;
+  }
+
   pipeWidth(index) {
-    return Math.ceil(Number(this.classesArray[index].totalCallAmount) * 0.25);
+    return Math.ceil(Math.max(1, Number(this.classesArray[index].totalCallAmount)) * 0.25);
   }
 
   nodeRadius(classIndex, methodIndex) {
@@ -87,6 +92,14 @@ class CallVolumeDiagramPositioner {
       innerRadius: this.nodeInnerRadius(classIndex, methodIndex),
       angle: 360,
     };
+  }
+
+  emptyStemPosition(classIndex, methodIndex) {
+    if (this.stemData[classIndex][methodIndex] !== undefined) {
+      return this.stemData[classIndex][methodIndex];
+    }
+
+    return this.stemPosition(classIndex, methodIndex);
   }
 
   stemPosition(classIndex, methodIndex) {
