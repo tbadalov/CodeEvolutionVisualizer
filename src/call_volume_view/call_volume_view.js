@@ -76,9 +76,6 @@ class CallVolumeView extends React.Component {
       this.updateMenuItem = this.props.addMenuItem(
         <ItemList items={items} onItemChange={this.handleItemChange}/>
       );
-      //this.setState({items: items});
-      //this.setState({selectedClassName: classNames[0]});
-      return classNames[0];
     })
     .catch(error => console.log(error));
     this.setState({
