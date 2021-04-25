@@ -101,7 +101,7 @@ class ClassOverviewView extends React.Component {
         <ItemList items={branchFilterItems} title='Branch filter' onItemChange={this.handleBranchFilterItemClick} />
       )
       this.props.addMenuItem(
-        <ItemList items={classFilterItems} isRadio title='Class filter' onItemChange={this.handleItemChange.bind(this)}/>
+        <ItemList items={classFilterItems} isRadio title='Class selector' onItemChange={this.handleItemChange.bind(this)}/>
       );
       this.setState({
         classFilterItems: classFilterItems,
