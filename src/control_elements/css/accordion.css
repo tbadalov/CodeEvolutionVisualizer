@@ -11,6 +11,10 @@
   padding: 5px;
 }
 
+.accordion-collapsed .accordion-header {
+  border-radius: 6px;
+}
+
 .accordion-header::after {
   content: '-';
 }

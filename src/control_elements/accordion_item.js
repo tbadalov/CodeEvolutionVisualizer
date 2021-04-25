@@ -16,6 +16,7 @@ function didEventStartFromCheckbox(mouseEvent) {
 
 function AccordionItem(props) {
   const [collapsed, setCollapsed] = useState(props.collapsed || false);
+  const [animationHeight, setAnimationHeight] = useState(collapsed ? 0 : 'auto');
   const classNames = [
     'accordion',
   ];
@@ -23,13 +24,23 @@ function AccordionItem(props) {
     classNames.push('accordion-collapsed');
   }
 
-  function toggleCollapse() {
-    setCollapsed(!collapsed);
+  function nextAnimationHeight() {
+    return animationHeight === 0 ? 'auto' : 0;
+  }
+
+  function addHeaderBottomBorderRadiusAfterCollapsing() {
+    if (animationHeight === 0) {
+      setCollapsed(true);
+    }
+  }
+
+  function removeHeaderBottomBorderRadiusWhenUncollapsing() {
+    setCollapsed(false);
   }
 
   function onClick(clickEvent) {
     if (!didEventStartFromCheckbox(clickEvent)) {
-      toggleCollapse();
+      setAnimationHeight(nextAnimationHeight());
     }
   }
 
@@ -46,7 +57,9 @@ function AccordionItem(props) {
       </div>
       <AnimateHeight
         duration={400}
-        height={collapsed ? 0 : 'auto'}
+        height={animationHeight}
+        onAnimationStart={removeHeaderBottomBorderRadiusWhenUncollapsing}
+        onAnimationEnd={addHeaderBottomBorderRadiusAfterCollapsing}
       >
         { props.children }
       </AnimateHeight>
