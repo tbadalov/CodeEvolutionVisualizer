@@ -67,7 +67,7 @@ export function convertToVisualizationData(classesArray, params) {
           type: 'rect',
           fill: '#f0f0f0',
           startX: diagramPositioner.directionX(i) !== 0 ? leaf.stem.startX + diagramPositioner.directionX(i) * emptyMethodStrokeWidth : classData.methods.length > 1 ? leaf.stem.startX : leaf.stem.startX + diagramPositioner.emptyPipeStrokeWidth(),
-          startY: diagramPositioner.directionY(i) !== 0 ? leaf.stem.startY - (Number(classData.totalCallAmount) === 0 ? diagramPositioner.directionY(i) * diagramPositioner.emptyPipeStrokeWidth() : 0) : classData.methods.length > 1 ? leaf.stem.startY + emptyMethodStrokeWidth : leaf.stem.startY,
+          startY: diagramPositioner.directionY(i) !== 0 ? leaf.stem.startY - (Number(classData.totalCallAmount) === 0 && m < classData.methods.length-1 ? diagramPositioner.directionY(i) * diagramPositioner.emptyPipeStrokeWidth() : 0) : classData.methods.length > 1 ? leaf.stem.startY + emptyMethodStrokeWidth : leaf.stem.startY,
           width: diagramPositioner.directionX(i) !== 0 ? leaf.stem.width - 2 * emptyMethodStrokeWidth : classData.methods.length > 1 ? leaf.stem.width + emptyMethodStrokeWidth : leaf.stem.width - diagramPositioner.emptyPipeStrokeWidth() * 2,
           height: diagramPositioner.directionY(i) !== 0 ? leaf.stem.height + emptyMethodStrokeWidth*2 : classData.methods.length > 1 ? leaf.stem.height - 2 * emptyMethodStrokeWidth : leaf.stem.height + diagramPositioner.emptyPipeStrokeWidth(),
           scaleX: leaf.stem.scaleX,
