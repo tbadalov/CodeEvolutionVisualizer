@@ -86,9 +86,10 @@ class App extends React.Component {
   }
 
   onSelectedApp(e) {
-    this.setState({
+    this.setState((prevState) => ({
       selectedApplication: e.target.value,
-    });
+      menuItems: prevState.menuItems.slice(0, 1),
+    }));
   }
 
   setBranchColor(branchName, color) {
