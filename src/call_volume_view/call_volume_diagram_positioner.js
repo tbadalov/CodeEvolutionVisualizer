@@ -50,6 +50,10 @@ class CallVolumeDiagramPositioner {
     return Math.ceil(Math.max(1, Number(this.classesArray[index].totalCallAmount)) * 0.25);
   }
 
+  emptyPipeStrokeWidth() {
+    return 0.3 * MINIMUM_CIRCLE_RADIUS;
+  }
+
   nodeRadius(classIndex, methodIndex) {
     return Math.max(MINIMUM_CIRCLE_RADIUS, Number(this.classesArray[classIndex].methods[methodIndex].totalCallAmount));
   }

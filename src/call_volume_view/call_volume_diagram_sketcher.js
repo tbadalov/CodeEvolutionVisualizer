@@ -32,6 +32,16 @@ export function convertToVisualizationData(classesArray, params) {
         color: branchData.color,
       },
     ];
+    if (Number(classData.totalCallAmount) === 0) {
+      pipes.push({
+        type: 'rect',
+        startX: diagramPositioner.trunkX(i) + diagramPositioner.emptyPipeStrokeWidth(),
+        startY: marginTop,
+        height: diagramPositioner.trunkHeight(i) + diagramPositioner.emptyPipeStrokeWidth(),
+        width: diagramPositioner.pipeWidth(i)-diagramPositioner.emptyPipeStrokeWidth()*2,
+        color: '#f0f0f0',
+      });
+    }
     const leaves = [];
     let branchStartingPositionX = diagramPositioner.branchStartX(i);
     for ( let m = 0; m < methods.length; m++ ) {
@@ -56,10 +66,10 @@ export function convertToVisualizationData(classesArray, params) {
         leaf.stemFillerForEmptyMethod = {
           type: 'rect',
           fill: '#f0f0f0',
-          startX: diagramPositioner.directionX(i) !== 0 ? leaf.stem.startX + leaf.stem.scaleX * emptyMethodStrokeWidth : leaf.stem.startX,
-          startY: diagramPositioner.directionY(i) !== 0 ? leaf.stem.startY : leaf.stem.startY + emptyMethodStrokeWidth,
-          width: diagramPositioner.directionX(i) !== 0 ? leaf.stem.width - 2 * emptyMethodStrokeWidth : leaf.stem.width + emptyMethodStrokeWidth,
-          height: diagramPositioner.directionY(i) !== 0 ? leaf.stem.height + emptyMethodStrokeWidth : leaf.stem.height - 2 * emptyMethodStrokeWidth,
+          startX: diagramPositioner.directionX(i) !== 0 ? leaf.stem.startX + diagramPositioner.directionX(i) * emptyMethodStrokeWidth : classData.methods.length > 1 ? leaf.stem.startX : leaf.stem.startX + diagramPositioner.emptyPipeStrokeWidth(),
+          startY: diagramPositioner.directionY(i) !== 0 ? leaf.stem.startY - (Number(classData.totalCallAmount) === 0 ? diagramPositioner.directionY(i) * diagramPositioner.emptyPipeStrokeWidth() : 0) : classData.methods.length > 1 ? leaf.stem.startY + emptyMethodStrokeWidth : leaf.stem.startY,
+          width: diagramPositioner.directionX(i) !== 0 ? leaf.stem.width - 2 * emptyMethodStrokeWidth : classData.methods.length > 1 ? leaf.stem.width + emptyMethodStrokeWidth : leaf.stem.width - diagramPositioner.emptyPipeStrokeWidth() * 2,
+          height: diagramPositioner.directionY(i) !== 0 ? leaf.stem.height + emptyMethodStrokeWidth*2 : classData.methods.length > 1 ? leaf.stem.height - 2 * emptyMethodStrokeWidth : leaf.stem.height + diagramPositioner.emptyPipeStrokeWidth(),
           scaleX: leaf.stem.scaleX,
           scaleY: leaf.stem.scaleY,
         };
@@ -87,6 +97,28 @@ export function convertToVisualizationData(classesArray, params) {
         scaleX: -1 * ((methods.length-1) % 2 == 0 ? -1 : 1) * (diagramPositioner.pipeWidth(i) / diagramPositioner.stemWidth(diagramPositioner.nodeRadius(i, methods.length-1))), // 1 to draw arc to left, -1 to draw to right
         scaleY: 1,
       });
+      if (Number(classData.totalCallAmount) === 0) {
+        pipes.push({
+          type: 'rect',
+          startX: diagramPositioner.branchStartX(i)+diagramPositioner.emptyPipeStrokeWidth(),
+          startY: diagramPositioner.branchStartY(i),
+          width: diagramPositioner.pipeWidth(i)-diagramPositioner.emptyPipeStrokeWidth() * 2,
+          height: diagramPositioner.stemPosition(i, methods.length-1).startY - diagramPositioner.branchStartY(i),
+          color: '#f0f0f0',
+          scaleY: 1,
+        });
+        pipes.push({
+          type: 'arc',
+          thickness: diagramPositioner.stemWidthFor(i, methods.length-1) - diagramPositioner.emptyPipeStrokeWidth() * 2,
+          radius: diagramPositioner.stemWidthFor(i, methods.length-1) - diagramPositioner.emptyPipeStrokeWidth(),
+          centerX: diagramPositioner.stemPosition(i, methods.length-1).startX,
+          centerY: diagramPositioner.stemPosition(i, methods.length-1).startY,
+          angle: 90,
+          color: '#f0f0f0',
+          scaleX: -1 * ((methods.length-1) % 2 == 0 ? -1 : 1) * (diagramPositioner.pipeWidth(i) / diagramPositioner.stemWidth(diagramPositioner.nodeRadius(i, methods.length-1))), // 1 to draw arc to left, -1 to draw to right
+          scaleY: 1,
+        });
+      }
     } else {
       pipes.push({
         type: 'arc',
@@ -119,6 +151,39 @@ export function convertToVisualizationData(classesArray, params) {
         scaleX: diagramPositioner.directionX(i), // 1 to draw arc to left, -1 to draw to right
         scaleY: -(diagramPositioner.pipeWidth(i) / diagramPositioner.stemWidth(diagramPositioner.nodeRadius(i, methods.length-1))) * diagramPositioner.directionY(i),
       });
+      if (Number(classData.totalCallAmount) === 0) {
+        pipes.push({
+          type: 'arc',
+          thickness: diagramPositioner.pipeWidth(i) - diagramPositioner.emptyPipeStrokeWidth() * 2,
+          radius: diagramPositioner.trunkAngleRadius(i)-diagramPositioner.emptyPipeStrokeWidth(),
+          centerX: diagramPositioner.trunkAngleCenterX(i),
+          centerY: diagramPositioner.trunkAngleCenterY(i),
+          angle: 90,
+          color: '#f0f0f0',
+          scaleX: -1 * diagramPositioner.directionX(i), // 1 to draw arc to left, -1 to draw to right
+        });
+        pipes.push({
+          type: 'rect',
+          startX: diagramPositioner.branchStartX(i),
+          startY: diagramPositioner.branchStartY(i) - diagramPositioner.emptyPipeStrokeWidth()*diagramPositioner.directionY(i),
+          width: (diagramPositioner.stemPosition(i, methods.length-1).startX - branchStartingPositionX) * diagramPositioner.directionX(i),
+          height: diagramPositioner.pipeWidth(i)-diagramPositioner.emptyPipeStrokeWidth()*2,
+          color: '#f0f0f0',
+          scaleX: diagramPositioner.directionX(i),
+          scaleY: -1 * diagramPositioner.directionY(i),
+        });
+        pipes.push({
+          type: 'arc',
+          thickness: diagramPositioner.stemWidth(diagramPositioner.nodeRadius(i, methods.length-1))-diagramPositioner.emptyPipeStrokeWidth()*2,
+          radius: diagramPositioner.stemWidth(diagramPositioner.nodeRadius(i, methods.length-1))-diagramPositioner.emptyPipeStrokeWidth(),
+          centerX: diagramPositioner.stemPosition(i, methods.length-1).startX,
+          centerY: diagramPositioner.branchStartY(i),
+          angle: 90,
+          color: '#f0f0f0',
+          scaleX: diagramPositioner.directionX(i), // 1 to draw arc to left, -1 to draw to right
+          scaleY: -(diagramPositioner.pipeWidth(i) / diagramPositioner.stemWidth(diagramPositioner.nodeRadius(i, methods.length-1))) * diagramPositioner.directionY(i),
+        });
+      }
     }
     branches.push({
       data: branchData,
@@ -181,7 +246,7 @@ function drawBranches(branches) {
           y: leave.stemFillerForEmptyMethod.startY,
           width: leave.stemFillerForEmptyMethod.width,
           height: leave.stemFillerForEmptyMethod.height,
-          fill: leave.stemFillerForEmptyMethod.fill,
+          fill: '#f0f0f0',
           scaleX: leave.stemFillerForEmptyMethod.scaleX,
           scaleY: leave.stemFillerForEmptyMethod.scaleY,
         });
