@@ -79,7 +79,9 @@ class ClassOverviewView extends React.Component {
         selectedCommitHashes: this.props.selectedCommitHashes,
       }
     ).then(initialData => {
-      const classFilterItems = initialData.classNames.map((className, index) => ({
+      const classFilterItems = initialData.classNames
+      .filter(className => !this.context.isClassDisabled(className))
+      .map((className, index) => ({
         label: className,
         checked: index === 0,
         payload: {
