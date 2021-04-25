@@ -24,7 +24,7 @@ function CheckboxItem(props) {
               }
             />
       }
-      <p>{props.label}</p>
+      <p title={props.label}>{props.label}</p>
     </div>
   );
 }
