@@ -45,6 +45,10 @@ module.exports = (env, options) => {
           use: ["style-loader", "css-loader", "sass-loader"],
         },
         {
+          test: /\.svg/,
+          loader: 'url-loader',
+        },
+        {
           test: /\.ejs$/,
           loader: 'ejs-loader',
           options: {
