@@ -43,6 +43,7 @@ router.get('/', function(req, res, next) {
             WHEN class_changed_rel IS NULL THEN c.number_of_lines
             ELSE sum(class_changed_rel.added_lines+class_changed_rel.changed_lines+class_changed_rel.deleted_lines)
           END as changedLinesCount
+          WHERE changedLinesCount > 0
         WITH className, changedLinesCount
         ORDER BY className
         RETURN collect( { className: className, changedLinesCount: changedLinesCount } ) as changedClasses, sum(changedLinesCount) as totalChangedLinesCount
