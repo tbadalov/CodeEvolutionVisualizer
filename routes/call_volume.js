@@ -26,7 +26,8 @@ router.get('/', function(req, res, next) {
     next_commit
   ORDER BY prev_commit.author_timestamp DESC
   LIMIT 1
-  MATCH (app)-[:APP_OWNS_CLASS]->(class:Class)-[:CLASS_OWNS_METHOD]->(m:Method)
+  MATCH (app)-[:APP_OWNS_CLASS]->(class:Class)
+  OPTIONAL MATCH (class)-[:CLASS_OWNS_METHOD]->(m:Method)
   OPTIONAL MATCH (caller_class:Class)-[:CLASS_OWNS_METHOD]->(caller:Method)-[:CALLS]->(m)
     WHERE (app)-[:APP_OWNS_CLASS]->(caller_class)
   WITH app,
@@ -63,11 +64,14 @@ router.get('/', function(req, res, next) {
     prev_commit,
     next_commit,
     class.name as className,
-    collect({
-      methodName: m.name,
-      totalCallAmount: toString(total_calls),
-      callers: callers
-    }) as methods,
+    CASE
+      WHEN m IS NULL THEN []
+      ELSE collect({
+       methodName: m.name,
+       totalCallAmount: toString(total_calls),
+       callers: callers
+      })
+    END as methods,
     sum(total_calls) as total_calls
   RETURN app.commit as commitHash,
   prev_commit.commit as previousCommitHash,

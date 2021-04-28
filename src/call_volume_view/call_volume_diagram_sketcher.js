@@ -8,10 +8,8 @@ export function convertToVisualizationData(classesArray, params) {
   const {
     classToColorMapping,
   } = params;
-  if (classesArray.length == 0) {
-    return [];
-  }
-
+  console.log("converting to visualization data");
+  console.log(classesArray);
   const branches = [];
   const diagramPositioner = new CallVolumeDiagramPositioner(classesArray);
   window.diagramPositioner = diagramPositioner;
@@ -37,11 +35,13 @@ export function convertToVisualizationData(classesArray, params) {
         type: 'rect',
         startX: diagramPositioner.trunkX(i) + diagramPositioner.emptyPipeStrokeWidth(),
         startY: marginTop,
-        height: diagramPositioner.trunkHeight(i) + diagramPositioner.emptyPipeStrokeWidth(),
+        height: diagramPositioner.trunkHeight(i) + (classData.methods.length === 0 ? - 1 : 1) * diagramPositioner.emptyPipeStrokeWidth(),
         width: diagramPositioner.pipeWidth(i)-diagramPositioner.emptyPipeStrokeWidth()*2,
         color: '#f0f0f0',
       });
     }
+    console.log("pipes for " + classData.className);
+    console.log(pipes);
     const leaves = [];
     let branchStartingPositionX = diagramPositioner.branchStartX(i);
     for ( let m = 0; m < methods.length; m++ ) {
@@ -76,113 +76,115 @@ export function convertToVisualizationData(classesArray, params) {
       }
       leaves.push(leaf);
     }
-    if (diagramPositioner.directionY(i) == 0) {
-      pipes.push({
-        type: 'rect',
-        startX: diagramPositioner.branchStartX(i),
-        startY: diagramPositioner.branchStartY(i),
-        width: diagramPositioner.pipeWidth(i),
-        height: diagramPositioner.stemPosition(i, methods.length-1).startY - diagramPositioner.branchStartY(i),
-        color: branchData.color,
-        scaleY: 1,
-      });
-      pipes.push({
-        type: 'arc',
-        thickness: diagramPositioner.stemWidthFor(i, methods.length-1),
-        radius: diagramPositioner.stemWidthFor(i, methods.length-1),
-        centerX: diagramPositioner.stemPosition(i, methods.length-1).startX,
-        centerY: diagramPositioner.stemPosition(i, methods.length-1).startY,
-        angle: 90,
-        color: branchData.color,
-        scaleX: -1 * ((methods.length-1) % 2 == 0 ? -1 : 1) * (diagramPositioner.pipeWidth(i) / diagramPositioner.stemWidth(diagramPositioner.nodeRadius(i, methods.length-1))), // 1 to draw arc to left, -1 to draw to right
-        scaleY: 1,
-      });
-      if (Number(classData.totalCallAmount) === 0) {
+    if (classData.methods.length > 0) {
+      if (diagramPositioner.directionY(i) == 0) {
         pipes.push({
           type: 'rect',
-          startX: diagramPositioner.branchStartX(i)+diagramPositioner.emptyPipeStrokeWidth(),
+          startX: diagramPositioner.branchStartX(i),
           startY: diagramPositioner.branchStartY(i),
-          width: diagramPositioner.pipeWidth(i)-diagramPositioner.emptyPipeStrokeWidth() * 2,
+          width: diagramPositioner.pipeWidth(i),
           height: diagramPositioner.stemPosition(i, methods.length-1).startY - diagramPositioner.branchStartY(i),
-          color: '#f0f0f0',
+          color: branchData.color,
           scaleY: 1,
         });
         pipes.push({
           type: 'arc',
-          thickness: diagramPositioner.stemWidthFor(i, methods.length-1) - diagramPositioner.emptyPipeStrokeWidth() * 2,
-          radius: diagramPositioner.stemWidthFor(i, methods.length-1) - diagramPositioner.emptyPipeStrokeWidth(),
+          thickness: diagramPositioner.stemWidthFor(i, methods.length-1),
+          radius: diagramPositioner.stemWidthFor(i, methods.length-1),
           centerX: diagramPositioner.stemPosition(i, methods.length-1).startX,
           centerY: diagramPositioner.stemPosition(i, methods.length-1).startY,
           angle: 90,
-          color: '#f0f0f0',
+          color: branchData.color,
           scaleX: -1 * ((methods.length-1) % 2 == 0 ? -1 : 1) * (diagramPositioner.pipeWidth(i) / diagramPositioner.stemWidth(diagramPositioner.nodeRadius(i, methods.length-1))), // 1 to draw arc to left, -1 to draw to right
           scaleY: 1,
         });
-      }
-    } else {
-      pipes.push({
-        type: 'arc',
-        thickness: diagramPositioner.pipeWidth(i),
-        radius: diagramPositioner.trunkAngleRadius(i),
-        centerX: diagramPositioner.trunkAngleCenterX(i),
-        centerY: diagramPositioner.trunkAngleCenterY(i),
-        angle: 90,
-        color: branchData.color,
-        scaleX: -1 * diagramPositioner.directionX(i), // 1 to draw arc to left, -1 to draw to right
-      });
-      pipes.push({
-        type: 'rect',
-        startX: diagramPositioner.branchStartX(i),
-        startY: diagramPositioner.branchStartY(i),
-        width: (diagramPositioner.stemPosition(i, methods.length-1).startX - branchStartingPositionX) * diagramPositioner.directionX(i),
-        height: diagramPositioner.pipeWidth(i),
-        color: branchData.color,
-        scaleX: diagramPositioner.directionX(i),
-        scaleY: -1 * diagramPositioner.directionY(i),
-      });
-      pipes.push({
-        type: 'arc',
-        thickness: diagramPositioner.stemWidth(diagramPositioner.nodeRadius(i, methods.length-1)),
-        radius: diagramPositioner.stemWidth(diagramPositioner.nodeRadius(i, methods.length-1)),
-        centerX: diagramPositioner.stemPosition(i, methods.length-1).startX,
-        centerY: diagramPositioner.branchStartY(i),
-        angle: 90,
-        color: branchData.color,
-        scaleX: diagramPositioner.directionX(i), // 1 to draw arc to left, -1 to draw to right
-        scaleY: -(diagramPositioner.pipeWidth(i) / diagramPositioner.stemWidth(diagramPositioner.nodeRadius(i, methods.length-1))) * diagramPositioner.directionY(i),
-      });
-      if (Number(classData.totalCallAmount) === 0) {
+        if (Number(classData.totalCallAmount) === 0) {
+          pipes.push({
+            type: 'rect',
+            startX: diagramPositioner.branchStartX(i)+diagramPositioner.emptyPipeStrokeWidth(),
+            startY: diagramPositioner.branchStartY(i),
+            width: diagramPositioner.pipeWidth(i)-diagramPositioner.emptyPipeStrokeWidth() * 2,
+            height: diagramPositioner.stemPosition(i, methods.length-1).startY - diagramPositioner.branchStartY(i),
+            color: '#f0f0f0',
+            scaleY: 1,
+          });
+          pipes.push({
+            type: 'arc',
+            thickness: diagramPositioner.stemWidthFor(i, methods.length-1) - diagramPositioner.emptyPipeStrokeWidth() * 2,
+            radius: diagramPositioner.stemWidthFor(i, methods.length-1) - diagramPositioner.emptyPipeStrokeWidth(),
+            centerX: diagramPositioner.stemPosition(i, methods.length-1).startX,
+            centerY: diagramPositioner.stemPosition(i, methods.length-1).startY,
+            angle: 90,
+            color: '#f0f0f0',
+            scaleX: -1 * ((methods.length-1) % 2 == 0 ? -1 : 1) * (diagramPositioner.pipeWidth(i) / diagramPositioner.stemWidth(diagramPositioner.nodeRadius(i, methods.length-1))), // 1 to draw arc to left, -1 to draw to right
+            scaleY: 1,
+          });
+        }
+      } else {
         pipes.push({
           type: 'arc',
-          thickness: diagramPositioner.pipeWidth(i) - diagramPositioner.emptyPipeStrokeWidth() * 2,
-          radius: diagramPositioner.trunkAngleRadius(i)-diagramPositioner.emptyPipeStrokeWidth(),
+          thickness: diagramPositioner.pipeWidth(i),
+          radius: diagramPositioner.trunkAngleRadius(i),
           centerX: diagramPositioner.trunkAngleCenterX(i),
           centerY: diagramPositioner.trunkAngleCenterY(i),
           angle: 90,
-          color: '#f0f0f0',
+          color: branchData.color,
           scaleX: -1 * diagramPositioner.directionX(i), // 1 to draw arc to left, -1 to draw to right
         });
         pipes.push({
           type: 'rect',
           startX: diagramPositioner.branchStartX(i),
-          startY: diagramPositioner.branchStartY(i) - diagramPositioner.emptyPipeStrokeWidth()*diagramPositioner.directionY(i),
+          startY: diagramPositioner.branchStartY(i),
           width: (diagramPositioner.stemPosition(i, methods.length-1).startX - branchStartingPositionX) * diagramPositioner.directionX(i),
-          height: diagramPositioner.pipeWidth(i)-diagramPositioner.emptyPipeStrokeWidth()*2,
-          color: '#f0f0f0',
+          height: diagramPositioner.pipeWidth(i),
+          color: branchData.color,
           scaleX: diagramPositioner.directionX(i),
           scaleY: -1 * diagramPositioner.directionY(i),
         });
         pipes.push({
           type: 'arc',
-          thickness: diagramPositioner.stemWidth(diagramPositioner.nodeRadius(i, methods.length-1))-diagramPositioner.emptyPipeStrokeWidth()*2,
-          radius: diagramPositioner.stemWidth(diagramPositioner.nodeRadius(i, methods.length-1))-diagramPositioner.emptyPipeStrokeWidth(),
+          thickness: diagramPositioner.stemWidth(diagramPositioner.nodeRadius(i, methods.length-1)),
+          radius: diagramPositioner.stemWidth(diagramPositioner.nodeRadius(i, methods.length-1)),
           centerX: diagramPositioner.stemPosition(i, methods.length-1).startX,
           centerY: diagramPositioner.branchStartY(i),
           angle: 90,
-          color: '#f0f0f0',
+          color: branchData.color,
           scaleX: diagramPositioner.directionX(i), // 1 to draw arc to left, -1 to draw to right
           scaleY: -(diagramPositioner.pipeWidth(i) / diagramPositioner.stemWidth(diagramPositioner.nodeRadius(i, methods.length-1))) * diagramPositioner.directionY(i),
         });
+        if (Number(classData.totalCallAmount) === 0) {
+          pipes.push({
+            type: 'arc',
+            thickness: diagramPositioner.pipeWidth(i) - diagramPositioner.emptyPipeStrokeWidth() * 2,
+            radius: diagramPositioner.trunkAngleRadius(i)-diagramPositioner.emptyPipeStrokeWidth(),
+            centerX: diagramPositioner.trunkAngleCenterX(i),
+            centerY: diagramPositioner.trunkAngleCenterY(i),
+            angle: 90,
+            color: '#f0f0f0',
+            scaleX: -1 * diagramPositioner.directionX(i), // 1 to draw arc to left, -1 to draw to right
+          });
+          pipes.push({
+            type: 'rect',
+            startX: diagramPositioner.branchStartX(i),
+            startY: diagramPositioner.branchStartY(i) - diagramPositioner.emptyPipeStrokeWidth()*diagramPositioner.directionY(i),
+            width: (diagramPositioner.stemPosition(i, methods.length-1).startX - branchStartingPositionX) * diagramPositioner.directionX(i),
+            height: diagramPositioner.pipeWidth(i)-diagramPositioner.emptyPipeStrokeWidth()*2,
+            color: '#f0f0f0',
+            scaleX: diagramPositioner.directionX(i),
+            scaleY: -1 * diagramPositioner.directionY(i),
+          });
+          pipes.push({
+            type: 'arc',
+            thickness: diagramPositioner.stemWidth(diagramPositioner.nodeRadius(i, methods.length-1))-diagramPositioner.emptyPipeStrokeWidth()*2,
+            radius: diagramPositioner.stemWidth(diagramPositioner.nodeRadius(i, methods.length-1))-diagramPositioner.emptyPipeStrokeWidth(),
+            centerX: diagramPositioner.stemPosition(i, methods.length-1).startX,
+            centerY: diagramPositioner.branchStartY(i),
+            angle: 90,
+            color: '#f0f0f0',
+            scaleX: diagramPositioner.directionX(i), // 1 to draw arc to left, -1 to draw to right
+            scaleY: -(diagramPositioner.pipeWidth(i) / diagramPositioner.stemWidth(diagramPositioner.nodeRadius(i, methods.length-1))) * diagramPositioner.directionY(i),
+          });
+        }
       }
     }
     branches.push({
@@ -250,6 +252,10 @@ function drawBranches(branches) {
           scaleX: leave.stemFillerForEmptyMethod.scaleX,
           scaleY: leave.stemFillerForEmptyMethod.scaleY,
         });
+        if (isNaN(stemFillerForEmptyMethod.x)) {
+          console.log("NaN detected stem filler");
+          console.log(stemFillerForEmptyMethod);
+        }
       }
       return (
         <ReactKonva.Group key={`leaf-${index}-of-branch-${i}`}>

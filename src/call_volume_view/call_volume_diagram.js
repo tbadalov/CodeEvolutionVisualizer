@@ -27,6 +27,7 @@ function calculateSizeOfTheDiagram(visualData, classesArray) {
     };
   }
   const largestWidthFromLeft = Math.max(
+    0,
       ...visualData
         .slice(0, Math.floor(visualData.length / 2))
         .map(branch => branch.pipes
@@ -35,6 +36,7 @@ function calculateSizeOfTheDiagram(visualData, classesArray) {
          )
   );
   const largestWidthFromRight = Math.max(
+    0,
     ...visualData
       .slice(Math.floor(visualData.length / 2))
       .map(branch => branch.pipes
@@ -48,12 +50,14 @@ function calculateSizeOfTheDiagram(visualData, classesArray) {
     return widthSum + classPipeWidth;
   }, 0);
   const totalHeight = Math.max(
+    0,
     ...visualData
       .map(branch => branch.pipes
           .map(pipe => pipe.type === 'rect' ? pipe.height : pipe.radius)
           .reduce((heightSum, height) => heightSum + height, 0)
       )
   );
+  console.log();
   return {
     totalWidth: largestWidthFromLeft + middleWidth + largestWidthFromRight,
     leftWidth: largestWidthFromLeft,
@@ -271,10 +275,11 @@ class CallVolumeDiagram extends React.Component {
 
   positionCameraToCenterAtFirstLoad(classesArray, visualizationData) {
     const diagramSize = calculateSizeOfTheDiagram(visualizationData, classesArray);
-    const newScale = diagramSize.totalWidth > diagramSize.totalHeight
+    const newScale = diagramSize.totalWidth === 0 ? this.state.primitiveDiagramProps.stageProps.scaleX : diagramSize.totalWidth > diagramSize.totalHeight
       ? 0.7 * this.state.primitiveDiagramProps.stageProps.width / diagramSize.totalWidth
       : 0.7 * this.state.primitiveDiagramProps.stageProps.height / diagramSize.totalHeight;
     if (shouldAdaptCamera && this.state.primitiveDiagramProps.stageProps.scaleX !== newScale) {
+      console.log(diagramSize);
       this.setState({
         primitiveDiagramProps: {
           ...this.state.primitiveDiagramProps,
