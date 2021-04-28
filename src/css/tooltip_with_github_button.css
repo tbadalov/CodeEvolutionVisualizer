@@ -1,0 +1,24 @@
+.github-commit-title {
+  display: grid;
+  grid-template-columns: auto min-content;
+  align-content: baseline;
+  column-gap: 20px;
+}
+
+.github-icon {
+  width: 20px;
+  height: 20px;
+  background-image: url('images/github_icon.svg');
+  background-size: 20px;
+  position: relative;
+}
+
+.github-icon::before {
+  position: absolute;
+  border-left: 1px solid black;
+  width: 20px;
+  height: 20px;
+  left: -10px;
+  top: 0;
+  content: '';
+}

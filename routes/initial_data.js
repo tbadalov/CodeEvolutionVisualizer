@@ -12,11 +12,14 @@ router.get('/', function(req, res, next) {
   let applications;
   session.run(`
     MATCH (app:App)
-    RETURN collect(distinct app.name) as applications
+    RETURN collect(distinct {
+        applicationName: app.name,
+        repositoryUrl: replace(app.repository_url, ".git", "")
+    }) as applications
   `).subscribe({
     onNext: record => {
       applications = record.get("applications");
-      mainApp = applications[1];
+      mainApp = applications[1].applicationName;
     },
     onCompleted: () => {
       session.close();

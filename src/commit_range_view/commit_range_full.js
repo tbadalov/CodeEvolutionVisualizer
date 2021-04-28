@@ -97,6 +97,7 @@ class CommitRangeViewFull extends React.Component {
         data={{commits: this.commitsDataAdapter.getFilteredData()}}
         disabledClasses={this.context.disabledClasses}
         applicationName={this.props.applicationName}
+        repositoryUrl={this.props.repositoryUrl}
         classToColorMapping={classToColorMapping}
         branchToColorMapping={branchToColorMapping}
         showSourceCodeChanges={this.state.showSourceCodeChanges}

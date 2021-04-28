@@ -37,7 +37,7 @@ class App extends React.Component {
       rawData: {
         applications: [],
       },
-      selectedApplication: undefined,
+      selectedApplication: {},
       colorContextValue: {
         classToColorMapping: {},
         changeClassColor: this.changeClassColor,
@@ -87,7 +87,7 @@ class App extends React.Component {
 
   onSelectedApp(e) {
     this.setState((prevState) => ({
-      selectedApplication: e.target.value,
+      selectedApplication: this.state.rawData.applications.find(app => app.applicationName === e.target.value),
       menuItems: prevState.menuItems.slice(0, 1),
     }));
   }
@@ -150,7 +150,7 @@ class App extends React.Component {
         console.log(initialData);
         this.setState({
           rawData: initialData,
-          selectedApplication: initialData.selectedApplication,
+          selectedApplication: initialData.applications.find(app => app.applicationName === initialData.selectedApplication),
         });
         this.props.history.replace('/commitRangeView');
       });
@@ -185,10 +185,12 @@ class App extends React.Component {
       <div className="select menu-item">
         <select id="slct"
           name="slct"
-          value={this.state.selectedApplication}
+          value={this.state.selectedApplication.applicationName}
           onChange={this.onSelectedApp}
         >
-          { this.state.rawData.applications.map((applicationName, index) => (
+          { this.state.rawData.applications
+            .map(app => app.applicationName)
+            .map((applicationName, index) => (
               <option value={applicationName}>{applicationName}</option>
             ))
           }
@@ -216,7 +218,8 @@ class App extends React.Component {
               <DiagramComponent url={uiConfig[diagramName].apiUrl}
                 addMenuItem={this.addMenuItem}
                 changeDiagram={this.changeDiagram}
-                applicationName={this.state.selectedApplication}
+                applicationName={this.state.selectedApplication.applicationName}
+                repositoryUrl={this.state.selectedApplication.repositoryUrl}
                 offsetLeft={this.sceneContainerRef.current ? this.sceneContainerRef.current.offsetLeft : 0}
                 {...props}
                 {...props.location.state}

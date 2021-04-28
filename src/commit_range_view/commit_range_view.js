@@ -15,6 +15,7 @@ const {
   MAX_SCROLL_SPEED,
 } = constants;
 const { calculateLargestCommitSize } = require('./util');
+const TooltipWithGithubButton = require('../ui_elements/tooltip_with_github_button');
 
 let isMouseDown = false;
 let isSelecting = false;
@@ -374,11 +375,12 @@ class CommitRangeView extends React.Component {
           applicationName={this.props.applicationName}
           commits={commits}
         >
-          <Tooltip
+          <TooltipWithGithubButton
             visible={this.state.tooltipVisible}
             left={this.state.tooltipLeft}
             top={this.state.tooltipTop}
-            title={this.state.tooltipTitle}
+            commitHash={this.state.tooltipTitle}
+            repositoryUrl={this.props.repositoryUrl}
             items={this.state.tooltipItems} />
           <MouseSelectionArea {...this.state.mouseSelectionAreaProps}/>
         </BarChart>
