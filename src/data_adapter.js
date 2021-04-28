@@ -12,6 +12,10 @@ class DataAdapter {
     delete this.filtersByIds[filterId];
   }
 
+  replaceData(dataArray) {
+    this.dataArray = dataArray;
+  }
+
   getFilteredData() {
     const filters = Object.values(this.filtersByIds);
     return this.dataArray.filter(element => {

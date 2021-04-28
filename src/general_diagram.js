@@ -2,7 +2,6 @@ const React = require('react');
 const PrimitiveDiagram = require('./primitive_diagram');
 
 class GeneralDiagram extends React.Component {
-
   render() {
     return(
       <div

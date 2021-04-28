@@ -155,7 +155,7 @@ class CallVolumeDiagram extends React.Component {
   }
 
   isDataNotAvailableYet() {
-    return this.props.rawData === undefined;
+    return this.props.classes === undefined;
   }
 
   convertRawDataToVisualShapes(filteredRawData, params) {
@@ -197,8 +197,8 @@ class CallVolumeDiagram extends React.Component {
     return currentKonvaShapes;
   }
 
-  filterRawData(originalRawData={}) {
-    const filteredRawData = (originalRawData.classes || [])
+  filterRawData(classes) {
+    const filteredRawData = classes
       .map(classRecord => {
         classRecord.methods = classRecord.methods.sort((method1, method2) => method1.totalCallAmount - method2.totalCallAmount);
         return classRecord;
@@ -233,10 +233,10 @@ class CallVolumeDiagram extends React.Component {
       this.removePreviousLayer();
     }
 
-    if (this.props.rawData !== prevProps.rawData) {
-      console.log(prevProps.rawData);
-      const previousLayerData = this.filterRawData(prevProps.rawData);
-      const currentLayerData = this.filterRawData(this.props.rawData);
+    if (this.props.classes !== prevProps.classes) {
+      console.log(prevProps.classes);
+      const previousLayerData = this.filterRawData(prevProps.classes);
+      const currentLayerData = this.filterRawData(this.props.classes);
       const currentCommitLayer = this.buildCurrentCommitLayer(currentLayerData);
       const diagramLayers = this.buildPreviousCommitLayer(previousLayerData).concat(currentCommitLayer);
       this.setState({
