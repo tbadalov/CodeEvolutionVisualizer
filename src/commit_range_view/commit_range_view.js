@@ -167,25 +167,9 @@ class CommitRangeView extends React.Component {
 
     const tooltipTitle = params.tooltipTitle || this.state.tooltipTitle;
     const tooltipItems = params.tooltipItems || this.state.tooltipItems;
-    const dummyContainer = document.createElement('div');
-    document.body.appendChild(dummyContainer);
-    ReactDOM.render(
-      <Tooltip visible
-        left={-9999}
-        top={-9999}
-        title={tooltipTitle}
-        items={tooltipItems}
-      />,
-      dummyContainer
-    );
-    const tooltipWidth = dummyContainer.firstChild.offsetWidth;
-    const tooltipHeight = dummyContainer.firstChild.offsetHeight;
-    dummyContainer.remove();
-    const tooltipLeft = pageX + tooltipWidth <= window.innerWidth ? pageX : pageX - tooltipWidth;
-    const tooltipTop = pageY - tooltipHeight >= 0 ? pageY - tooltipHeight - constants.LABEL_HEIGHT : pageY + constants.LABEL_HEIGHT;
     this.setState({
-      tooltipLeft,
-      tooltipTop,
+      tooltipLeft: pageX,
+      tooltipTop: pageY,
       tooltipTitle,
       tooltipItems,
     });
