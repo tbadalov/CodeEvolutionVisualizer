@@ -6,6 +6,9 @@ const ClassOverviewColumnTitles = require('./class_overview_column_titles');
 const constants = require('./constants');
 const { columnTotalTitleFramHeight, columnTotalTitleFrameHeight } = require('./class_overview_diagram_positioner');
 const ClassOverviewDataConverter = require('./data_converter');
+const { commitTooltipItems } = require('../utils');
+const DelayedTooltip = require('../ui_elements/delayed_tooltip');
+const TooltipWithGithubButton = require('../ui_elements/tooltip_with_github_button');
 
 class ClassOverviewDiagram extends React.Component {
   constructor(props) {
@@ -15,6 +18,8 @@ class ClassOverviewDiagram extends React.Component {
     this.methodLegendScrollContainerRef = React.createRef();
     this.largeContainerRef = React.createRef();
     this.onScroll = this.onScroll.bind(this);
+    this.labelMouseEnter = this.labelMouseEnter.bind(this);
+    this.hideTooltip = this.hideTooltip.bind(this);
     this.state = {
       rawData: { commits: {} },
       tooltipVisible: false,
@@ -35,6 +40,49 @@ class ClassOverviewDiagram extends React.Component {
     const { scrollLeft, scrollTop } = e.target;
     this.columnTitlesScrollContainerRef.current.scrollTo(scrollLeft, scrollTop);
     this.methodLegendScrollContainerRef.current.scrollTo(scrollLeft, scrollTop);
+  }
+
+  showTooltip(params) {
+    const {
+      pageX,
+      pageY,
+    } = params;
+
+    const tooltipTitle = params.tooltipTitle || this.state.tooltipTitle;
+    const tooltipItems = params.tooltipItems || this.state.tooltipItems;
+    this.setState({
+      tooltipLeft: pageX,
+      tooltipTop: pageY,
+      tooltipVisible: true,
+      delay: 700,
+      tooltipOffset: 20,
+      tooltipTitle,
+      tooltipItems,
+    });
+  }
+
+  hideTooltip(e, payload) {
+    console.log("HIDING!!!!!" + payload.labelData.commitHash);
+    console.log(payload);
+    this.setState({
+      tooltipVisible: false,
+      delay: 0,
+    })
+  }
+
+  labelMouseEnter(event, titlePayload) {
+    console.log("ENTERED!! " + titlePayload.labelData.commitHash );
+    console.log(titlePayload);
+    const labelData = titlePayload.labelData;
+    const tooltipItems = commitTooltipItems(labelData, {
+      classToColorMapping: this.props.classToColorMapping,
+    });
+    this.showTooltip({
+      pageX: event.evt.pageX,
+      pageY: event.evt.pageY,
+      tooltipTitle: labelData.commitHash,
+      tooltipItems,
+    });
   }
 
   componentDidUpdate(prevProps) {
@@ -93,9 +141,24 @@ class ClassOverviewDiagram extends React.Component {
           onContainerScroll={this.onScroll}
           scrollContainerRef={this.scrollContainerRef}
           largeContainerRef={this.largeContainerRef}
-          onDraw={this.convertDataToPrimitiveShapes} />
+          onDraw={this.convertDataToPrimitiveShapes}>
+          <DelayedTooltip
+            delay={this.state.delay}
+            tooltipClass={TooltipWithGithubButton}
+            visible={this.state.tooltipVisible}
+            left={this.state.tooltipLeft}
+            top={this.state.tooltipTop}
+            offset={this.state.tooltipOffset}
+            commitHash={this.state.tooltipTitle}
+            repositoryUrl={this.props.repositoryUrl}
+            items={this.state.tooltipItems} />
+        </GeneralDiagram>
         <ClassOverviewColumnTitles
           scrollContainerRef={this.columnTitlesScrollContainerRef}
+          selectedCommits={this.props.selectedCommits}
+          onMouseEnter={this.labelMouseEnter}
+          onMouseMove={this.labelMouseEnter}
+          onMouseLeave={this.hideTooltip}
           columnTitles={columnTitles} />
       </React.Fragment>
     );

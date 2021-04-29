@@ -26,7 +26,6 @@ let selectionClickStartY;
 let scrollInterval;
 let currentX;
 let currentY;
-let tooltipTimeout;
 
 function strokeStack(payload) {
   this.setState({
@@ -67,7 +66,6 @@ function labelMouseEnter(event, labelData) {
 function mouseLeaveStack(unstrokeStack, event) {
   if (Math.abs(this.state.tooltipLeft - (event.evt.pageX)) > 4) { // mouse out of tooltip
     unstrokeStack();
-    this.disableTooltipTimer();
     this.setState({
       tooltipVisible: false,
     });
@@ -88,7 +86,6 @@ class CommitRangeView extends React.Component {
     this.mouseMoveStack = this.mouseMoveStack.bind(this);
     this.mouseEnterStack = this.mouseEnterStack.bind(this);
     this.changeDiagram = this.changeDiagram.bind(this);
-    this.disableTooltipTimer = () => {};
     this.showTooltip = this.showTooltip.bind(this);
     this.onMouseUp = this.onMouseUp.bind(this);
     this.state = {
@@ -149,7 +146,6 @@ class CommitRangeView extends React.Component {
   }
 
   showTooltip(params) {
-    this.disableTooltipTimer();
     const {
       pageX,
       pageY,
@@ -161,15 +157,11 @@ class CommitRangeView extends React.Component {
       tooltipLeft: pageX,
       tooltipTop: pageY,
       tooltipVisible: true,
+      delay: 700,
+      tooltipOffset: 20,
       tooltipTitle,
       tooltipItems,
     });
-
-    this.disableTooltipTimer = () => {
-      clearTimeout(tooltipTimeout);
-      this.disableTooltipTimer = () => {};
-    }
-    return this.disableTooltipTimer;
   }
 
   onContainerScroll(scrollEvent) {
@@ -181,7 +173,6 @@ class CommitRangeView extends React.Component {
   }
 
   changeDiagram(...args) {
-    this.disableTooltipTimer();
     this.props.onDiagramChange(...args);
   }
 
@@ -266,10 +257,10 @@ class CommitRangeView extends React.Component {
   }
 
   hideTooltip() {
-    this.disableTooltipTimer();
     this.setState({
       cursorStyle: 'auto',
       tooltipVisible: false,
+      delay: 0,
     });
   }
 
@@ -347,10 +338,11 @@ class CommitRangeView extends React.Component {
           commits={commits}
         >
           <DelayedTooltip
-            delay={700}
+            delay={this.state.delay}
             tooltipClass={TooltipWithGithubButton}
             visible={this.state.tooltipVisible}
             left={this.state.tooltipLeft}
+            offset={this.state.tooltipOffset}
             top={this.state.tooltipTop}
             commitHash={this.state.tooltipTitle}
             repositoryUrl={this.props.repositoryUrl}

@@ -21,13 +21,12 @@ function DelayedRender(props) {
       clearTimeout(renderTimeout);
     }
 
-    if (shouldDelay(props)) {
-      const timeout = setTimeout(updateChildren, props.timeout);
-      setRenderTimeout(timeout);
-    } else {
-      updateChildren();
+    const timeout = setTimeout(updateChildren, props.timeout);
+    setRenderTimeout(timeout);
+
+    return function cleanup() {
+      clearTimeout(renderTimeout);
     }
-    return () => clearTimeout(renderTimeout);
   }, [props])
 
   return children;

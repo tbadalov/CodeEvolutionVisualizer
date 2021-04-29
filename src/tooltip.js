@@ -40,6 +40,8 @@ function Tooltip(props) {
       top,
       left,
     } = props;
+    const offset = props.offset || 0;
+    console.log(props);
 
     const [tooltipWidth, setTooltipWidth] = useState(0);
     const [tooltipHeight, setTooltipHeight] = useState(0);
@@ -50,8 +52,8 @@ function Tooltip(props) {
       }
     }, [props.visible]);
 
-    let tooltipLeft = left;
-    let tooltipTop = top;
+    let tooltipLeft = left + offset;
+    let tooltipTop = top + offset;
     if (props.visible) {
       measureSize(
         props,
@@ -63,8 +65,8 @@ function Tooltip(props) {
       );
     }
 
-    tooltipLeft = tooltipLeft + tooltipWidth <= window.innerWidth ? tooltipLeft : tooltipLeft - tooltipWidth;
-    tooltipTop = tooltipTop + tooltipHeight <= window.innerHeight ? tooltipTop : window.innerHeight - tooltipHeight;
+    tooltipLeft = tooltipLeft + tooltipWidth <= window.innerWidth ? tooltipLeft : tooltipLeft - tooltipWidth - offset;
+    tooltipTop = tooltipTop + tooltipHeight <= window.innerHeight ? tooltipTop : tooltipTop - tooltipHeight - offset;
 
     return tooltipElement({
       ...props,

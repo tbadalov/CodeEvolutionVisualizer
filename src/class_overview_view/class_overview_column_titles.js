@@ -7,6 +7,7 @@ const constants = require('./constants');
 const { columnTitlePosition, columnTitleHeight, columnTotalTitleFrameHeight } = require('./class_overview_diagram_positioner');
 const { usePrimitiveDiagramProps } = require('../common');
 const { calculateStageWidth } = require('./class_overview_diagram_sketcher');
+const { buildLabelData } = require('../utils');
 
 const defaultStageProps = {
   stageProps: {
@@ -22,10 +23,14 @@ function ClassOverviewColumnTitles(props) {
   const { branchToColorMapping } = useContext(ColorContext);
   const columnTitlesVisualData = convertToVisualData(props.columnTitles, {
     branchToColorMapping,
+    selectedCommits: props.selectedCommits,
   });
   const konvaShapes = drawColumnTitles(columnTitlesVisualData, {
     setCursorStylePointer: setCursorStyle.bind(null, 'pointer'),
     setCursorStyleAuto: setCursorStyle.bind(null, 'auto'),
+    onMouseEnter: props.onMouseEnter,
+    onMouseLeave: props.onMouseLeave,
+    onMouseMove: props.onMouseMove,
   });
   const onDraw = () => konvaShapes;
   const stageWidth = calculateStageWidth(columnTitlesVisualData.length);
@@ -63,6 +68,7 @@ function convertToVisualData(columnTitles, params) {
 function buildColumnTitle(params, columnTitleData, columnIndex) {
   const {
     branchToColorMapping,
+    selectedCommits
   } = params;
   const title = columnTitleData.commitHash;
   const columnTitleText = columnTitleData.isAggregation ? '       ...' : title.substr(0, 8);
@@ -84,20 +90,21 @@ function buildColumnTitle(params, columnTitleData, columnIndex) {
     isAggregation: columnTitleData.isAggregation,
     aggregatedColumns: columnTitleData.aggregatedColumns,
     columnIndex,
+    labelData: buildLabelData(selectedCommits[title]),
   };
   return columnTitlePositionResult;
 }
 
 function drawColumnTitles(columnTitlesVisualData, params) {
-  const {
-    setCursorStyleAuto,
-    setCursorStylePointer,
-  } = params;
   const konvaShapes = columnTitlesVisualData.map((columnTitleVisualData, columnIndex) => {
     const groupProps = {};
     if (columnTitleVisualData.payload.isAggregation) {
-      groupProps.onMouseEnter = setCursorStylePointer;
-      groupProps.onMouseLeave = setCursorStyleAuto;
+      groupProps.onMouseEnter = params.setCursorStylePointer;
+      groupProps.onMouseLeave = params.setCursorStyleAuto;
+    } else {
+      groupProps.onMouseEnter = (e) => params.onMouseEnter(e, columnTitleVisualData.payload);
+      groupProps.onMouseLeave = (e) => params.onMouseLeave(e, columnTitleVisualData.payload);
+      groupProps.onMouseMove = (e) => params.onMouseMove(e, columnTitleVisualData.payload);
     }
     return (
       <ReactKonva.Group key={`title-for-column-${columnIndex}`} {...groupProps}>

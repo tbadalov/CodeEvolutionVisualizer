@@ -53,7 +53,11 @@ function BarChart(props) {
       const selectedCommits = dataFromRange(props.commits, {
         startX: props.selectFromX / chartLayerProps.scaleX,
         endX: props.selectToX / chartLayerProps.scaleX,
-      })
+      }).reduce((commitInfo, selectedCommit) => {
+        commitInfo[selectedCommit.commitHash] = selectedCommit;
+        return commitInfo;
+      }, {});
+      console.log(selectedCommits);
       props.changeDiagram(
         'classOverviewView',
         {

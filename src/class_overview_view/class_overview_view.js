@@ -31,6 +31,7 @@ class ClassOverviewView extends React.Component {
         collapseSameCommits={this.state.collapseSameCommits}
         classToColorMapping={classToColorMapping}
         branchToColorMapping={branchToColorMapping}
+        repositoryUrl={this.props.repositoryUrl}
         selectedCommits={this.props.selectedCommits}
         onCollapseItems={this.onCollapseItems}
         onDiagramChange={this.props.changeDiagram} />
@@ -77,7 +78,7 @@ class ClassOverviewView extends React.Component {
       `${this.props.url}/initial_data`,
       {
         applicationName,
-        selectedCommitHashes: this.props.selectedCommits.map(commit => commit.commitHash),
+        selectedCommitHashes: Object.keys(this.props.selectedCommits),
       }
     ).then(initialData => {
       const classFilterItems = initialData.classNames
@@ -123,7 +124,7 @@ class ClassOverviewView extends React.Component {
         this.props.url,
         {
           className: this.state.selectedClassName,
-          selectedCommitHashes: this.props.selectedCommits.map(commit => commit.commitHash),
+          selectedCommitHashes: Object.keys(this.props.selectedCommits),
           applicationName: this.props.applicationName,
         }
       ).then(rawData => {
