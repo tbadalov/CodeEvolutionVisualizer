@@ -27,7 +27,7 @@ function DelayedRender(props) {
     } else {
       updateChildren();
     }
-
+    return () => clearTimeout(renderTimeout);
   }, [props])
 
   return children;
