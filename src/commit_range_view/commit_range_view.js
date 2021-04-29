@@ -2,7 +2,6 @@ const React = require('react');
 const ReactDOM = require('react-dom');
 const ReactKonva = require('react-konva');
 const BarDataManager = require('./bar_data_manager');
-const Tooltip = require('../tooltip');
 const TooltipCommitRangeItem = require('./tooltip_commit_range_item');
 const CommitDetailTooltipItem = require('./commit_detail_tooltip_item');
 const MouseSelectionArea = require('../mouse_selection_area');
@@ -15,6 +14,7 @@ const {
   MAX_SCROLL_SPEED,
 } = constants;
 const { calculateLargestCommitSize } = require('./util');
+const DelayedTooltip = require('../ui_elements/delayed_tooltip');
 const TooltipWithGithubButton = require('../ui_elements/tooltip_with_github_button');
 
 let isMouseDown = false;
@@ -170,14 +170,10 @@ class CommitRangeView extends React.Component {
     this.setState({
       tooltipLeft: pageX,
       tooltipTop: pageY,
+      tooltipVisible: true,
       tooltipTitle,
       tooltipItems,
     });
-    const tooltipTimeout = setTimeout(() => {
-      this.setState({
-        tooltipVisible: true,
-      });
-    }, 700);
 
     this.disableTooltipTimer = () => {
       clearTimeout(tooltipTimeout);
@@ -357,9 +353,12 @@ class CommitRangeView extends React.Component {
           isSelecting={isSelecting}
           changeDiagram={this.changeDiagram}
           applicationName={this.props.applicationName}
+          repositoryUrl={this.props.repositoryUrl}
           commits={commits}
         >
-          <TooltipWithGithubButton
+          <DelayedTooltip
+            delay={700}
+            tooltipClass={TooltipWithGithubButton}
             visible={this.state.tooltipVisible}
             left={this.state.tooltipLeft}
             top={this.state.tooltipTop}
