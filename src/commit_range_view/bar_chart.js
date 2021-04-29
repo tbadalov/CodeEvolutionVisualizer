@@ -50,15 +50,14 @@ function BarChart(props) {
 
   useEffect(() => {
     if (props.selectFromX !== undefined && props.selectToX !== undefined) {
-      const selectedCommitHashes = dataFromRange(props.commits, {
+      const selectedCommits = dataFromRange(props.commits, {
         startX: props.selectFromX / chartLayerProps.scaleX,
         endX: props.selectToX / chartLayerProps.scaleX,
-      }).map(selectedCommit => selectedCommit.commitHash);
+      })
       props.changeDiagram(
         'classOverviewView',
         {
-          selectedCommitHashes,
-          applicationName: props.applicationName,
+          selectedCommits,
         }
       );
     }

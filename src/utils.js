@@ -1,6 +1,5 @@
 import React from 'react';
 import CommitDetailTooltipItem from "./commit_range_view/commit_detail_tooltip_item";
-import { convertClassToTooltipInfo, extractCommitDetails } from "./commit_range_view/data_converter";
 import TooltipCommitRangeItem from './commit_range_view/tooltip_commit_range_item';
 
 export function loadData(url) {
@@ -77,6 +76,21 @@ export function extractCommitDetails(commit) {
     commitAuthor: commit.author,
     commitTime: commit.time,
     commitBranchName: commit.branchName,
+  };
+}
+
+export function buildLabelData(commit) {
+  return {
+    commitDetails: extractCommitDetails(commit),
+    commitHash: commit.commitHash,
+    stacks: commit.changedClasses.map((changedClass, index) => buildStackPayload(commit, index)),
+  };
+}
+
+export function buildStackPayload(commit, classIndex) {
+  return {
+    ...convertClassToTooltipInfo(commit.changedClasses[classIndex], commit.totalChangedLinesCount),
+    commitHash: commit.commitHash,
   };
 }
 

@@ -1,4 +1,4 @@
-import { convertClassToTooltipInfo, extractCommitDetails } from '../utils';
+import { buildLabelData, buildStackPayload, convertClassToTooltipInfo, extractCommitDetails } from '../utils';
 
 const constants = require('./constants');
 
@@ -43,10 +43,7 @@ export function convertToVisualData(params) {
       const stackHeight = isClassDisabled[changedClass.className] ? 0 : changedClass.changedLinesCount * heightPerLine;
       const stackWidth = barWidth;
       const stackColor = classToColorMapping[changedClass.className];
-      const payload = {
-        ...convertClassToTooltipInfo(changedClass, commit.totalChangedLinesCount),
-        commitHash: commit.commitHash,
-      };
+      const payload = buildStackPayload(commit, j);
       const strokeColor = commit.commitHash === params.strokedStackCommitHash && changedClass.className === params.strokedStackClassName ? params.strokedStackBorderColor : undefined;
       const stackData = {
         x: stackX,
@@ -63,11 +60,7 @@ export function convertToVisualData(params) {
     }
 
     const barHeight = currentStackHeight * heightPerLine;
-    const labelPayload = {
-      commitDetails: extractCommitDetails(commit),
-      commitHash: commit.commitHash,
-      stacks: stack.map(stackData => stackData.payload),
-    };
+    const labelPayload = buildLabelData(commit);
     const label = {
       text: commit.commitHash.substr(0, Math.min(commit.commitHash.length, 7)),
       rotation: -45,
