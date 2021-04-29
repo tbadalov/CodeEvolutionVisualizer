@@ -1,3 +1,8 @@
+import React from 'react';
+import CommitDetailTooltipItem from "./commit_range_view/commit_detail_tooltip_item";
+import { convertClassToTooltipInfo, extractCommitDetails } from "./commit_range_view/data_converter";
+import TooltipCommitRangeItem from './commit_range_view/tooltip_commit_range_item';
+
 export function loadData(url) {
   return fetch(url)
           .then((result) => result.json());
@@ -23,6 +28,57 @@ export function groupBy(array, key) {
     {}
   );
 };
+
+export function commitDetailsItems(labelData) {
+  return Object.keys(labelData.commitDetails)
+    .map((commitDetail, index) => {
+      return (
+        <CommitDetailTooltipItem
+          key={index}
+          detailName={commitDetail}
+          detailValue={labelData.commitDetails[commitDetail]}
+        />
+      );
+    });
+}
+
+export function commitChangedClassesItems(labelData, params) {
+  const {
+    classToColorMapping
+  } = params;
+  return labelData.stacks
+    .map((stackPayload, index) => {
+      return (
+        <TooltipCommitRangeItem
+          key={index + Object.keys(labelData.commitDetails).length}
+          markerColor={classToColorMapping[stackPayload.changedClassName]}
+          className={stackPayload.changedClassName}
+          amount={`${stackPayload.changedLinesCount} line${stackPayload.changedLinesCount > 1 ? 's were' : ' was'} changed (${stackPayload.changedLinesCountPercentage.toFixed(2)}%)`}
+        />
+      );
+    });
+}
+
+export function commitTooltipItems(labelData, params) {
+  return commitDetailsItems(labelData).concat(commitChangedClassesItems(labelData, params));
+}
+
+export function convertClassToTooltipInfo(changedClass, totalChangedLinesCountInCommit) {
+  return {
+    changedLinesCount: changedClass.changedLinesCount,
+    changedLinesCountPercentage: changedClass.changedLinesCount / totalChangedLinesCountInCommit * 100.0,
+    changedClassName: changedClass.className,
+  };
+}
+
+export function extractCommitDetails(commit) {
+  return {
+    commitMessage: commit.message,
+    commitAuthor: commit.author,
+    commitTime: commit.time,
+    commitBranchName: commit.branchName,
+  };
+}
 
 export function extractUniqueValues(array) {
   const cache = {};

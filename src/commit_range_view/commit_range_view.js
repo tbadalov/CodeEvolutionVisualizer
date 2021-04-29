@@ -16,6 +16,7 @@ const {
 const { calculateLargestCommitSize } = require('./util');
 const DelayedTooltip = require('../ui_elements/delayed_tooltip');
 const TooltipWithGithubButton = require('../ui_elements/tooltip_with_github_button');
+const { commitTooltipItems } = require('../utils');
 
 let isMouseDown = false;
 let isSelecting = false;
@@ -52,20 +53,9 @@ function labelMouseEnter(event, labelData) {
   this.setState({
     cursorStyle: 'pointer',
   });
-  const tooltipItems = Object.keys(labelData.commitDetails)
-    .map((commitDetail, index) => <CommitDetailTooltipItem
-        key={index}
-        detailName={commitDetail}
-        detailValue={labelData.commitDetails[commitDetail]}
-      />)
-    .concat(
-      labelData.stacks.map((stackPayload, index) => <TooltipCommitRangeItem
-        key={index + Object.keys(labelData.commitDetails).length}
-        markerColor={this.props.classToColorMapping[stackPayload.changedClassName]}
-        className={stackPayload.changedClassName}
-        amount={`${stackPayload.changedLinesCount} line${stackPayload.changedLinesCount > 1 ? 's were' : ' was'} changed (${stackPayload.changedLinesCountPercentage.toFixed(2)}%)`}
-      />
-    ));
+  const tooltipItems = commitTooltipItems(labelData, {
+    classToColorMapping: this.props.classToColorMapping,
+  });
   this.showTooltip({
     pageX: event.evt.pageX,
     pageY: event.evt.pageY,
