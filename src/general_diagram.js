@@ -7,6 +7,7 @@ class GeneralDiagram extends React.Component {
       <div
         className={"scroll-container" + (this.props.hideScrollbar ? ' hide-scrollbar' : '')}
         onScroll={this.props.onContainerScroll}
+        onMouseEnter={this.props.onMouseEnter}
         onMouseMove={this.props.onContainerMouseMove}
         onMouseDown={this.props.onContainerMouseDown}
         style={this.props.rootStyle}

@@ -19,6 +19,8 @@ class ClassOverviewDiagram extends React.Component {
     this.largeContainerRef = React.createRef();
     this.onScroll = this.onScroll.bind(this);
     this.labelMouseEnter = this.labelMouseEnter.bind(this);
+    this.onTitleMouseLeave = this.onTitleMouseLeave.bind(this);
+    this.onDiagramMouseMove = this.onDiagramMouseMove.bind(this);
     this.hideTooltip = this.hideTooltip.bind(this);
     this.state = {
       rawData: { commits: {} },
@@ -40,6 +42,17 @@ class ClassOverviewDiagram extends React.Component {
     const { scrollLeft, scrollTop } = e.target;
     this.columnTitlesScrollContainerRef.current.scrollTo(scrollLeft, scrollTop);
     this.methodLegendScrollContainerRef.current.scrollTo(scrollLeft, scrollTop);
+    this.hideTooltip();
+  }
+
+  onDiagramMouseMove(e) {
+    this.ensureTooltipCloses(e.pageX, e.pageY);
+  }
+
+  ensureTooltipCloses(mousePositionPageX, mousePositionPageY) {
+    if (this.state.tooltipVisible && mousePositionPageX - this.state.tooltipLeft < -20 || Math.abs(mousePositionPageY - this.state.tooltipTop) > 450) {
+      this.hideTooltip();
+    }
   }
 
   showTooltip(params) {
@@ -61,9 +74,11 @@ class ClassOverviewDiagram extends React.Component {
     });
   }
 
+  onTitleMouseLeave(e) {
+    this.ensureTooltipCloses(e.pageX, e.pageY);
+  }
+
   hideTooltip(e, payload) {
-    console.log("HIDING!!!!!" + payload.labelData.commitHash);
-    console.log(payload);
     this.setState({
       tooltipVisible: false,
       delay: 0,
@@ -71,8 +86,6 @@ class ClassOverviewDiagram extends React.Component {
   }
 
   labelMouseEnter(event, titlePayload) {
-    console.log("ENTERED!! " + titlePayload.labelData.commitHash );
-    console.log(titlePayload);
     const labelData = titlePayload.labelData;
     const tooltipItems = commitTooltipItems(labelData, {
       classToColorMapping: this.props.classToColorMapping,
@@ -98,7 +111,8 @@ class ClassOverviewDiagram extends React.Component {
             this.props.onDiagramChange('callVolumeView', {label: commit, classToColorMapping: this.props.classToColorMapping});
           },
           this.props.branchToColorMapping,
-          this.props.disabledBranches
+          this.props.disabledBranches,
+          this.onDiagramMouseEnter
       );
 
       this.largeContainerRef.current.style.width = drawResult.stageSize.width + 'px';
@@ -139,6 +153,7 @@ class ClassOverviewDiagram extends React.Component {
             top: (constants.COLUMN_TOP_Y + columnTotalTitleFrameHeight()) + 'px',
           }}
           onContainerScroll={this.onScroll}
+          onContainerMouseMove={this.onDiagramMouseMove}
           scrollContainerRef={this.scrollContainerRef}
           largeContainerRef={this.largeContainerRef}
           onDraw={this.convertDataToPrimitiveShapes}>
@@ -158,7 +173,7 @@ class ClassOverviewDiagram extends React.Component {
           selectedCommits={this.props.selectedCommits}
           onMouseEnter={this.labelMouseEnter}
           onMouseMove={this.labelMouseEnter}
-          onMouseLeave={this.hideTooltip}
+          onMouseLeave={this.onTitleMouseLeave}
           columnTitles={columnTitles} />
       </React.Fragment>
     );

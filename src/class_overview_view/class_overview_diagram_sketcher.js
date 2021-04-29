@@ -203,7 +203,7 @@ function convertToVisualizationData(groupedData, branchToColorMapping, disabledB
   return data;
 }
 
-export function draw(groupedData, onCommitClick, branchToColorMapping, disabledBranches) {
+export function draw(groupedData, onCommitClick, branchToColorMapping, disabledBranches, onMouseMove) {
   const visualizationData = convertToVisualizationData(
     groupedData,
     branchToColorMapping,
@@ -229,7 +229,7 @@ export function draw(groupedData, onCommitClick, branchToColorMapping, disabledB
     );
   }
   const konvaLayer = [
-    <ReactKonva.Layer key="class-overview-layer">
+    <ReactKonva.Layer key="class-overview-layer" onMouseMove={onMouseMove}>
       { konvaElements }
     </ReactKonva.Layer>,
   ];
