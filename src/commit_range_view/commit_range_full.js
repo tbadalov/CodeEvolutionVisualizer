@@ -6,33 +6,37 @@ const CheckboxItem = require('../checkbox_item');
 const ItemList = require('../item_list');
 const DataAdapter = require('../data_adapter');
 
-function mapClassToClassFilterItem(commit, changedClass, classToColorMapping) {
+function mapClassToClassFilterItem(commit, changedClass, params) {
+  const {
+    classToColorMapping,
+    isClassDisabled,
+  } = params;
   const changedClassName = changedClass.className;
   return {
     label: changedClassName,
     color: classToColorMapping[changedClassName] || getRandomColor(),
-    checked: true,
+    checked: !isClassDisabled(changedClassName),
     payload: {
       className: changedClassName,
     },
   };
 }
 
-function mapCommitToClassFilterItems(result, commit, classToColorMapping) {
+function mapCommitToClassFilterItems(result, commit, params) {
   for (let i = 0; i < commit.changedClasses.length; i++) {
     const changedClass = commit.changedClasses[i];
     const changedClassName = changedClass.className;
     if (!result[changedClassName]) {
-      result[changedClassName] = mapClassToClassFilterItem(commit, changedClass, classToColorMapping);
+      result[changedClassName] = mapClassToClassFilterItem(commit, changedClass, params);
     }
   }
 }
 
-function buildClassFilterItems(data, classToColorMapping) {
+function buildClassFilterItems(data, params) {
   const classNameItemMapping = {};
   for (let i = 0; i < data.commits.length; i++) {
     const commit = data.commits[i];
-    mapCommitToClassFilterItems(classNameItemMapping, commit, classToColorMapping);
+    mapCommitToClassFilterItems(classNameItemMapping, commit, params);
   }
   return Object.values(classNameItemMapping);
 }
@@ -80,8 +84,7 @@ class CommitRangeViewFull extends React.Component {
     this.handleContentFilterClick = this.handleContentFilterClick.bind(this);
     this.handleClassFilterClick = this.handleClassFilterClick.bind(this);
     this.handleBranchFilterClick = this.handleBranchFilterClick.bind(this);
-    this.commitsDataAdapter = new DataAdapter([]);
-    this.state = {
+    this.state = this.props.location.state || {
       items: [],
       showSourceCodeChanges: true,
       showAssetChanges: true,
@@ -89,6 +92,7 @@ class CommitRangeViewFull extends React.Component {
         commits: [],
       },
     };
+    this.commitsDataAdapter = new DataAdapter(this.state.data.commits);
   }
 
   mapContextValueToView({ branchToColorMapping, classToColorMapping }) {
@@ -163,7 +167,10 @@ class CommitRangeViewFull extends React.Component {
       isClassDisabled
     } = this.context;
     this.commitsDataAdapter = new DataAdapter(data.commits);
-    const classFilterItems = buildClassFilterItems(data, classToColorMapping)
+    const classFilterItems = buildClassFilterItems(data, {
+      classToColorMapping,
+      isClassDisabled,
+    })
       .sort((item1, item2) => item1.label.localeCompare(item2.label));
       classFilterItems.forEach(item => changeClassColor(item.label, item.color));
     
@@ -187,11 +194,6 @@ class CommitRangeViewFull extends React.Component {
     });*/
 
     this.setState({ data });
-    this.setState({
-      //items: alpahebticallySortedItems,
-      //branchFilterItems: alpahebticallySortedBranchFilterItems,
-    });
-
     /*this.props.addMenuItem(
       <ItemList items={this.state.branchFilterItems} title='Branch filter' onItemChange={this.handleBranchFilterClick} />
     );*/
@@ -240,9 +242,41 @@ class CommitRangeViewFull extends React.Component {
         <CheckboxItem label='Show commits with other changes' checked={this.state.showAssetChanges} onItemChange={this.handleContentFilterClick} payload={{filterType: 'asset'}} />
       </ItemList>
     );
+    if (this.props.location.state) {
+      const data = this.state.data;
+      const {
+        branchToColorMapping,
+        setBranchColor,
+        classToColorMapping,
+        changeClassColor,
+        disableClass,
+        enableClass,
+        isClassDisabled
+      } = this.context;
+      const classFilterItems = buildClassFilterItems(data, {
+        classToColorMapping,
+        isClassDisabled,
+      })
+      .sort((item1, item2) => item1.label.localeCompare(item2.label));
+      classFilterItems.forEach(item => changeClassColor(item.label, item.color));
+    
+      this.createFilter(
+        'classFilter',
+        'Class Filter',
+        'checkbox',
+        false,
+        classFilterItems,
+        (commit) => commit.changedClasses.length === 0 || commit.changedClasses.some(changedClass => !isClassDisabled(changedClass.className)),
+        (payload) => enableClass(payload.className),
+        (payload) => disableClass(payload.className),
+      );
+    }
   }
 
   componentDidUpdate(prevProps) {
+    this.props.location.state = {
+      ...this.state,
+    };
     if (this.props.applicationName !== prevProps.applicationName) {
       console.log("update nedi");
       const diagramLoader = new DiagramDataLoader();
