@@ -274,10 +274,7 @@ class CommitRangeViewFull extends React.Component {
   }
 
   componentDidUpdate(prevProps) {
-    this.props.location.state = {
-      ...this.state,
-    };
-    if (this.props.applicationName !== prevProps.applicationName) {
+    if (!this.props.location.state) {
       console.log("update nedi");
       const diagramLoader = new DiagramDataLoader();
       console.log(this.props);
@@ -302,6 +299,9 @@ class CommitRangeViewFull extends React.Component {
       })
       .catch(error => console.log(error));
     }
+    this.props.location.state = {
+      ...this.state,
+    };
   }
 
   render() {

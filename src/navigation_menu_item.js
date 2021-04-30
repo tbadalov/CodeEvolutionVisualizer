@@ -4,8 +4,8 @@ const navigationMenuItemStyle = require('./css/navigation_menu_item.scss');
 function NavigationMenuItem(props) {
 
   return (
-    <div className={'navigation-menu-item menu-item' + (props.canGoBack ? '' : ' disabled')}>
-      <div className='navigation-menu-item-button'>
+    <div className={'navigation-menu-item menu-item'}>
+      <div className={'navigation-menu-item-button' + (props.canGoBack ? '' : ' disabled')}>
         <a className='label' onClick={props.onBackClick}>Back</a>
       </div>
       <div className={'navigation-menu-item-button' + (props.canGoForward ? '' : ' disabled')} style={{marginLeft: '10px'}}>

@@ -86,9 +86,13 @@ class App extends React.Component {
   }
 
   onSelectedApp(e) {
+    window.his = this.props.history;
+    const shouldKeepMenuItems = this.props.history.location.pathname === '/commitRangeView';
+    this.props.history.go(-this.props.history.length);
+    this.props.history.replace('/commitRangeView');
     this.setState((prevState) => ({
       selectedApplication: this.state.rawData.applications.find(app => app.applicationName === e.target.value),
-      menuItems: prevState.menuItems.slice(0, 1),
+      menuItems: shouldKeepMenuItems ? prevState.menuItems.slice(0, 1) : [],
     }));
   }
 
@@ -203,7 +207,7 @@ class App extends React.Component {
       <NavigationMenuItem
         onBackClick={this.goBack}
         canGoBack={this.props.history.canGo(-1)}
-        onFowardClick={this.goForward}
+        onForwardClick={this.goForward}
         canGoForward={this.props.history.canGo(1)}
       />,
       ...this.state.menuItems,

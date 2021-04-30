@@ -102,7 +102,7 @@ class ClassOverviewView extends React.Component {
       })).sort((item1, item2) => item1.label.localeCompare(item2.label));
 
       this.props.addMenuItem(
-        <ItemList items={branchFilterItems} title='Branch filter' onItemChange={this.handleBranchFilterItemClick} />
+        <ItemList items={branchFilterItems} withCheckbox title='Branch filter' onItemChange={this.handleBranchFilterItemClick} />
       )
       this.props.addMenuItem(
         <ItemList items={classFilterItems} isRadio title='Class selector' onItemChange={this.handleItemChange.bind(this)}/>
