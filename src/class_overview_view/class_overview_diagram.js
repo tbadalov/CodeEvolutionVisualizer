@@ -107,12 +107,14 @@ class ClassOverviewDiagram extends React.Component {
       rawData = this.props.collapseSameCommits ? new ClassOverviewDataConverter().combineColumnsWithTheSameState(rawData) : rawData;
       const drawResult = draw(
           rawData,
-          (commit) => {
-            this.props.onDiagramChange('callVolumeView', {label: commit, classToColorMapping: this.props.classToColorMapping});
-          },
-          this.props.branchToColorMapping,
-          this.props.disabledBranches,
-          this.onDiagramMouseEnter
+          {
+            branchToColorMapping: this.props.branchToColorMapping,
+            disabledBranches: this.props.disabledBranches,
+            onMouseMove: this.onDiagramMouseEnter,
+            onLabelClick: (commit) => {
+              this.props.onDiagramChange('callVolumeView', {label: commit, classToColorMapping: this.props.classToColorMapping});
+            },
+          }
       );
 
       this.largeContainerRef.current.style.width = drawResult.stageSize.width + 'px';

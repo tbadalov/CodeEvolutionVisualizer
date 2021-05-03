@@ -53,10 +53,13 @@ function drawColumnMethods(columnMethods) {
 }
 
 function drawColumnMethodArrows(arrows) {
-  for (let i = 0; i < arrows.length; i++) {
-    //layer.add(new Konva.Circle(columnMethods[i]));
-  }
-  return null;
+  return arrows.map((arrow, index) => (
+    <ReactKonva.Group key={`arrow-${index}`}>
+      <ReactKonva.Path {...arrow.arrowBody}/>
+      <ReactKonva.Line {...arrow.arrowHead[0]}/>
+      <ReactKonva.Line {...arrow.arrowHead[1]}/>
+    </ReactKonva.Group>
+  ));
 }
 
 function drawMethodLegend(methodNames) {
@@ -171,6 +174,96 @@ function buildColumnLine(columnIndex, totalRowCount) {
   };
 }
 
+// returns radians
+function findAngle(sx, sy, ex, ey) {
+  // make sx and sy at the zero point
+  return Math.atan((ey - sy) / (ex - sx)) * 180.0 / Math.PI;
+}
+
+function buildArrowHead(columnIndex, fromRow, toRow, index) {
+  const side = (fromRow+toRow+index) % 2 === 0 ? 1 : -1;
+  const startRowPosition = methodPosition(columnIndex, fromRow);
+  const endRowPosition = methodPosition(columnIndex, toRow);
+  const startX = startRowPosition.circleX + startRowPosition.circleRadius * side;
+  const endX = endRowPosition.circleX+endRowPosition.circleRadius * side;
+  const {
+    columnCenterX,
+    columnWidth,
+  } = columnPosition(columnIndex);
+  const controlPointX = Math.min(columnCenterX+columnWidth/2.0, startX + Math.abs(endRowPosition.circleY - startRowPosition.circleY) / 5.0 * side);
+  const angle = findAngle(endX, endRowPosition.circleY, controlPointX, (startRowPosition.circleY+endRowPosition.circleY)/2.0);
+  return [
+    {
+      type: 'line',
+      rotation: angle-45,
+      x: endX,
+      y: endRowPosition.circleY,
+      points: [0, 0, 10*side, 0],
+      stroke: 'black',
+      strokeWidth: 5,
+      lineCap: 'round',
+      lineJoin: 'round',
+    },
+    {
+      type: 'line',
+      rotation: angle+45,
+      x: endX,
+      y: endRowPosition.circleY,
+      points: [0, 0, 10*side, 0],
+      stroke: 'black',
+      strokeWidth: 5,
+      lineCap: 'round',
+      lineJoin: 'round',
+    },
+  ];
+}
+
+function buildArrow(columnIndex, fromRow, toRow, index) {
+  const side = (fromRow+toRow+index) % 2 === 0 ? 1 : -1;
+  const startRowPosition = methodPosition(columnIndex, fromRow);
+  const endRowPosition = methodPosition(columnIndex, toRow);
+  const startX = startRowPosition.circleX + startRowPosition.circleRadius * side;
+  const endX = endRowPosition.circleX+endRowPosition.circleRadius * side;
+  const {
+    columnCenterX,
+    columnWidth,
+  } = columnPosition(columnIndex);
+  const controlPointX = Math.min(columnCenterX+columnWidth/2.0, startX + Math.abs(endRowPosition.circleY - startRowPosition.circleY) / 5.0 * side);
+  let pts = {
+    st: [startX, startRowPosition.circleY],
+    ct: [
+      controlPointX,
+      (startRowPosition.circleY+endRowPosition.circleY) / 2.0
+    ],
+    en: [endX, endRowPosition.circleY]
+  };
+  const arrowHeadLine = buildArrowHead(columnIndex, fromRow, toRow, index);
+
+  let pathStr = "M" + pts.st[0] + " " + pts.st[1] +
+        "Q" + pts.ct[0] + " " + pts.ct[1] +
+        " " + pts.en[0] + " " + pts.en[1];
+  return {
+    arrowBody: {
+      type: 'path',
+      data: pathStr,
+      lineCap: 'round',
+      strokeWidth: 5,
+      stroke: 'black',
+    },
+    arrowHead: arrowHeadLine,
+  };
+}
+
+function buildArrows(columnIndex, columnRow) {
+  const arrows = [];
+  Object.keys(columnRow).forEach(rowNumber => {
+    arrows.push(
+      ...columnRow[rowNumber].calls.map((toRow, index) => buildArrow(columnIndex, rowNumber, toRow, index))
+    );
+  });
+  return arrows;
+}
+
 export function calculateStageHeight(totalMethodCount) {
   return constants.COLUMN_TOP_Y + constants.VERTICAL_MARGIN_FROM_TOP + totalMethodCount * constants.ROW_HEIGHT;
 }
@@ -179,7 +272,10 @@ export function calculateStageWidth(totalCommitsCount) {
   return constants.METHOD_NAME_COLUMN_WIDTH + totalCommitsCount * constants.COLUMN_WIDTH;
 }
 
-function convertToVisualizationData(groupedData, branchToColorMapping, disabledBranches) {
+function convertToVisualizationData(groupedData, params) {
+  const {
+    disabledBranches,
+  } = params;
   const data = {
     columns: [],
   };
@@ -192,8 +288,7 @@ function convertToVisualizationData(groupedData, branchToColorMapping, disabledB
     const columnIndex = i-disabledColumnsCount;
     const columnLine = buildColumnLine(columnIndex, Object.keys(groupedData.methodNameToRowNumberMapping).length);
     const methods = buildColumnMethods(columnIndex, groupedData.columns[i].row);
-    console.log(methods);
-    const arrows = [];
+    const arrows = buildArrows(columnIndex, groupedData.columns[i].row);
     data.columns.push({
       columnLine,
       methods,
@@ -203,11 +298,18 @@ function convertToVisualizationData(groupedData, branchToColorMapping, disabledB
   return data;
 }
 
-export function draw(groupedData, onCommitClick, branchToColorMapping, disabledBranches, onMouseMove) {
+export function draw(groupedData, params) {
+  const {
+    branchToColorMapping,
+    disabledBranches,
+    onMouseMove,
+  } = params;
   const visualizationData = convertToVisualizationData(
     groupedData,
-    branchToColorMapping,
-    disabledBranches
+    {
+      branchToColorMapping,
+      disabledBranches,
+    }
   );
   const stageSize = {
     width: calculateStageWidth(visualizationData.columns.length),
@@ -220,11 +322,12 @@ export function draw(groupedData, onCommitClick, branchToColorMapping, disabledB
     const columnLine = drawColumnLine(visualizationData.columns[i].columnLine);
     const columnMethods = drawColumnMethods(visualizationData.columns[i].methods);
     const columnMethodArrows = drawColumnMethodArrows(visualizationData.columns[i].arrows);
+
     konvaElements.push(
       <ReactKonva.Group key={`data-group-for-column-${i}`}>
         { columnLine }
         { columnMethods }
-        { columnMethodArrows }
+        { params.isCallArrowDisabled ? null: columnMethodArrows }
       </ReactKonva.Group>
     );
   }
