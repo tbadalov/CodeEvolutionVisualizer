@@ -177,6 +177,7 @@ class CommitRangeView extends React.Component {
   }
 
   clickCommit(e, labelPayload) {
+    isMouseDown = false;
     const commit = labelPayload.commitHash;
     const changedClassNames = labelPayload.stacks.map(stackPayload => stackPayload.changedClassName);
     this.changeDiagram(
