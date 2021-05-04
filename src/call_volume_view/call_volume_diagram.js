@@ -76,6 +76,8 @@ class CallVolumeDiagram extends React.Component {
     this.onWheel = this.onWheel.bind(this);
     this.onSwitchButtonClicked = this.onSwitchButtonClicked.bind(this);
     this.onDraw = this.onDraw.bind(this);
+    this.onPipeHover = this.onPipeHover.bind(this);
+    this.unfocusPipe = this.unfocusPipe.bind(this);
     this.classNameOrder = {};
     this.state = {
       isFocusOn: false,
@@ -137,7 +139,13 @@ class CallVolumeDiagram extends React.Component {
   componentDidMount() {
     // what? ?stage.position(dragBoundary({x: -(stage.width()/2)*stage.scaleX() + this.scrollContainerRef.current.clientWidth / 2, y: stage.y()}));
     console.log(this.scrollContainerRef.current.clientWidth);
+    const isClassFocused = this.props.selectedClassNames.reduce((selectionMapping, selectedClassName) => {
+      selectionMapping[selectedClassName] = true;
+      return selectionMapping;
+    }, {});
     this.setState({
+      isClassFocused: isClassFocused,
+      isFocusOn: this.props.selectedClassNames.length > 0,
       primitiveDiagramProps: {
         ...this.state.primitiveDiagramProps,
         stageProps: {
@@ -162,6 +170,22 @@ class CallVolumeDiagram extends React.Component {
 
   isDataNotAvailableYet() {
     return this.props.classes === undefined;
+  }
+
+  onPipeHover(e, payload) {
+    this.setState({
+      isFocusOn: true,
+      isClassFocused: {
+        [payload.className]: true,
+      },
+    })
+  }
+
+  unfocusPipe(e, payload) {
+    this.setState({
+      isFocusOn: false,
+      isClassFocused: {},
+    });
   }
 
   convertRawDataToVisualShapes(filteredRawData, params) {
@@ -199,6 +223,8 @@ class CallVolumeDiagram extends React.Component {
           layerRef: this.currentLayerRef,
           key: 'current',
           opacity: 0,
+          onMouseEnter: this.onPipeHover,
+          onMouseLeave: this.unfocusPipe,
         },
       }
     )
@@ -241,7 +267,7 @@ class CallVolumeDiagram extends React.Component {
       this.removePreviousLayer();
     }
 
-    if (this.props.classes !== prevProps.classes) {
+    if (this.props.classes !== prevProps.classes || this.state.isClassFocused !== prevState.isClassFocused) {
       console.log(prevProps.classes);
       const previousLayerData = this.filterRawData(prevProps.classes);
       const currentLayerData = this.filterRawData(this.props.classes);

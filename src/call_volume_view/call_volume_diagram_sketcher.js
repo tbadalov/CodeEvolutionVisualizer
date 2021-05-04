@@ -199,7 +199,7 @@ export function convertToVisualizationData(classesArray, params) {
   return branches;
 }
 
-function drawBranches(branches) {
+function drawBranches(branches, params) {
   const branchKonvaShapes = [];
   for (let i = 0; i < branches.length; i++) {
     const branch = branches[i];
@@ -270,7 +270,9 @@ function drawBranches(branches) {
     });
     branchKonvaShapes.push(
       <ReactKonva.Group key={`branch-${i}`}
-        opacity={branch.data.isFocusOn && branch.data.isFocused ? 0.5 : 1.0}
+        opacity={branch.data.isFocusOn ? (branch.data.isFocused ? 1.0 : 0.05) : 1.0}
+        onMouseEnter={(e) => params.onMouseEnter(e, branch.data)}
+        onMouseLeave={(e) => params.onMouseLeave(e, branch.data)}
       >
         { currentBranchPipeShapes }
         { currentBranchLeafShapes }
@@ -287,7 +289,7 @@ export function draw(visualData, params) {
     key
   } = params;
   console.log(params);
-  const branchKonvaShapes = drawBranches(visualData);
+  const branchKonvaShapes = drawBranches(visualData, params)
   return [
     <ReactKonva.Layer
       key={`${key}-call-volume-layer`}
