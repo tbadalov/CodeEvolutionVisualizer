@@ -118,7 +118,7 @@ class CallVolumeView extends React.Component {
       const classFilterItems = classNames.map((className, index) => ({
         label: className,
         color: this.context.classToColorMapping[className],
-        checked: this.props.selectedClassNames.includes(className),
+        checked: !this.context.isClassDisabled(className),
         payload: {
           className,
         },

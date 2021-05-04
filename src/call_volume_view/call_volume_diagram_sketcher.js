@@ -1,7 +1,19 @@
 const React = require('react');
 const ReactKonva = require('react-konva');
 const CallVolumeDiagramPositioner = require('./call_volume_diagram_positioner');
-const EMPTY_CLASS_STROKE_WIDTH = 0.2;
+
+function debounce(func, delay) {
+  let timeout = null;
+  const cleanTimeout = function() {
+    clearTimeout(timeout);
+    timeout = null;
+  }
+  timeout = setTimeout(() => {
+    func();
+    cleanTimeout();
+  }, delay);
+  return cleanTimeout;
+}
 
 const marginTop = 0;
 export function convertToVisualizationData(classesArray, params) {
@@ -268,11 +280,11 @@ function drawBranches(branches, params) {
         </ReactKonva.Group>
       );
     });
+
     branchKonvaShapes.push(
       <ReactKonva.Group key={`branch-${i}`}
-        opacity={branch.data.isFocusOn ? (branch.data.isFocused ? 1.0 : 0.05) : 1.0}
+        opacity={branch.data.isFocusOn ? (branch.data.isFocused ? 1.0 : 0.07) : 1.0}
         onMouseEnter={(e) => params.onMouseEnter(e, branch.data)}
-        onMouseLeave={(e) => params.onMouseLeave(e, branch.data)}
       >
         { currentBranchPipeShapes }
         { currentBranchLeafShapes }
@@ -288,13 +300,32 @@ export function draw(visualData, params) {
     opacity,
     key
   } = params;
-  console.log(params);
-  const branchKonvaShapes = drawBranches(visualData, params)
+  let removeTimeout = null;
+  let didLeaveDiagram = false;
+  const branchKonvaShapes = drawBranches(visualData, {
+    ...params,
+    onMouseEnter: (e, payload) => {
+      if (removeTimeout !== null) {
+        removeTimeout();
+      }
+      removeTimeout = debounce(() => params.onMouseEnter(e, payload), didLeaveDiagram ? 200 : 20);
+      didLeaveDiagram = false;
+    }
+  })
   return [
     <ReactKonva.Layer
       key={`${key}-call-volume-layer`}
       opacity={opacity}
-      ref={layerRef}>
+      ref={layerRef}
+      onMouseLeave={(e) => {
+        if (removeTimeout !== null) {
+          removeTimeout();
+          removeTimeout = null;
+        }
+        didLeaveDiagram = true;
+        params.onMouseLeave(e);
+      }}
+    >
       { branchKonvaShapes }
     </ReactKonva.Layer>
   ];
