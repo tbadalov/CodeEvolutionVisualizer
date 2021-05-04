@@ -78,6 +78,8 @@ class CallVolumeDiagram extends React.Component {
     this.onDraw = this.onDraw.bind(this);
     this.classNameOrder = {};
     this.state = {
+      isFocusOn: false,
+      isClassFocused: {},
       primitiveDiagramProps: {
         stageProps: {
           draggable: true,
@@ -165,6 +167,8 @@ class CallVolumeDiagram extends React.Component {
   convertRawDataToVisualShapes(filteredRawData, params) {
     const visualizationData = convertToVisualizationData(filteredRawData, {
       classToColorMapping: this.props.classToColorMapping,
+      isFocusOn: this.state.isFocusOn,
+      isClassFocused: this.state.isClassFocused,
       ...params.visualizationParams,
     });
     const konvaShapes = draw(visualizationData, params.drawParams);
@@ -251,6 +255,8 @@ class CallVolumeDiagram extends React.Component {
       });
       const visualizationData = convertToVisualizationData(currentLayerData, {
         classToColorMapping: this.props.classToColorMapping,
+        isFocusOn: this.state.isFocusOn,
+        isClassFocused: this.state.isClassFocused,
       });
       console.log(visualizationData);
       if (shouldAdaptCamera) {

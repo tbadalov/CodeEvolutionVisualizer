@@ -17,6 +17,9 @@ export function convertToVisualizationData(classesArray, params) {
     const classData = classesArray[i];
     const branchData = {
       color: classToColorMapping[classData.className],
+      className: classData.className,
+      isFocusOn: params.isFocusOn,
+      isFocused: params.isClassFocused[classData.className],
     };
     //const methods = classData.methods.sort((method1, method2) => method1.totalCallAmount - method2.totalCallAmount);
     const methods = classData.methods;
@@ -266,7 +269,9 @@ function drawBranches(branches) {
       );
     });
     branchKonvaShapes.push(
-      <ReactKonva.Group key={`branch-${i}`}>
+      <ReactKonva.Group key={`branch-${i}`}
+        opacity={branch.data.isFocusOn && branch.data.isFocused ? 0.5 : 1.0}
+      >
         { currentBranchPipeShapes }
         { currentBranchLeafShapes }
       </ReactKonva.Group>
