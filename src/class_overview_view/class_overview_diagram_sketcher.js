@@ -228,7 +228,7 @@ function buildArrow(columnIndex, fromRow, toRow, index) {
     columnCenterX,
     columnWidth,
   } = columnPosition(columnIndex);
-  const controlPointX = Math.min(columnCenterX+columnWidth/2.0, startX + Math.abs(endRowPosition.circleY - startRowPosition.circleY) / 5.0 * side);
+  const controlPointX = startX + Math.min(columnWidth/2.0, Math.abs(endRowPosition.circleY - startRowPosition.circleY) / 5.0) * side;
   let pts = {
     st: [startX, startRowPosition.circleY],
     ct: [
