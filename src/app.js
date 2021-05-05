@@ -25,6 +25,7 @@ class App extends React.Component {
     this.enableClass = this.enableClass.bind(this);
     this.disableClass = this.disableClass.bind(this);
     this.isClassDisabled = this.isClassDisabled.bind(this);
+    this.setCallArrowEnabled = this.setCallArrowEnabled.bind(this);
     this.sceneContainerRef = React.createRef();
     this.refresh = () => this.forceUpdate();
     this.diagrams = {
@@ -39,6 +40,9 @@ class App extends React.Component {
       },
       selectedApplication: {},
       colorContextValue: {
+        isDisplayingCallArrows: true,
+        setIsDisplayingCallArrows: this.setCallArrowEnabled,
+        isDisplayingClassesWithNoMethodsInCallVolume: true,
         classToColorMapping: {},
         changeClassColor: this.changeClassColor,
         branchToColorMapping: {},
@@ -49,6 +53,15 @@ class App extends React.Component {
         disableClass: this.disableClass,
       },
     };
+  }
+
+  setCallArrowEnabled(value) {
+    this.setState({
+      colorContextValue: {
+        ...this.state.colorContextValue,
+        isDisplayingCallArrows: value,
+      },
+    });
   }
 
   disableClass(className) {

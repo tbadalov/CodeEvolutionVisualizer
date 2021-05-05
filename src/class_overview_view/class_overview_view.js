@@ -13,6 +13,7 @@ class ClassOverviewView extends React.Component {
     this.mapContextValueToView = this.mapContextValueToView.bind(this);
     this.handleBranchFilterItemClick = this.handleBranchFilterItemClick.bind(this);
     this.onCollapseItems = this.onCollapseItems.bind(this);
+    this.toggleDisplayingCallArrows = this.toggleDisplayingCallArrows.bind(this);
     this.state = {
       classFilterItems: [],
       branchFilterItems: [],
@@ -31,6 +32,7 @@ class ClassOverviewView extends React.Component {
         collapseSameCommits={this.state.collapseSameCommits}
         classToColorMapping={classToColorMapping}
         branchToColorMapping={branchToColorMapping}
+        isDisplayingCallArrows={this.context.isDisplayingCallArrows}
         repositoryUrl={this.props.repositoryUrl}
         selectedCommits={this.props.selectedCommits}
         onCollapseItems={this.onCollapseItems}
@@ -66,10 +68,15 @@ class ClassOverviewView extends React.Component {
     });
   }
 
+  toggleDisplayingCallArrows() {
+    this.context.setIsDisplayingCallArrows(!this.context.isDisplayingCallArrows);
+  }
+
   componentDidMount() {
     this.updateContentFilter = this.props.addMenuItem(
       <ItemList title='Content filter'>
         <CheckboxItem label='Collapse equal states' checked={this.state.collapseSameCommits} onItemChange={this.onCollapseItems} />
+        <CheckboxItem label='Show method calls' checked={this.context.isDisplayingCallArrows} onItemChange={this.toggleDisplayingCallArrows} />
       </ItemList>
     );
     const { applicationName, startCommit, endCommit } = this.props;
@@ -146,6 +153,7 @@ class ClassOverviewView extends React.Component {
       this.updateContentFilter(
         <ItemList title='Content filter'>
           <CheckboxItem label='Collapse equal states' checked={this.state.collapseSameCommits} onItemChange={this.onCollapseItems} />
+          <CheckboxItem label='Show method calls' checked={this.context.isDisplayingCallArrows} onItemChange={this.toggleDisplayingCallArrows} />
         </ItemList>
       );
     }

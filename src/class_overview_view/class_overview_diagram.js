@@ -99,7 +99,11 @@ class ClassOverviewDiagram extends React.Component {
   }
 
   componentDidUpdate(prevProps) {
-    if (this.props.rawData !== prevProps.rawData || this.props.branchToColorMapping !== prevProps.branchToColorMapping || this.props.disabledBranches !== prevProps.disabledBranches || this.props.collapseSameCommits !== prevProps.collapseSameCommits) {
+    if (this.props.rawData !== prevProps.rawData
+      || this.props.branchToColorMapping !== prevProps.branchToColorMapping
+      || this.props.disabledBranches !== prevProps.disabledBranches
+      || this.props.collapseSameCommits !== prevProps.collapseSameCommits
+      || this.props.isDisplayingCallArrows !== prevProps.isDisplayingCallArrows) {
       let rawData = {
         ...this.props.rawData,
       };
@@ -114,6 +118,7 @@ class ClassOverviewDiagram extends React.Component {
             onLabelClick: (commit) => {
               this.props.onDiagramChange('callVolumeView', {label: commit, classToColorMapping: this.props.classToColorMapping});
             },
+            isDisplayingCallArrows: this.props.isDisplayingCallArrows,
           }
       );
 

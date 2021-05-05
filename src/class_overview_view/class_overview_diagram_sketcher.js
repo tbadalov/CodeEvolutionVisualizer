@@ -327,7 +327,7 @@ export function draw(groupedData, params) {
       <ReactKonva.Group key={`data-group-for-column-${i}`}>
         { columnLine }
         { columnMethods }
-        { params.isCallArrowDisabled ? null: columnMethodArrows }
+        { params.isDisplayingCallArrows ? columnMethodArrows : null}
       </ReactKonva.Group>
     );
   }
