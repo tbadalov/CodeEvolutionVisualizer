@@ -1,20 +1,38 @@
 const React = require('react');
 const switchCommitButtonStyle = require('./css/play_button.scss');
 
-function onPlayButtonClicked(event) {
-  this.setState({
-    isPaused: !this.state.isPaused,
-  });
-}
-
 class PlayButton extends React.PureComponent {
   constructor(props) {
     super(props);
     this.buttonStateContainerRef = React.createRef();
+    this.onPlayButtonClicked = this.onPlayButtonClicked.bind(this),
+    this.animationTimeout = null;
     this.state = {
-      isPaused: (this.props.isPaused == undefined ? true : this.props.isPaused),
-      onPlayButtonClicked: onPlayButtonClicked.bind(this),
+      isPaused: (this.props.isPaused === undefined ? true : this.props.isPaused),
     };
+  }
+
+  onPlayButtonClicked() {
+    this.setState({
+      isPaused: !this.state.isPaused,
+    });
+  }
+
+  componentDidUpdate() {
+    if (this.state.isPaused || this.props.isPaused) {
+      if (this.props.onPause) {
+        this.props.onPause();
+      }
+      if (!this.state.isPaused) {
+        this.setState({
+          isPaused: true,
+        });
+      }
+    } else {
+      if (this.props.onPlay) {
+        this.props.onPlay();
+      }
+    }
   }
 
   render() {
@@ -26,7 +44,7 @@ class PlayButton extends React.PureComponent {
         <div
           ref={this.buttonStateContainerRef}
           className="play-button-state-container"
-          onClick={this.state.onPlayButtonClicked} >
+          onClick={this.onPlayButtonClicked} >
           <div className={pauseClassName} >
             <div className="line line_1"></div>
             <div className="line line_2"></div>

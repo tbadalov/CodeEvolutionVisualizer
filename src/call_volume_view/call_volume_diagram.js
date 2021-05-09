@@ -84,7 +84,10 @@ class CallVolumeDiagram extends React.Component {
     this.unfocusPipe = this.unfocusPipe.bind(this);
     this.onMouseEnterCommitHash = this.onMouseEnterCommitHash.bind(this);
     this.hideTooltip = this.hideTooltip.bind(this);
+    this.onPlayButtonClicked = this.onPlayButtonClicked.bind(this);
+    this.onPauseButtonClicked = this.onPauseButtonClicked.bind(this);
     this.classNameOrder = {};
+    this.animationInterval = null;
     this.state = {
       delay: 700,
       tooltipVisible: false,
@@ -400,6 +403,21 @@ class CallVolumeDiagram extends React.Component {
     }
   }
 
+  onPlayButtonClicked() {
+    if (this.animationInterval === null) {
+      this.animationInterval = setInterval(() => {
+        if (this.props.nextCommitHash) {
+          this.onSwitchButtonClicked('next');
+        }
+      }, 150);
+    }
+  }
+
+  onPauseButtonClicked() {
+    clearInterval(this.animationInterval);
+    this.animationInterval = null;
+  }
+
   render() {
     return(
       <GeneralDiagram {...this.state}
@@ -409,7 +427,9 @@ class CallVolumeDiagram extends React.Component {
         onDraw={this.onDraw}>
         { this.props.previousCommitHash ? <SwitchCommitButton direction='prev' onSwitchCommitButtonClick={this.onSwitchButtonClicked} /> : null }
         { this.props.nextCommitHash ? <SwitchCommitButton direction='next' onSwitchCommitButtonClick={this.onSwitchButtonClicked} /> : null }
-        <PlayButton />
+        <PlayButton isPaused={this.props.nextCommitHash ? undefined : true}
+          onPause={this.onPauseButtonClicked}
+          onPlay={this.onPlayButtonClicked} />
         <div className='current-commit-hash'
           onMouseEnter={this.onMouseEnterCommitHash}>
           <p>{this.props.selectedCommit ? this.props.selectedCommit.substr(0, 8) : ""}</p>
