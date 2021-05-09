@@ -118,6 +118,7 @@ router.get('/', function(req, res, next) {
           changedClass.changedLinesCount = changedClass.changedLinesCount.low;
           return changedClass;
         }),
+        totalChangedLinesCount: record.get('totalChangedLinesCount').low,
         branchName: record.get('branchName'),
         previousCommitHash: record.get('previousCommitHash'),
         nextCommitHash: record.get('nextCommitHash'),
