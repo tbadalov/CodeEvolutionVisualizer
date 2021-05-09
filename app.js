@@ -33,13 +33,9 @@ app.use(session({
 }));
 
 app.use('/', indexRouter);
-app.use('/users', usersRouter);
 app.use('/commit_range_data', commitRangeRouter);
 app.use('/call_volume', callVolume);
 app.use('/class_overview', classOverviewRouter);
-app.use('/commit_range_view', commitRangeViewRouter);
-app.use('/call_volume_view', callVolumeViewRouter);
-app.use('/class_overview_view', classOverviewViewRouter);
 app.use('/initial_data', initialDataRouter);
 
 // catch 404 and forward to error handler

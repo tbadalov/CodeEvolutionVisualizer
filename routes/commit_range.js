@@ -48,7 +48,14 @@ router.get('/', function(req, res, next) {
         ORDER BY className
         RETURN collect( { className: className, changedLinesCount: changedLinesCount } ) as changedClasses, sum(changedLinesCount) as totalChangedLinesCount
       }
-      RETURN app.commit as commitHash, app.author as author, app.message as message, app.version_number as versionNumber, app.branch as branchName, changedClasses, totalChangedLinesCount
+      RETURN app.commit as commitHash,
+        app.author as author,
+        app.message as message,
+        app.version_number as versionNumber,
+        app.author_timestamp as authorTimestamp,
+        app.branch as branchName,
+        changedClasses,
+        totalChangedLinesCount
       ORDER BY toInteger(app.author_timestamp) ASC
       `).subscribe({
         onNext: record => {
@@ -56,6 +63,7 @@ router.get('/', function(req, res, next) {
             commitHash: record.get('commitHash'),
             author: record.get('author'),
             message: record.get('message'),
+            time: record.get('authorTimestamp'),
             versionNumber: record.get('versionNumber').low,
             branchName: record.get('branchName'),
             changedClasses: record.get('changedClasses').map(changedClass => {
