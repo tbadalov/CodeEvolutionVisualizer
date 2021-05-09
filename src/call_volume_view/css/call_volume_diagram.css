@@ -1,0 +1,9 @@
+.current-commit-hash {
+  padding: 10px;
+  border-radius: 100px;
+  background-color: #ccc;
+  position: absolute;
+  left: calc(50% - 43px);
+  bottom: calc(10% - 50px);
+  width: min-content;
+}

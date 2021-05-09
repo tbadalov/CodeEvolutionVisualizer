@@ -4,6 +4,7 @@ const PlayButton = require('./buttons/play_button');
 const GeneralDiagram = require('../general_diagram');
 const { draw, convertToVisualizationData } = require('./call_volume_diagram_sketcher');
 const CallVolumeDiagramPositioner = require('./call_volume_diagram_positioner');
+const diagramStyle = require('./css/call_volume_diagram.css');
 
 let shouldAdaptCamera = true;
 
@@ -336,6 +337,9 @@ class CallVolumeDiagram extends React.Component {
         { this.props.previousCommitHash ? <SwitchCommitButton direction='prev' onSwitchCommitButtonClick={this.onSwitchButtonClicked} /> : null }
         { this.props.nextCommitHash ? <SwitchCommitButton direction='next' onSwitchCommitButtonClick={this.onSwitchButtonClicked} /> : null }
         <PlayButton />
+        <div className='current-commit-hash'>
+          <p>{this.props.selectedCommit ? this.props.selectedCommit.substr(0, 8) : ""}</p>
+        </div>
       </GeneralDiagram>
     );
   }
