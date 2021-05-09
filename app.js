@@ -6,13 +6,9 @@ var session = require('express-session');
 var logger = require('morgan');
 
 var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
 var callVolume = require('./routes/call_volume');
 var commitRangeRouter = require('./routes/commit_range');
 var classOverviewRouter = require('./routes/class_overview');
-var commitRangeViewRouter = require('./routes/commit_range_view');
-var callVolumeViewRouter = require('./routes/call_volume_view');
-var classOverviewViewRouter = require('./routes/class_overview_view');
 var initialDataRouter = require('./routes/initial_data');
 
 var app = express();

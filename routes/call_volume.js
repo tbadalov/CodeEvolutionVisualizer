@@ -73,20 +73,52 @@ router.get('/', function(req, res, next) {
       })
     END as methods,
     sum(total_calls) as total_calls
+  CALL {
+    WITH app
+    MATCH (app)-[:APP_OWNS_CLASS]->(c:Class)
+    WHERE NOT (app)<-[:CHANGED_TO]-(:App)-[:APP_OWNS_CLASS]->(c)
+    OPTIONAL MATCH (:Class)-[class_changed_rel:CLASS_CHANGED_TO]->(c)
+    WITH app,
+      c.name as className,
+      CASE
+        WHEN class_changed_rel IS NULL THEN c.number_of_lines
+        ELSE sum(class_changed_rel.added_lines+class_changed_rel.changed_lines+class_changed_rel.deleted_lines)
+      END as changedLinesCount
+      WHERE changedLinesCount > 0
+    WITH className, changedLinesCount
+    ORDER BY className
+    RETURN collect( { className: className, changedLinesCount: changedLinesCount } ) as changedClasses, sum(changedLinesCount) as totalChangedLinesCount
+  }
   RETURN app.commit as commitHash,
-  prev_commit.commit as previousCommitHash,
-  next_commit.commit as nextCommitHash,
-  collect({
-    className: className,
-    totalCallAmount: toString(total_calls),
-    methods: methods
-  }) as classes
+    prev_commit.commit as previousCommitHash,
+    next_commit.commit as nextCommitHash,
+    app.author as author,
+    app.message as message,
+    app.author_timestamp as authorTimestamp,
+    app.version_number as versionNumber,
+    app.branch as branchName,
+    changedClasses,
+    totalChangedLinesCount,
+    collect({
+      className: className,
+      totalCallAmount: toString(total_calls),
+      methods: methods
+    }) as classes
   `;
   console.log(query);
   session.run(query).subscribe({
     onNext: record => {
       dataFromDb = {
         commitHash: record.get('commitHash'),
+        author: record.get('author'),
+        message: record.get('message'),
+        authorTimestamp: record.get('authorTimestamp'),
+        versionNumber: record.get('versionNumber').low,
+        changedClasses: record.get('changedClasses').map(changedClass => {
+          changedClass.changedLinesCount = changedClass.changedLinesCount.low;
+          return changedClass;
+        }),
+        branchName: record.get('branchName'),
         previousCommitHash: record.get('previousCommitHash'),
         nextCommitHash: record.get('nextCommitHash'),
         classes: record.get('classes'),
