@@ -11,7 +11,7 @@ function buildColumn(commitData, props) {
     (rows, record) => {
       const methodName = record.name;
       const methodRow = methodNameToRowNumberMapping[methodName];
-      const wasMethodChangedInMergedBranch = commitData.mergedBranchNames.find(mergedBranchName => didMethodChangeInBranchBeforeCommit[mergedBranchName][methodName] && didMethodChangeInBranchBeforeCommit[mergedBranchName][methodName][commitHash]);
+      const wasMethodChangedInMergedBranch = commitData.mergedBranchNames.find(mergedBranchName => didMethodChangeInBranchBeforeCommit[mergedBranchName] && didMethodChangeInBranchBeforeCommit[mergedBranchName][methodName] && didMethodChangeInBranchBeforeCommit[mergedBranchName][methodName][commitHash]);
       const status = record.status === 'same' && wasMethodChangedInMergedBranch ? 'semi-changed' : record.status;
       const calls = record.calls.map(called_method_name => methodNameToRowNumberMapping[called_method_name]);
       rows[methodRow] = {
