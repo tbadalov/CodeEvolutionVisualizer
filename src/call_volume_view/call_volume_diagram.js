@@ -5,6 +5,9 @@ const GeneralDiagram = require('../general_diagram');
 const { draw, convertToVisualizationData } = require('./call_volume_diagram_sketcher');
 const CallVolumeDiagramPositioner = require('./call_volume_diagram_positioner');
 const diagramStyle = require('./css/call_volume_diagram.css');
+const DelayedTooltip = require('../ui_elements/delayed_tooltip');
+const TooltipWithGithubButton = require('../ui_elements/tooltip_with_github_button');
+const { extractCommitDetails, commitTooltipItems, buildStackPayload } = require('../utils');
 
 let shouldAdaptCamera = true;
 
@@ -79,8 +82,16 @@ class CallVolumeDiagram extends React.Component {
     this.onDraw = this.onDraw.bind(this);
     this.onPipeHover = this.onPipeHover.bind(this);
     this.unfocusPipe = this.unfocusPipe.bind(this);
+    this.onMouseEnterCommitHash = this.onMouseEnterCommitHash.bind(this);
+    this.hideTooltip = this.hideTooltip.bind(this);
     this.classNameOrder = {};
     this.state = {
+      delay: 700,
+      tooltipVisible: false,
+      tooltipLeft: 0,
+      tooltipTop: 0,
+      tooltipItems: [],
+      tooltipTitle: "",
       isFocusOn: false,
       isClassFocused: {},
       primitiveDiagramProps: {
@@ -101,11 +112,52 @@ class CallVolumeDiagram extends React.Component {
   }
 
   onSwitchButtonClicked(direction) {
+    this.hideTooltip();
     if (direction === 'prev') {
       this.props.switchCommit(this.props.previousCommitHash);
     } else if (direction === 'next') {
       this.props.switchCommit(this.props.nextCommitHash);
     }
+  }
+
+  onDiagramMouseMove(e) {
+    this.ensureTooltipCloses(e.pageX, e.pageY);
+  }
+
+  ensureTooltipCloses(mousePositionPageX, mousePositionPageY) {
+    if (this.state.tooltipVisible && mousePositionPageX - this.state.tooltipLeft < -20 || Math.abs(mousePositionPageY - this.state.tooltipTop) > 450) {
+      this.hideTooltip();
+    }
+  }
+
+  showTooltip(params) {
+    const {
+      pageX,
+      pageY,
+    } = params;
+
+    const tooltipTitle = params.tooltipTitle || this.state.tooltipTitle;
+    const tooltipItems = params.tooltipItems || this.state.tooltipItems;
+    this.setState({
+      tooltipLeft: pageX,
+      tooltipTop: pageY,
+      tooltipVisible: true,
+      delay: 700,
+      tooltipOffset: 20,
+      tooltipTitle,
+      tooltipItems,
+    });
+  }
+
+  onTitleMouseLeave(e) {
+    this.ensureTooltipCloses(e.pageX, e.pageY);
+  }
+
+  hideTooltip(e, payload) {
+    this.setState({
+      tooltipVisible: false,
+      delay: 0,
+    })
   }
 
   onWheel(e) {
@@ -124,6 +176,7 @@ class CallVolumeDiagram extends React.Component {
       x: pointer.x - mousePointTo.x * newScale,
       y: pointer.y - mousePointTo.y * newScale,
     };
+    this.hideTooltip();
     this.setState({
       primitiveDiagramProps: {
         ...this.state.primitiveDiagramProps,
@@ -134,6 +187,25 @@ class CallVolumeDiagram extends React.Component {
           scaleY: newScale,
         },
       },
+    });
+  }
+
+  onMouseEnterCommitHash(event) {
+    const commitDetails = extractCommitDetails(this.props.commitInfo);
+    const tooltipItems = commitTooltipItems(
+      {
+        commitDetails,
+        stacks: this.props.commitInfo.changedClasses.map((changedClass, index) => buildStackPayload(this.props.commitInfo, index)),
+      },
+      {
+        classToColorMapping: this.props.classToColorMapping,
+      }
+    );
+    this.showTooltip({
+      pageX: event.pageX,
+      pageY: event.pageY,
+      tooltipTitle: this.props.selectedCommit,
+      tooltipItems,
     });
   }
 
@@ -332,14 +404,26 @@ class CallVolumeDiagram extends React.Component {
     return(
       <GeneralDiagram {...this.state}
         onWheel={this.onWheel}
+        onClick={this.hideTooltip}
         scrollContainerRef={this.scrollContainerRef}
         onDraw={this.onDraw}>
         { this.props.previousCommitHash ? <SwitchCommitButton direction='prev' onSwitchCommitButtonClick={this.onSwitchButtonClicked} /> : null }
         { this.props.nextCommitHash ? <SwitchCommitButton direction='next' onSwitchCommitButtonClick={this.onSwitchButtonClicked} /> : null }
         <PlayButton />
-        <div className='current-commit-hash'>
+        <div className='current-commit-hash'
+          onMouseEnter={this.onMouseEnterCommitHash}>
           <p>{this.props.selectedCommit ? this.props.selectedCommit.substr(0, 8) : ""}</p>
         </div>
+        <DelayedTooltip
+          delay={this.state.delay}
+          tooltipClass={TooltipWithGithubButton}
+          visible={this.state.tooltipVisible}
+          left={this.state.tooltipLeft}
+          offset={this.state.tooltipOffset}
+          top={this.state.tooltipTop}
+          commitHash={this.props.selectedCommit}
+          repositoryUrl={this.props.repositoryUrl}
+          items={this.state.tooltipItems} />
       </GeneralDiagram>
     );
   }

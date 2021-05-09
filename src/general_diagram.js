@@ -20,6 +20,7 @@ class GeneralDiagram extends React.Component {
           <div
             className="container"
             style={{transform: `translate(${this.props.scrollLeft}px, 0px)`, cursor: this.props.cursorStyle}}
+            onClick={this.props.onClick}
           >
             <PrimitiveDiagram
               {...this.props.primitiveDiagramProps}

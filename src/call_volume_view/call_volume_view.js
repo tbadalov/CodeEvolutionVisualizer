@@ -75,6 +75,8 @@ class CallVolumeView extends React.Component {
       window.diag = <CallVolumeDiagram
         classes={this.classDataAdapter.getFilteredData()}
         selectedCommit={this.state.selectedCommit}
+        repositoryUrl={this.props.repositoryUrl}
+        commitInfo={this.state.rawData}
         previousCommitHash={this.state.rawData && this.state.rawData.previousCommitHash}
         nextCommitHash={this.state.rawData && this.state.rawData.nextCommitHash}
         selectedClassNames={this.props.selectedClassNames}
