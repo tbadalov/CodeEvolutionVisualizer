@@ -1,4 +1,5 @@
 import React from 'react';
+import CallVolumeTooltipItem from './call_volume_view/call_volume_tooltip_item';
 import CommitDetailTooltipItem from "./commit_range_view/commit_detail_tooltip_item";
 import TooltipCommitRangeItem from './commit_range_view/tooltip_commit_range_item';
 
@@ -68,6 +69,38 @@ export function convertClassToTooltipInfo(changedClass, totalChangedLinesCountIn
     changedLinesCountPercentage: changedClass.changedLinesCount / totalChangedLinesCountInCommit * 100.0,
     changedClassName: changedClass.className,
   };
+}
+
+export function convertClassToCallVolumeTooltipInfo(classData, params={}) {
+  let methodNames = params.methodNames;
+  if (!methodNames) {
+    methodNames = classData.methods.map(method => method.methodName);
+  }
+  return classData.methods
+    .filter(method => methodNames.includes(method.methodName))
+    .map(method => {
+      const calledBy = method.callers.map(callerClass => {
+        return {
+          className: callerClass.callerClassName,
+          color: params.classToColorMapping ? params.classToColorMapping[callerClass.callerClassName] : '#000000',
+          callAmount: Number(callerClass.totalCallAmount),
+        };
+      });
+
+      return {
+        methodName: method.methodName,
+        totalCalls: calledBy.reduce((sum, caller) => sum + caller.callAmount, 0),
+        calledBy,
+      };
+    });
+}
+
+export function buildCallVolumeItems(items) {
+  return items.map(item => {
+    return (
+      <CallVolumeTooltipItem {...item} />
+    );
+  });
 }
 
 export function extractCommitDetails(commit) {

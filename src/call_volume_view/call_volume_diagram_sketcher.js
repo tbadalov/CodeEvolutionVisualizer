@@ -20,8 +20,6 @@ export function convertToVisualizationData(classesArray, params) {
   const {
     classToColorMapping,
   } = params;
-  console.log("converting to visualization data");
-  console.log(classesArray);
   const branches = [];
   const diagramPositioner = new CallVolumeDiagramPositioner(classesArray);
   window.diagramPositioner = diagramPositioner;
@@ -30,6 +28,7 @@ export function convertToVisualizationData(classesArray, params) {
     const branchData = {
       color: classToColorMapping[classData.className],
       className: classData.className,
+      classData: classData,
       isFocusOn: params.isFocusOn,
       isFocused: params.isClassFocused[classData.className],
     };
@@ -55,15 +54,14 @@ export function convertToVisualizationData(classesArray, params) {
         color: '#f0f0f0',
       });
     }
-    console.log("pipes for " + classData.className);
-    console.log(pipes);
     const leaves = [];
     let branchStartingPositionX = diagramPositioner.branchStartX(i);
     for ( let m = 0; m < methods.length; m++ ) {
       const method = methods[m];
       const leaf = {
         data: {
-          name: method.methodName,
+          method: method,
+          classData: classData,
         },
         stem: {
           type: 'rect',
@@ -212,6 +210,7 @@ export function convertToVisualizationData(classesArray, params) {
 }
 
 function drawBranches(branches, params) {
+  console.log(params);
   const branchKonvaShapes = [];
   for (let i = 0; i < branches.length; i++) {
     const branch = branches[i];
@@ -227,7 +226,8 @@ function drawBranches(branches, params) {
           scaleY: pipe.scaleY,
         };
         return (
-          <ReactKonva.Rect key={`pipe-${index}-of-branch-${i}`} {...pipeProps} />
+          <ReactKonva.Rect key={`pipe-${index}-of-branch-${i}`} {...pipeProps}
+            onMouseEnter={(e) => params.onClassMouseEnter(e, branch.data)}/>
         );
       } else if (pipe.type == 'arc') {
         const pipeCornerProps = {
@@ -241,42 +241,40 @@ function drawBranches(branches, params) {
           scaleY: pipe.scaleY,
         };
         return (
-          <ReactKonva.Arc {...pipeCornerProps} key={`corner-${index}-of-branch-${i}`} />
+          <ReactKonva.Arc {...pipeCornerProps} key={`corner-${index}-of-branch-${i}`}
+            onMouseEnter={(e) => params.onClassMouseEnter(e, branch.data)}/>
         );
       }
     });
-    const currentBranchLeafShapes = branch.leaves.map((leave, index) => {
-      const leaveProps = {
-        x: leave.stem.startX,
-        y: leave.stem.startY,
-        width: leave.stem.width,
-        height: leave.stem.height,
-        fill: leave.stem.fill,
-        scaleX: leave.stem.scaleX,
-        scaleY: leave.stem.scaleY,
+    const currentBranchLeafShapes = branch.leaves.map((leaf, index) => {
+      const leafProps = {
+        x: leaf.stem.startX,
+        y: leaf.stem.startY,
+        width: leaf.stem.width,
+        height: leaf.stem.height,
+        fill: leaf.stem.fill,
+        scaleX: leaf.stem.scaleX,
+        scaleY: leaf.stem.scaleY,
       };
 
       const stemFillerForEmptyMethod = {};
-      if (leave.stemFillerForEmptyMethod) {
+      if (leaf.stemFillerForEmptyMethod) {
         Object.assign(stemFillerForEmptyMethod, {
-          x: leave.stemFillerForEmptyMethod.startX,
-          y: leave.stemFillerForEmptyMethod.startY,
-          width: leave.stemFillerForEmptyMethod.width,
-          height: leave.stemFillerForEmptyMethod.height,
+          x: leaf.stemFillerForEmptyMethod.startX,
+          y: leaf.stemFillerForEmptyMethod.startY,
+          width: leaf.stemFillerForEmptyMethod.width,
+          height: leaf.stemFillerForEmptyMethod.height,
           fill: '#f0f0f0',
-          scaleX: leave.stemFillerForEmptyMethod.scaleX,
-          scaleY: leave.stemFillerForEmptyMethod.scaleY,
+          scaleX: leaf.stemFillerForEmptyMethod.scaleX,
+          scaleY: leaf.stemFillerForEmptyMethod.scaleY,
         });
-        if (isNaN(stemFillerForEmptyMethod.x)) {
-          console.log("NaN detected stem filler");
-          console.log(stemFillerForEmptyMethod);
-        }
       }
       return (
-        <ReactKonva.Group key={`leaf-${index}-of-branch-${i}`}>
-          <ReactKonva.Rect {...leaveProps} />
-          <ReactKonva.Arc {...leave.node} />
-          { leave.stemFillerForEmptyMethod ? <ReactKonva.Rect {...stemFillerForEmptyMethod} /> : null }
+        <ReactKonva.Group key={`leaf-${index}-of-branch-${i}`}
+          onMouseEnter={(e) => params.onMethodMouseEnter(e, leaf.data)}>
+          <ReactKonva.Rect {...leafProps} />
+          <ReactKonva.Arc {...leaf.node} />
+          { leaf.stemFillerForEmptyMethod ? <ReactKonva.Rect {...stemFillerForEmptyMethod} /> : null }
         </ReactKonva.Group>
       );
     });
@@ -295,6 +293,7 @@ function drawBranches(branches, params) {
 }
 
 export function draw(visualData, params) {
+  console.log(params);
   const {
     layerRef,
     opacity,

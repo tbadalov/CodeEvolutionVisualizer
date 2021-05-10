@@ -132,7 +132,6 @@ class CallVolumeView extends React.Component {
         false,
         classFilterItems,
         (commitClass) => {
-          console.log("is class enabled " + commitClass.className);
           return !this.context.isClassDisabled(commitClass.className);
         },
         (payload) => this.context.enableClass(payload.className),

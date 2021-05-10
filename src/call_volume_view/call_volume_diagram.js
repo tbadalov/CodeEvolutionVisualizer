@@ -7,7 +7,8 @@ const CallVolumeDiagramPositioner = require('./call_volume_diagram_positioner');
 const diagramStyle = require('./css/call_volume_diagram.css');
 const DelayedTooltip = require('../ui_elements/delayed_tooltip');
 const TooltipWithGithubButton = require('../ui_elements/tooltip_with_github_button');
-const { extractCommitDetails, commitTooltipItems, buildStackPayload } = require('../utils');
+const Tooltip = require('../tooltip');
+const { extractCommitDetails, commitTooltipItems, buildStackPayload, buildCallVolumeItems, convertClassToCallVolumeTooltipInfo } = require('../utils');
 
 let shouldAdaptCamera = true;
 
@@ -86,6 +87,8 @@ class CallVolumeDiagram extends React.Component {
     this.hideTooltip = this.hideTooltip.bind(this);
     this.onPlayButtonClicked = this.onPlayButtonClicked.bind(this);
     this.onPauseButtonClicked = this.onPauseButtonClicked.bind(this);
+    this.onMethodMouseEnter = this.onMethodMouseEnter.bind(this);
+    this.onClassMouseEnter = this.onClassMouseEnter.bind(this);
     this.classNameOrder = {};
     this.animationInterval = null;
     this.state = {
@@ -95,6 +98,7 @@ class CallVolumeDiagram extends React.Component {
       tooltipTop: 0,
       tooltipItems: [],
       tooltipTitle: "",
+      tooltipClass: TooltipWithGithubButton,
       isFocusOn: false,
       isClassFocused: {},
       primitiveDiagramProps: {
@@ -147,6 +151,7 @@ class CallVolumeDiagram extends React.Component {
       tooltipVisible: true,
       delay: 700,
       tooltipOffset: 20,
+      tooltipClass: params.tooltipClass,
       tooltipTitle,
       tooltipItems,
     });
@@ -208,6 +213,7 @@ class CallVolumeDiagram extends React.Component {
       pageX: event.pageX,
       pageY: event.pageY,
       tooltipTitle: this.props.selectedCommit,
+      tooltipClass: TooltipWithGithubButton,
       tooltipItems,
     });
   }
@@ -275,6 +281,37 @@ class CallVolumeDiagram extends React.Component {
     return konvaShapes;
   }
 
+  onClassMouseEnter(event, payload) {
+    const tooltipLabels = convertClassToCallVolumeTooltipInfo(payload.classData, {
+      classToColorMapping: this.props.classToColorMapping,
+    });
+    const tooltipItems = buildCallVolumeItems(tooltipLabels);
+    this.showTooltip({
+      pageX: event.evt.pageX,
+      pageY: event.evt.pageY,
+      tooltipTitle: payload.className,
+      tooltipItems: tooltipItems,
+      tooltipClass: Tooltip,
+    });
+  }
+
+  onMethodMouseEnter(event, payload) {
+    const tooltipLabels = convertClassToCallVolumeTooltipInfo(payload.classData, {
+      classToColorMapping: this.props.classToColorMapping,
+      methodNames: [
+        payload.method.methodName,
+      ],
+    });
+    const tooltipItems = buildCallVolumeItems(tooltipLabels);
+    this.showTooltip({
+      pageX: event.evt.pageX,
+      pageY: event.evt.pageY,
+      tooltipTitle: payload.className,
+      tooltipItems: tooltipItems,
+      tooltipClass: Tooltip,
+    });
+  }
+
   buildPreviousCommitLayer(filteredRawData) {
     this.previousLayerRef = React.createRef();
     const prevKonvaShapes = this.convertRawDataToVisualShapes(
@@ -301,6 +338,8 @@ class CallVolumeDiagram extends React.Component {
           opacity: 0,
           onMouseEnter: this.onPipeHover,
           onMouseLeave: this.unfocusPipe,
+          onClassMouseEnter: this.onClassMouseEnter,
+          onMethodMouseEnter: this.onMethodMouseEnter,
         },
       }
     )
@@ -436,11 +475,12 @@ class CallVolumeDiagram extends React.Component {
         </div>
         <DelayedTooltip
           delay={this.state.delay}
-          tooltipClass={TooltipWithGithubButton}
+          tooltipClass={this.state.tooltipClass}
           visible={this.state.tooltipVisible}
           left={this.state.tooltipLeft}
           offset={this.state.tooltipOffset}
           top={this.state.tooltipTop}
+          title={this.state.tooltipTitle}
           commitHash={this.props.selectedCommit}
           repositoryUrl={this.props.repositoryUrl}
           items={this.state.tooltipItems} />
