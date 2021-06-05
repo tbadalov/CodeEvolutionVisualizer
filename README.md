@@ -13,13 +13,13 @@ This tool visualizes source code evolution based on the repository data produced
 
 
 ### Class overview view
-To open the view, hold your mouse and select the range of commits in "Commit range" view Commit range view
+To open the view, hold your mouse and select the range of commits in "Commit range" view.
 
 ![ascii-clock](https://i.ibb.co/gwj85pN/class-overview-view.png)
 
 
 ### Call volume view
-To open the view, click on any commit hash in "Commit range" view Commit range view
+To open the view, click on any commit hash in "Commit range" view.
 
 ![ascii-clock](https://i.ibb.co/Qb6Y3N6/call-volume-view.png)
 
