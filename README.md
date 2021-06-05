@@ -1,9 +1,9 @@
 # CodeEvolutionVisualizer
 
-This tool visualizes source code evolution based on the repository data produced by GraphifyEvolution tool.
+This tool visualizes source code evolution based on the repository data produced by [GraphifyEvolution](https://github.com/kristiinara/GraphifyEvolution) tool.
 ## Example app
 
-This is an example app that is deployed to Heroku.
+[This](https://code-evolution-visualizer.herokuapp.com) is an example app that is deployed to Heroku.
 
 ## Usage
 
