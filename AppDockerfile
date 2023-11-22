@@ -1,0 +1,9 @@
+FROM node:16.20.2
+WORKDIR /home/node/app
+
+COPY . .
+
+RUN npm install
+RUN npm run prod:build
+
+CMD npm run start
