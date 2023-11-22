@@ -1,5 +1,5 @@
 # CodeEvolutionVisualizer
-
+https://github.com/tbadalov/CodeEvolutionVisualizer/edit/main/README.md
 This tool visualizes source code evolution based on the repository data produced by [GraphifyEvolution](https://github.com/kristiinara/GraphifyEvolution) tool.
 ## Example app
 
@@ -26,29 +26,9 @@ To open the view, click on any commit hash in "Commit range" view.
 
 ## Running locally
 
-> **Make sure you are running Neo4J database with the dump generated from GraphifyEvolution**
-
-### Configure Neo4J params
-
-Open the "neo4jconfig.js" file and fill in details like user, password and database uri, e.g.:
-```javascript
-module.exports = {
-  user: 'neo4j',
-  password: process.env.NEO4J_PASS || 'neo4j',
-  uri: 'bolt://localhost:7687'
-}
+To run the project locally, it is as simple as running a docker compose with the following command inside of the root directory of this project:
+```shell
+docker compose up -d
 ```
 
-### Run the application
-
-Go to the folder with the project in your console. You have to run UI and Backend separately.First, run UI:
-```bash
-npm run dev:start-ui
-```
-
-Run the backend in another console:
-```bash
-npm run dev:start-server
-```
-
-Wait until both components are ready (usually takes less than a minute). Navigate to http://localhost:8080/ in your browser.
+Wait until both components are ready (usually takes less than a minute). Navigate to http://localhost:3000/ in your browser.
