@@ -1,0 +1,12 @@
+services:
+  web:
+    build:
+      dockerfile: AppDockerfile
+    ports:
+      - "3000:3000"
+  neo4j:
+    build:
+      dockerfile: Neo4jDockerfile
+    ports:
+      - "7474:7474"
+      - "7687:7687"
