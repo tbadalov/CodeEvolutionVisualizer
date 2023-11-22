@@ -1,0 +1,13 @@
+FROM neo4j:4.1.13
+
+RUN echo "dbms.security.auth_enabled=false" >> conf/neo4j.conf
+RUN echo "dbms.default_database=neo4j" >> conf/neo4j.conf
+RUN echo "dbms.active_database=neo4j" >> conf/neo4j.conf
+RUN echo "dbms.recovery.fail_on_missing_files=false" >> conf/neo4j.conf
+RUN echo "unsupported.dbms.tx_log.fail_on_corrupted_log_files=false" >> conf/neo4j.conf
+
+COPY db_two_apps_15_04.dump /backups/db.dump
+
+RUN neo4j-admin load --database=neo4j --from=/backups/db.dump --force
+
+CMD neo4j start & tail -f /dev/null
